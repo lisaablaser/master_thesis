@@ -40,7 +40,7 @@ def generate_launch_description():
     )
 
     kinematics_yaml = load_yaml(
-        "moveit_resources_panda_moveit_config", "config/kinematics.yaml"
+        "panda_moveit_config", "config/kinematics.yaml"
     )
 
     # RViz

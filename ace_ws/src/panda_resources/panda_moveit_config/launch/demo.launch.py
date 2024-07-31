@@ -8,6 +8,8 @@ from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 from moveit_configs_utils import MoveItConfigsBuilder
 
+import moveit_msgs
+
 
 def generate_launch_description():
 
@@ -21,16 +23,17 @@ def generate_launch_description():
     db_arg = DeclareLaunchArgument(
         "db", default_value="False", description="Database flag"
     )
+    
 
     ros2_control_hardware_type = DeclareLaunchArgument(
         "ros2_control_hardware_type",
         default_value="mock_components",
         description="ROS 2 control hardware interface type to use for the launch file -- possible values: [mock_components, isaac]",
     )
-
-    moveit_config = (
-        MoveItConfigsBuilder("moveit_resources_panda")
-        .robot_description(
+    
+    moveit_config = MoveItConfigsBuilder("panda", package_name="panda_moveit_config")
+    
+    moveit_config.robot_description(
             file_path="config/panda.urdf.xacro",
             mappings={
                 "ros2_control_hardware_type": LaunchConfiguration(
@@ -38,16 +41,21 @@ def generate_launch_description():
                 )
             },
         )
-        .robot_description_semantic(file_path="config/panda.srdf")
-        .planning_scene_monitor(
+    
+    moveit_config.robot_description_semantic(file_path="config/panda.srdf")
+    
+    moveit_config.planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
-        .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
-        .planning_pipelines(
+    
+    moveit_config.trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
+    
+    moveit_config.planning_pipelines(
             pipelines=["ompl", "chomp", "pilz_industrial_motion_planner", "stomp"]
         )
-        .to_moveit_configs()
-    )
+    
+    moveit_config = moveit_config.to_moveit_configs()
+
 
     # Start the actual move_group node/action server
     move_group_node = Node(
@@ -57,12 +65,14 @@ def generate_launch_description():
         parameters=[moveit_config.to_dict()],
         arguments=["--ros-args", "--log-level", "info"],
     )
-
+  
     # RViz
     rviz_base = LaunchConfiguration("rviz_config")
+
     rviz_config = PathJoinSubstitution(
         [FindPackageShare("panda_moveit_config"), "launch", rviz_base]
     )
+
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -77,7 +87,7 @@ def generate_launch_description():
             moveit_config.joint_limits,
         ],
     )
-
+   
     # Static TF
     static_tf_node = Node(
         package="tf2_ros",
@@ -86,7 +96,7 @@ def generate_launch_description():
         output="log",
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "panda_link0"],
     )
-
+  
     # Publish TF
     robot_state_publisher = Node(
         package="robot_state_publisher",
