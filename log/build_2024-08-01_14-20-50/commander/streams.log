@@ -1,0 +1,22 @@
+[0.028s] Invoking command in '/home/lisa/master_thesis/build/commander': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/lisa/master_thesis/build/commander -- -j20 -l20
+[0.102s] [100%] Built target commander
+[0.130s] Invoked command in '/home/lisa/master_thesis/build/commander' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/lisa/master_thesis/build/commander -- -j20 -l20
+[0.171s] Invoking command in '/home/lisa/master_thesis/build/commander': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/lisa/master_thesis/build/commander
+[0.179s] -- Install configuration: ""
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/lib/commander/commander
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/ament_index/resource_index/package_run_dependencies/commander
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/ament_index/resource_index/parent_prefix_path/commander
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/environment/ament_prefix_path.sh
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/environment/ament_prefix_path.dsv
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/environment/path.sh
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/environment/path.dsv
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/local_setup.bash
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/local_setup.sh
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/local_setup.zsh
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/local_setup.dsv
+[0.179s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/package.dsv
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/ament_index/resource_index/packages/commander
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/cmake/commanderConfig.cmake
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/cmake/commanderConfig-version.cmake
+[0.179s] -- Up-to-date: /home/lisa/master_thesis/install/commander/share/commander/package.xml
+[0.180s] Invoked command in '/home/lisa/master_thesis/build/commander' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/lisa/master_thesis/build/commander

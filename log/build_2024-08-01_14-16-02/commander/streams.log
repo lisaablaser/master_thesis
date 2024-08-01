@@ -1,0 +1,71 @@
+[0.025s] Invoking command in '/home/lisa/master_thesis/build/commander': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/lisa/master_thesis/ace_ws/src/commander -DCMAKE_INSTALL_PREFIX=/home/lisa/master_thesis/install/commander
+[0.080s] -- The C compiler identification is GNU 13.2.0
+[0.145s] -- The CXX compiler identification is GNU 13.2.0
+[0.158s] -- Detecting C compiler ABI info
+[0.249s] -- Detecting C compiler ABI info - done
+[0.258s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.258s] -- Detecting C compile features
+[0.258s] -- Detecting C compile features - done
+[0.267s] -- Detecting CXX compiler ABI info
+[0.361s] -- Detecting CXX compiler ABI info - done
+[0.368s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.368s] -- Detecting CXX compile features
+[0.369s] -- Detecting CXX compile features - done
+[0.374s] -- Found ament_cmake: 2.5.2 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.549s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[0.691s] -- Found moveit_ros_planning_interface: 2.10.0 (/home/lisa/ws_moveit/install/moveit_ros_planning_interface/share/moveit_ros_planning_interface/cmake)
+[0.842s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found version "1.83.0") found components: date_time filesystem program_options system thread 
+[0.914s] -- Found rosidl_generator_c: 4.6.3 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[0.935s] -- Found rosidl_generator_cpp: 4.6.3 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[0.960s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.986s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.300s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found version "1.83.0") found components: chrono date_time filesystem iostreams program_options regex serialization system thread 
+[1.385s] -- Found parameter_traits: 0.3.8 (/opt/ros/jazzy/share/parameter_traits/cmake)
+[1.447s] -- Found rmw_implementation_cmake: 7.3.1 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[1.454s] -- Found rmw_cyclonedds_cpp: 2.2.2 (/opt/ros/jazzy/share/rmw_cyclonedds_cpp/cmake)
+[1.493s] -- Using RMW implementation 'rmw_cyclonedds_cpp' as default
+[1.568s] -- Found rclcpp_lifecycle: 28.1.3 (/opt/ros/jazzy/share/rclcpp_lifecycle/cmake)
+[1.601s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found version "1.83.0") found components: filesystem 
+[1.675s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[1.675s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[1.705s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[1.859s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found version "1.83.0") found components: system filesystem date_time program_options thread chrono 
+[1.899s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found version "1.83.0") found components: thread system filesystem regex date_time program_options 
+[2.001s] -- Found Boost: /usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake (found version "1.83.0") found components: system filesystem date_time program_options thread 
+[2.036s] -- Found ament_lint_auto: 0.17.1 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+[2.120s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[2.121s] -- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/lisa/master_thesis/ace_ws/src/commander/include>
+[2.121s] -- Configured cppcheck exclude dirs and/or files: 
+[2.122s] -- Added test 'lint_cmake' to check CMake code style
+[2.123s] -- Added test 'uncrustify' to check C / C++ code style
+[2.123s] -- Configured uncrustify additional arguments: 
+[2.123s] -- Added test 'xmllint' to check XML markup files
+[2.125s] -- Configuring done (2.1s)
+[2.147s] -- Generating done (0.0s)
+[2.148s] -- Build files have been written to: /home/lisa/master_thesis/build/commander
+[2.159s] Invoked command in '/home/lisa/master_thesis/build/commander' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/lisa/master_thesis/ace_ws/src/commander -DCMAKE_INSTALL_PREFIX=/home/lisa/master_thesis/install/commander
+[2.160s] Invoking command in '/home/lisa/master_thesis/build/commander': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/lisa/master_thesis/build/commander -- -j20 -l20
+[2.211s] [ 50%] [32mBuilding CXX object CMakeFiles/commander.dir/src/commander.cpp.o[0m
+[6.887s] [100%] [32m[1mLinking CXX executable commander[0m
+[7.143s] [100%] Built target commander
+[7.157s] Invoked command in '/home/lisa/master_thesis/build/commander' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/lisa/master_thesis/build/commander -- -j20 -l20
+[7.189s] Invoking command in '/home/lisa/master_thesis/build/commander': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/lisa/master_thesis/build/commander
+[7.198s] -- Install configuration: ""
+[7.198s] -- Installing: /home/lisa/master_thesis/install/commander/lib/commander/commander
+[7.198s] -- Set non-toolchain portion of runtime path of "/home/lisa/master_thesis/install/commander/lib/commander/commander" to ""
+[7.198s] -- Installing: /home/lisa/master_thesis/install/commander/share/ament_index/resource_index/package_run_dependencies/commander
+[7.198s] -- Installing: /home/lisa/master_thesis/install/commander/share/ament_index/resource_index/parent_prefix_path/commander
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/environment/ament_prefix_path.sh
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/environment/ament_prefix_path.dsv
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/environment/path.sh
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/environment/path.dsv
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/local_setup.bash
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/local_setup.sh
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/local_setup.zsh
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/local_setup.dsv
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/package.dsv
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/ament_index/resource_index/packages/commander
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/cmake/commanderConfig.cmake
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/cmake/commanderConfig-version.cmake
+[7.199s] -- Installing: /home/lisa/master_thesis/install/commander/share/commander/package.xml
+[7.200s] Invoked command in '/home/lisa/master_thesis/build/commander' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/lisa/ws_moveit/install/moveit_configs_utils:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/lisa/master_thesis/build/commander
