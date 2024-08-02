@@ -120,6 +120,7 @@ def generate_launch_description():
         MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config")
         .robot_description_semantic(Path("srdf") / "ur.srdf.xacro", {"name": ur_type})
         .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
+        #.sensors_3d(file_path="config/sensors_3d.yaml")
         .to_moveit_configs()
     )
 
