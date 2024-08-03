@@ -14,7 +14,7 @@
     <joint name="cam_joint" type="fixed">
         <parent link="wrist_3_link"/>
         <child link="rgbd_camera"/>
-        <origin xyz="0.0 -0.02 0.0" rpy="0 -1.5707 1.5707"/>
+        <origin xyz="0.0 -0.05 0.0" rpy="0 -1.5707 1.5707"/>
     </joint>
 
     <link name="rgbd_camera">
