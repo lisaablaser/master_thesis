@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
   // Execute the plan
   if(success) {
     std::cout << "planning succeeded" << std::endl;
-    //move_group_interface.execute(plan);
+    move_group_interface.execute(plan);
   } else {
     RCLCPP_ERROR(logger, "Planning failed!");
   }
