@@ -127,8 +127,7 @@ def generate_launch_description():
             "is not set, it enables use of a custom moveit config.",
         )
     )
-    print("kuku ==============================================")
-    print("kuku ==============================================")
+
 
     print(FindPackageShare("ur_moveit_config").find("ur_moveit_config"))
 

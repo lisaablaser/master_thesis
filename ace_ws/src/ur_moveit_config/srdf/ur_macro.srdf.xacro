@@ -54,4 +54,10 @@
     <disable_collisions link1="wrist_2_link" link2="wrist_3_link" reason="Adjacent" />
 
   </xacro:macro>
+
+
+
+   <!--Kinect-->
+
+
 </robot>

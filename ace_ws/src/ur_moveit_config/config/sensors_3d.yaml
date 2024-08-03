@@ -7,6 +7,6 @@ kinect_pointcloud:
     ns: kinect
     padding_offset: 0.1
     padding_scale: 1.0
-    point_cloud_topic: /camera/depth_registered/points
+    point_cloud_topic: /rgbd_camera/points
     point_subsample: 1
     sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
