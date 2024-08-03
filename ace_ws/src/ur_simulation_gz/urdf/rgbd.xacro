@@ -1,13 +1,23 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
+    <xacro:macro name="inertial_cylinder" params="mass length radius *origin">
+        <inertial>
+            <xacro:insert_block name="origin"/>
+            <mass value="${mass}" />
+            <inertia ixx="${(1/12) * mass * (3*radius*radius + length*length)}" ixy="0.0" ixz="0.0"
+                    iyy="${(1/12) * mass * (3*radius*radius + length*length)}" iyz="0.0"
+                    izz="${(1/2) * mass * (radius*radius)}" />
+        </inertial>
+    </xacro:macro>
+
     <joint name="cam_joint" type="fixed">
         <parent link="wrist_3_link"/>
-        <child link="cam_frame"/>
+        <child link="rgbd_camera"/>
         <origin xyz="0.1 0 0.175" rpy="0 0 0"/>
     </joint>
 
-    <link name="cam_frame">
+    <link name="rgbd_camera">
         <visual>
             <geometry>
                 <cylinder radius="0.05" length="0.04"/>
@@ -26,7 +36,7 @@
 
 
 
-    <gazebo reference="cam_frame">
+    <gazebo reference="rgbd_camera">
         <material>Gazebo/Red</material>
 
         <sensor name="rgbd_camera" type="rgbd_camera">
@@ -45,6 +55,8 @@
           <update_rate>30</update_rate>
           <visualize>true</visualize>
           <topic>rgbd_camera</topic>
+        <gz_frame_id>rgbd_camera</gz_frame_id>
+        </sensor>
     </gazebo>
 
 </robot>
