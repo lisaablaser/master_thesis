@@ -1,11 +1,32 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
+
+  <!-- PLUGINS-->
+  <!--gazebo>
+      <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+  </gazebo-->
+
+ <gazebo>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+    </plugin>
+  </gazebo>
+
+   <gazebo>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+  </gazebo>
+  <!---->
   <!-- robot name parameter -->
   <xacro:arg name="name" default="ur"/>
   <!-- import main macro -->
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
 
   <xacro:include filename="$(find ur_simulation_gz)/urdf/ur_gz.ros2_control.xacro" />
+
+  <!--xacro:include filename="$(find ur_simulation_gz)/urdf/rgbd.xacro" /-->
 
   <!-- possible 'ur_type' values: ur3, ur3e, ur5, ur5e, ur10, ur10e, ur16e, ur20, ur30 -->
   <!-- the default value should raise an error in case this was called without defining the type -->
@@ -58,179 +79,5 @@
     tf_prefix="$(arg tf_prefix)"
     transmission_hw_interface="$(arg transmission_hw_interface)"
   />
-  <!--gazebo>
-      <plugin
-      filename="gz-sim-physics-system"
-      name="gz::sim::systems::Physics">
-    </plugin>
-  </gazebo-->
-
- <gazebo>
-    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
-    </plugin>
-  </gazebo>
-
-   <gazebo>
-    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-  </gazebo>
-
-   <joint name="laser_joint" type="fixed">
-        <parent link="wrist_3_link"/>
-        <child link="laser_frame"/>
-        <origin xyz="0.1 0 0.175" rpy="0 0 0"/>
-    </joint>
-
-    <link name="laser_frame">
-        <inertial>
-          <mass>0.1</mass>
-          <inertia>
-            <ixx>0.000166667</ixx>
-            <iyy>0.000166667</iyy>
-            <izz>0.000166667</izz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>2 2 2</size>
-            </box>
-          </geometry>
-        </visual>
-    </link>
-
-
-
-    <gazebo reference="laser_frame">
-
-        <sensor name="rgbd_camera" type="rgbd_camera">
-          <camera>
-            <horizontal_fov>1.047</horizontal_fov>
-            <image>
-              <width>320</width>
-              <height>240</height>
-            </image>
-            <clip>
-              <near>0.1</near>
-              <far>100</far>
-            </clip>
-          </camera>
-          <always_on>1</always_on>
-          <update_rate>30</update_rate>
-          <visualize>true</visualize>
-          <topic>rgbd_camera</topic>
-          <enable_metrics>true</enable_metrics>
-        </sensor>
-    </gazebo>
-
-      <!--link name="cam_mount">
-        <pose>0.05 0.05 0.05 0 0 0</pose>
-        <inertial>
-          <mass value="0.1"/>
-          <inertia ixx="0.1" ixy="0" ixz="0" iyy="0.1" iyz="0" izz="0.1"/>
-        </inertial>
-        <visual>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <geometry>
-          <box size="1 1 1" />
-        </geometry>
-        <material name="Cyan">
-          <color rgba="0 1.0 1.0 1.0"/>
-        </material>
-        </visual>
-
-        <collision>
-          <origin xyz="0 0 0" rpy="0 0 0"/>
-          <geometry>
-            <cylinder radius="1" length="0.5"/>
-          </geometry>
-        </collision>
-        <sensor name="rgbd_camera" type="rgbd_camera">
-          <camera>
-            <horizontal_fov>1.047</horizontal_fov>
-            <image>
-              <width>320</width>
-              <height>240</height>
-            </image>
-            <clip>
-              <near>0.1</near>
-              <far>100</far>
-            </clip>
-          </camera>
-          <always_on>1</always_on>
-          <update_rate>30</update_rate>
-          <visualize>true</visualize>
-          <topic>rgbd_camera</topic>
-          <enable_metrics>true</enable_metrics>
-        </sensor>
-      </link-->
- 
-      
-      <!--joint name="cam_mount_joint" type="fixed">
-          <origin xyz="0 0 1" rpy="0 0 0"/>
-          <parent link="wrist_3_link"/>
-          <child link="cam_mount"/>
-       </joint-->
-
-   <!--model name="custom_params">
-      <pose>5 0 0.5 0 0.0 3.14</pose>
-      <link name="link">
-        <pose>0.05 0.05 0.05 0 0 0</pose>
-        <inertial>
-          <mass>0.1</mass>
-          <inertia>
-            <ixx>0.000166667</ixx>
-            <iyy>0.000166667</iyy>
-            <izz>0.000166667</izz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
-          </geometry>
-        </visual>
-        <sensor name="depth_camera" type="depth_camera">
-          <camera>
-            <horizontal_fov>1.047</horizontal_fov>
-            <image>
-              <width>320</width>
-              <height>240</height>
-              <format>R_FLOAT32</format>
-            </image>
-            <clip>
-              <near>0.1</near>
-              <far>100</far>
-            </clip>
-          </camera>
-          <always_on>1</always_on>
-          <update_rate>10</update_rate>
-          <visualize>true</visualize>
-          <topic>depth_camera</topic>
-          <plugin
-            filename="RosGzPointCloud"
-            name="ros_gz_point_cloud::PointCloud">
-            <topic>points</topic>
-            <frame_id>map</frame_id>
-          </plugin>
-        </sensor>
-      </link>
-    </model-->
-    
   
 </robot>
