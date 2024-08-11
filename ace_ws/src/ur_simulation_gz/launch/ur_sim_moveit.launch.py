@@ -47,6 +47,7 @@ def launch_setup(context, *args, **kwargs):
     controllers_file = LaunchConfiguration("controllers_file")
     description_file = LaunchConfiguration("description_file")
     moveit_launch_file = LaunchConfiguration("moveit_launch_file")
+    world_file = LaunchConfiguration("world_file")
 
     ur_control_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -64,6 +65,7 @@ def launch_setup(context, *args, **kwargs):
             "controllers_file": controllers_file,
             "description_file": description_file,
             "launch_rviz": "false",
+            "world_file": world_file,
         }.items(),
     )
 
@@ -154,8 +156,13 @@ def generate_launch_description():
             "is not set, it enables use of a custom moveit config.",
         )
     )
-
-    print(FindPackageShare("ur_moveit_config").find("ur_moveit_config"))
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "world_file",
+            default_value="empty.sdf",
+            description="Gazebo world file (absolute path or filename from the gazebosim worlds collection) containing a custom world.",
+        )
+    )
 
     return LaunchDescription(
         declared_arguments + [OpaqueFunction(function=launch_setup)]
