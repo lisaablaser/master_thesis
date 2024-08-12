@@ -64,7 +64,9 @@ def load_yaml(package_name, file_path):
 def declare_arguments():
     return LaunchDescription(
         [
-            DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?"),
+            DeclareLaunchArgument(
+                "launch_rviz", default_value="true", description="Launch RViz?"
+            ),
             DeclareLaunchArgument(
                 "ur_type",
                 description="Typo/series of used UR robot.",
@@ -90,7 +92,7 @@ def declare_arguments():
             ),
             DeclareLaunchArgument(
                 "use_sim_time",
-                default_value="false",
+                default_value="true",
                 description="Using or not time from simulation",
             ),
             DeclareLaunchArgument(
@@ -113,14 +115,18 @@ def generate_launch_description():
     warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
     launch_servo = LaunchConfiguration("launch_servo")
     use_sim_time = LaunchConfiguration("use_sim_time")
-    publish_robot_description_semantic = LaunchConfiguration("publish_robot_description_semantic")
+    publish_robot_description_semantic = LaunchConfiguration(
+        "publish_robot_description_semantic"
+    )
     publish_robot_description = LaunchConfiguration("publish_robot_description")
 
     moveit_config = (
         MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config")
         .robot_description_semantic(Path("srdf") / "ur.srdf.xacro", {"name": ur_type})
-        .planning_scene_monitor(publish_robot_description=True, publish_robot_description_semantic=True)
-        #.sensors_3d(file_path="config/sensors_3d.yaml")
+        .planning_scene_monitor(
+            publish_robot_description=True, publish_robot_description_semantic=True
+        )
+        # .sensors_3d(file_path="config/sensors_3d.yaml")
         .to_moveit_configs()
     )
 

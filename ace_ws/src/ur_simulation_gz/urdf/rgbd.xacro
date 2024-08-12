@@ -21,7 +21,7 @@
         <visual>
         <origin xyz="0 0 0" rpy="0 0 1.5707"/>
         <geometry>
-            <mesh filename="file:///home/lisa/master_thesis/ace_ws/src/ur_simulation_gz/kinect.dae"/>
+            <mesh filename="file:///home/lisa/master_thesis/ace_ws/src/ur_simulation_gz/material/kinect.dae"/>
         </geometry>
         </visual>
         <collision>

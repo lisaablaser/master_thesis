@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<sdf version="1.11">
+  <model name="hollow_cylinder">
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial auto="true" />
+      <collision name="cylinder_collision">
+        <density>1000.0</density>
+        <auto_inertia_params>
+          <gz:voxel_size>0.01</gz:voxel_size>
+        </auto_inertia_params>
+        <geometry>
+          <mesh>
+            <uri>meshes/hollow_cylinder.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="cylinder_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/hollow_cylinder.dae</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1 1 0.0 1.0</diffuse>
+          <ambient>1 1 0.0 1.0</ambient>
+          <specular>1 1 0.0 1.0</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

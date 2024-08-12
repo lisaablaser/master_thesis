@@ -61,7 +61,13 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "world_file",
-            default_value="empty.sdf",
+            default_value=PathJoinSubstitution(
+                [
+                    FindPackageShare("automatic_cell_explorer"),
+                    "worlds",
+                    "cell.sdf",
+                ]
+            ),
             description="Gazebo world file (absolute path or filename from the gazebosim worlds collection) containing a custom world.",
         )
     )
