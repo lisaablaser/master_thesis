@@ -3,10 +3,12 @@ from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
     OpaqueFunction,
+    TimerAction,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.actions import Node
 
 
 def launch_setup(context, *args, **kwargs):
@@ -29,9 +31,25 @@ def launch_setup(context, *args, **kwargs):
             "world_file": world_file,
         }.items(),
     )
+    octomap_server_node = TimerAction(
+        period=5.0,  # Delay by 5 seconds, dont think its neccesary.
+        actions=[
+            Node(
+                package="octomap_server",
+                executable="octomap_server_node",
+                name="octomap_server",
+                output="screen",
+                parameters=[
+                    {"use_sim_time": True, "resolution": 0.05, "frame_id": "world"}
+                ],
+                remappings=[("/cloud_in", "/rgbd_camera/points")],
+            )
+        ],
+    )
 
     nodes_to_launch = [
         ur_sim_moveit_launch,
+        octomap_server_node,
     ]
 
     return nodes_to_launch
@@ -65,7 +83,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("automatic_cell_explorer"),
                     "worlds",
-                    "cell.sdf",
+                    "table.sdf",
                 ]
             ),
             description="Gazebo world file (absolute path or filename from the gazebosim worlds collection) containing a custom world.",
