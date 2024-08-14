@@ -127,6 +127,13 @@ def generate_launch_description():
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
+        # .moveit_cpp(
+        #     file_path=os.path.join(
+        #         get_package_share_directory("ur_moveit_config"),
+        #         "config",
+        #         "moveit_cpp.yaml",
+        #     )
+        # )
         # .sensors_3d(file_path="config/sensors_3d.yaml")
         .to_moveit_configs()
     )

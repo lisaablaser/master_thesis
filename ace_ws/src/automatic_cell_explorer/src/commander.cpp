@@ -25,7 +25,7 @@ int main(int argc, char * argv[])
     msg.orientation.w = 1.0;
     msg.position.x = 0.09;
     msg.position.y = 0.22;
-    msg.position.z = 0.61;
+    msg.position.z = 1.41;
     return msg;
   }();
   move_group_interface.setPoseTarget(target_pose);

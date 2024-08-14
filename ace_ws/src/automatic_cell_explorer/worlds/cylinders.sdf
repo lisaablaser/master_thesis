@@ -66,13 +66,17 @@
       <pose>0 0 0 0 0 0</pose>
       <self_collide>false</self_collide>
     </model>
-    
     <include>
       <uri>file:///home/lisa/master_thesis/ace_ws/src/models/cafe_table</uri>
       <name>cafe_table</name>
       <pose>0 0 0 0 0 0</pose>
     </include>
-     <model name='cylinder'>
+    <include>
+      <uri>file://<urdf-string></uri>
+      <name>ur</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+    <model name='cylinder'>
       <pose>0.17168507444367698 1.5777562068099515 0.49999991421923973 1.3095487021304291e-06 -9.397499803766779e-07 0.0019873933023787701</pose>
       <link name='cylinder_link'>
         <inertial>
@@ -170,7 +174,6 @@
       <static>false</static>
       <self_collide>false</self_collide>
     </model>
- 
     <light name='sun' type='directional'>
       <pose>0 0 10 0 0 0</pose>
       <cast_shadows>true</cast_shadows>

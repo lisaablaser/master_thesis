@@ -32,7 +32,7 @@ def launch_setup(context, *args, **kwargs):
         }.items(),
     )
     octomap_server_node = TimerAction(
-        period=5.0,  # Delay by 5 seconds, dont think its neccesary.
+        period=0.0,
         actions=[
             Node(
                 package="octomap_server",
@@ -47,9 +47,22 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
+    commander_node = TimerAction(
+        period=20.0,
+        actions=[
+            Node(
+                package="automatic_cell_explorer",
+                executable="commander",
+                name="commander",
+                output="screen",
+            )
+        ],
+    )
+
     nodes_to_launch = [
         ur_sim_moveit_launch,
         octomap_server_node,
+        commander_node,
     ]
 
     return nodes_to_launch
@@ -83,7 +96,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("automatic_cell_explorer"),
                     "worlds",
-                    "table.sdf",
+                    "cell.sdf",
                 ]
             ),
             description="Gazebo world file (absolute path or filename from the gazebosim worlds collection) containing a custom world.",
