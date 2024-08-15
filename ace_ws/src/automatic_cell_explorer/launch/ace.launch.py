@@ -59,23 +59,45 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    commander_node = TimerAction(
-        period=20.0,
-        actions=[
-            Node(
-                package="automatic_cell_explorer",
-                executable="commander",
-                name="commander",
-                output="screen",
-            )
-        ],
-    )
+    # commander_node = TimerAction(
+    #     period=20.0,
+    #     actions=[
+    #         Node(
+    #             package="automatic_cell_explorer",
+    #             executable="commander",
+    #             name="commander",
+    #             output="screen",
+    #         )
+    #     ],
+    # )
+    # planner_node = TimerAction(
+    #     period=0.0,
+    #     actions=[
+    #         Node(
+    #             package="automatic_cell_explorer",
+    #             executable="planner_node",
+    #             name="planner",
+    #             output="screen",
+    #         )
+    #     ],
+    # )
+    # move_robot_node = TimerAction(
+    #     period=20.0,
+    #     actions=[
+    #         Node(
+    #             package="automatic_cell_explorer",
+    #             executable="move_robot_node",
+    #             name="move_robot_nodeS",
+    #             output="screen",
+    #         )
+    #     ],
+    # )
 
     nodes_to_launch = [
         ur_sim_moveit_launch,
         octomap_server_node,
         octomap_sub_node,
-        commander_node,
+        # commander_node,
     ]
 
     return nodes_to_launch
