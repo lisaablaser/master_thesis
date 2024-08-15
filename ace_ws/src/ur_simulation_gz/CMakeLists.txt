@@ -3,7 +3,7 @@ project(ur_simulation_gz)
 
 find_package(ament_cmake REQUIRED)
 
-install(DIRECTORY config launch urdf
+install(DIRECTORY config launch urdf material
   DESTINATION share/${PROJECT_NAME}
 )
 
