@@ -48,7 +48,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     octomap_sub_node = TimerAction(
-        period=0.0,
+        period=7.0,
         actions=[
             Node(
                 package="automatic_cell_explorer",

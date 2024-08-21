@@ -2,6 +2,8 @@
 <robot xmlns:xacro="http://wiki.ros.org/xacro" name="$(arg name)">
 
   <!-- PLUGINS-->
+  
+  <!-- not working-->
   <!--gazebo>
       <plugin
       filename="gz-sim-physics-system"

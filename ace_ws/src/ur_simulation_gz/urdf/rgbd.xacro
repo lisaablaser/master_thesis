@@ -42,6 +42,8 @@
     <gazebo reference="rgbd_camera">
         <sensor name="rgbd_camera" type="rgbd_camera">
           <camera>
+            <triggered>true</triggered>
+            <trigger_topic>/trigger</trigger_topic>
             <horizontal_fov>1.047</horizontal_fov>
             <image>
               <width>320</width>
@@ -53,7 +55,7 @@
             </clip>
           </camera>
           <always_on>1</always_on>
-          <update_rate>10</update_rate>
+          <update_rate>100</update_rate>
           <visualize>true</visualize>
           <topic>rgbd_camera</topic>
         <gz_frame_id>rgbd_camera</gz_frame_id>
