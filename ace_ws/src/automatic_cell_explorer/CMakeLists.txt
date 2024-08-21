@@ -29,13 +29,13 @@ endif()
 
 # Add cpp executables
 add_executable(commander src/commander.cpp)
-add_executable(octomap_subscriber src/octomap_sub.cpp)
+add_executable(octomap_processor src/octomap_processor.cpp)
 add_executable(planner src/planner.cpp)
 add_executable(move_robot src/move_robot.cpp)
 
 
 ament_target_dependencies(
-  octomap_subscriber
+  octomap_processor
   octomap_msgs
   octomap
   rclcpp
@@ -68,7 +68,7 @@ ament_target_dependencies(
   geometry_msgs 
 )
 
-target_link_libraries(octomap_subscriber ${PCL_LIBRARIES})
+target_link_libraries(octomap_processor ${PCL_LIBRARIES})
 
 rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
 target_link_libraries(move_robot "${cpp_typesupport_target}")
@@ -76,7 +76,7 @@ target_link_libraries(planner "${cpp_typesupport_target}")
 
 
 # nodes
-install(TARGETS commander octomap_subscriber planner move_robot
+install(TARGETS commander octomap_processor planner move_robot
   DESTINATION lib/${PROJECT_NAME})
 
 # launch files

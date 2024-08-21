@@ -47,13 +47,13 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    octomap_sub_node = TimerAction(
+    octomap_processor_node = TimerAction(
         period=7.0,
         actions=[
             Node(
                 package="automatic_cell_explorer",
-                executable="octomap_subscriber",
-                name="octomap_subscriber",
+                executable="octomap_processor",
+                name="octomap_processor",
                 output="screen",
             )
         ],
@@ -96,7 +96,7 @@ def launch_setup(context, *args, **kwargs):
     nodes_to_launch = [
         ur_sim_moveit_launch,
         octomap_server_node,
-        octomap_sub_node,
+        octomap_processor_node,
         # commander_node,
     ]
 

@@ -11,15 +11,15 @@
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 
-class OctomapSubscriber : public rclcpp::Node
+class OctomapProcessor : public rclcpp::Node
 {
 public:
-  OctomapSubscriber()
-  : Node("octomap_subscriber")
+  OctomapProcessor()
+  : Node("octomap_processor")
   {
    
     subscription_ =
-      this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", 10, std::bind(&OctomapSubscriber::octomap_callback, this, std::placeholders::_1));
+      this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", 10, std::bind(&OctomapProcessor::octomap_callback, this, std::placeholders::_1));
     pointcloud_publisher_ = 
         this->create_publisher<sensor_msgs::msg::PointCloud2>("/octomap_pointcloud", 10);
     camera_trigger_ = 
@@ -29,7 +29,7 @@ public:
     trigger.data = true;
     camera_trigger_->publish(trigger);
 
-    RCLCPP_INFO(this->get_logger(), "Octomap_sub node intilized, trigger sent.");
+    RCLCPP_INFO(this->get_logger(), "Octomap_processor node intilized, trigger sent.");
   }
 
 private:
@@ -78,7 +78,7 @@ private:
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<OctomapSubscriber>());
+  rclcpp::spin(std::make_shared<OctomapProcessor>());
   rclcpp::shutdown();
   return 0;
 }
