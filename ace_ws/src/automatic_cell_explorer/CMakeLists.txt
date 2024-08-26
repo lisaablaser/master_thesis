@@ -30,13 +30,35 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# Add cpp executables
+#specify locations of header files
+include_directories(
+ include
+ ${ament_INCLUDE_DIRS}
+)
+
+## Declare a C++ library, the .cpp files are compiled into a library
+add_library(my_cpp_library
+  src/state_machine.cpp
+  # Add more source files as needed
+)
+
+# Add Google Test
+find_package(ament_cmake_gtest REQUIRED)
+
+# Add a test executable
+ament_add_gtest(state_machine_unit_test test/state_machine_unit_test.cpp)
+if(TARGET state_machine_unit_test)
+    target_link_libraries(state_machine_unit_test my_cpp_library)
+endif()
+
+# Add cpp executables, ros nodes
 add_executable(commander src/commander.cpp)
 add_executable(octomap_processor src/octomap_processor.cpp)
 add_executable(planner src/planner.cpp)
 add_executable(move_robot src/move_robot.cpp)
 
 
+#Link libraries to ros node
 ament_target_dependencies(
   octomap_processor
   octomap_msgs
@@ -73,12 +95,14 @@ ament_target_dependencies(
   geometry_msgs 
 )
 
+#difference between this and ament_target_dependencies??
 target_link_libraries(octomap_processor ${PCL_LIBRARIES})
 
 rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
 target_link_libraries(move_robot "${cpp_typesupport_target}")
 target_link_libraries(planner "${cpp_typesupport_target}")
 
+#add_dependencies()?
 
 # nodes
 install(TARGETS commander octomap_processor planner move_robot
