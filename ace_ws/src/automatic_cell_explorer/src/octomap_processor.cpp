@@ -22,24 +22,20 @@ public:
       this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", 10, std::bind(&OctomapProcessor::octomap_callback, this, std::placeholders::_1));
     pointcloud_publisher_ = 
         this->create_publisher<sensor_msgs::msg::PointCloud2>("/octomap_pointcloud", 10);
-    camera_trigger_ = 
-        this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
 
-    auto trigger = std_msgs::msg::Bool();
-    trigger.data = true;
-    camera_trigger_->publish(trigger);
 
-    RCLCPP_INFO(this->get_logger(), "Octomap_processor node intilized, trigger sent.");
+    RCLCPP_INFO(this->get_logger(), "Octomap_processor node intilized.");
   }
 
 private:
   rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr subscription_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_publisher_;
-  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
+  
 
 
   void octomap_callback(const octomap_msgs::msg::Octomap::SharedPtr msg) const {
     // Convert the message to an octomap::OcTree object
+    RCLCPP_INFO(this->get_logger(), "octomap callback started");
     octomap::OcTree* octree = dynamic_cast<octomap::OcTree*>(octomap_msgs::fullMsgToMap(*msg));
     
     if (octree) {
@@ -53,6 +49,7 @@ private:
         pcl_cloud.push_back(pcl::PointXYZ(it.getX(), it.getY(), it.getZ()));
         }
     }
+    delete octree;
 
     // Convert PCL PointCloud to ROS PointCloud2
     sensor_msgs::msg::PointCloud2 output;
@@ -63,11 +60,7 @@ private:
     // Publish the point cloud
     pointcloud_publisher_->publish(output);
 
-    auto trigger = std_msgs::msg::Bool();
-    trigger.data = true;
-    camera_trigger_->publish(trigger);
-    RCLCPP_INFO(this->get_logger(), "Trigger sent.");
-
+    
 
     } else {
       RCLCPP_WARN(this->get_logger(), "Failed to convert Octomap message to OcTree.");

@@ -2,17 +2,28 @@
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 #include "automatic_cell_explorer/srv/move_to_nbv.hpp" 
 
 class MoveRobotNode : public rclcpp::Node{
 public:
-  MoveRobotNode(const rclcpp::Node::SharedPtr& node)
-  : Node("move_robot_service_node"), move_group_interface_(node, "ur_manipulator")
+  MoveRobotNode()
+  : Node("move_robot_service_node"), move_group_interface_(std::shared_ptr<rclcpp::Node>(this, [](rclcpp::Node*){}), "ur_manipulator")
   {
-    // Create a service to move the robot
+   
     move_robot_service_ = this->create_service<automatic_cell_explorer::srv::MoveToNbv>(
       "/move_robot_to_pose", std::bind(&MoveRobotNode::move_robot_callback, this, std::placeholders::_1, std::placeholders::_2));
+    camera_trigger_ = 
+        this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
+
+    //Trigger to start the loop. Should verify it is recieved somehow. 
+    auto trigger = std_msgs::msg::Bool();
+    trigger.data = true;
+    camera_trigger_->publish(trigger);
+
+    RCLCPP_INFO(this->get_logger(), "Move robot service initialized, trigger sent.");
+
 
     
   }
@@ -20,11 +31,24 @@ public:
 private:
   rclcpp::Service<automatic_cell_explorer::srv::MoveToNbv>::SharedPtr move_robot_service_;
   moveit::planning_interface::MoveGroupInterface move_group_interface_;
+  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
 
   void move_robot_callback(const std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Request> request,
                            std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Response> response)
   {
-    // Set the target pose from the request
+    
+    RCLCPP_INFO(this->get_logger(), "Requested Pose:");
+    RCLCPP_INFO(this->get_logger(), "Position - x: %.2f, y: %.2f, z: %.2f",
+                request->pose.pose.position.x, 
+                request->pose.pose.position.y, 
+                request->pose.pose.position.z);
+
+    RCLCPP_INFO(this->get_logger(), "Orientation - x: %.2f, y: %.2f, z: %.2f, w: %.2f",
+                request->pose.pose.orientation.x, 
+                request->pose.pose.orientation.y, 
+                request->pose.pose.orientation.z, 
+                request->pose.pose.orientation.w);
+    
     move_group_interface_.setPoseTarget(request->pose.pose);
 
     // Plan to the target pose
@@ -42,16 +66,21 @@ private:
     } else {
       RCLCPP_ERROR(this->get_logger(), "Planning failed!");
       response->success = false;
+      //maybe request another nbv? Or try planning again. 
     }
+    auto trigger = std_msgs::msg::Bool();
+    trigger.data = true;
+    camera_trigger_->publish(trigger);
+    RCLCPP_INFO(this->get_logger(), "Trigger sent.");
+
   }
 };
 
 int main(int argc, char * argv[])
 {
-  // Initialize ROS and create the Node
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<rclcpp::Node>("move_robot_service_node");      
-  auto move_robot_node = std::make_shared<MoveRobotNode>(node);
+   
+  auto move_robot_node = std::make_shared<MoveRobotNode>();
 
   rclcpp::spin(move_robot_node);
   rclcpp::shutdown();
