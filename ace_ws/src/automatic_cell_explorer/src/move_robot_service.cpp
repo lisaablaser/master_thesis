@@ -6,6 +6,10 @@
 #include <std_srvs/srv/set_bool.hpp>
 #include "automatic_cell_explorer/srv/move_to_nbv.hpp" 
 
+//Class (Node) to offer move service 
+//remove camrea trigger from here
+//change to recieve a trajectory
+
 class MoveRobotNode : public rclcpp::Node{
 public:
   MoveRobotNode()
@@ -14,24 +18,14 @@ public:
    
     move_robot_service_ = this->create_service<automatic_cell_explorer::srv::MoveToNbv>(
       "/move_robot_to_pose", std::bind(&MoveRobotNode::move_robot_callback, this, std::placeholders::_1, std::placeholders::_2));
-    camera_trigger_ = 
-        this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
-
-    //Trigger to start the loop. Should verify it is recieved somehow. 
-    auto trigger = std_msgs::msg::Bool();
-    trigger.data = true;
-    camera_trigger_->publish(trigger);
-
-    RCLCPP_INFO(this->get_logger(), "Move robot service initialized, trigger sent.");
 
 
-    
   }
 
 private:
   rclcpp::Service<automatic_cell_explorer::srv::MoveToNbv>::SharedPtr move_robot_service_;
   moveit::planning_interface::MoveGroupInterface move_group_interface_;
-  rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
+
 
   void move_robot_callback(const std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Request> request,
                            std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Response> response)
@@ -68,10 +62,8 @@ private:
       response->success = false;
       //maybe request another nbv? Or try planning again. 
     }
-    auto trigger = std_msgs::msg::Bool();
-    trigger.data = true;
-    camera_trigger_->publish(trigger);
-    RCLCPP_INFO(this->get_logger(), "Trigger sent.");
+
+    //report back  status, not send a trigger. SM decides what to do next. 
 
   }
 };

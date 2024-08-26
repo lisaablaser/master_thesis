@@ -11,17 +11,15 @@ find_package(octomap REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common io)
 find_package(pcl_conversions REQUIRED)
 find_package(std_srvs REQUIRED)
-
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-
 find_package(rosidl_default_generators REQUIRED)
 
+# Generate service
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/MoveToNbv.srv"
   DEPENDENCIES geometry_msgs
 )
-
 
 ament_export_dependencies(rosidl_default_runtime)
 
@@ -30,82 +28,78 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-#specify locations of header files
+# Locations of header files
 include_directories(
  include
  ${ament_INCLUDE_DIRS}
+ #${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp/automatic_cell_explorer/srv
 )
+
 
 ## Declare a C++ library, the .cpp files are compiled into a library
 add_library(my_cpp_library
+  src/calculate_NBV_lib.cpp
+  src/move_robot_lib.cpp
   src/state_machine.cpp
-  # Add more source files as needed
+)
+
+# Link libraries to the library
+target_link_libraries(my_cpp_library
+  ${octomap_LIBRARIES}
+  ${octomap_msgs_LIBRARIES}
+  ${PCL_LIBRARIES}
+  ${rclcpp_LIBRARIES} 
+)
+ament_target_dependencies(my_cpp_library
+  rclcpp
+  sensor_msgs
+  octomap_msgs
+  octomap
+  PCL
+  pcl_conversions
+  std_srvs
+  tf2
+  tf2_geometry_msgs
 )
 
 # Add Google Test
 find_package(ament_cmake_gtest REQUIRED)
-
-# Add a test executable
 ament_add_gtest(state_machine_unit_test test/state_machine_unit_test.cpp)
 if(TARGET state_machine_unit_test)
     target_link_libraries(state_machine_unit_test my_cpp_library)
 endif()
 
 # Add cpp executables, ros nodes
-add_executable(commander src/commander.cpp)
-add_executable(octomap_processor src/octomap_processor.cpp)
-add_executable(planner src/planner.cpp)
-add_executable(move_robot src/move_robot.cpp)
+add_executable(state_machine_node src/main.cpp)
+add_executable(move_robot_service_node src/move_robot_service.cpp)
 
-
+target_link_libraries(state_machine_node
+  my_cpp_library          # Your custom library
+)
 #Link libraries to ros node
-ament_target_dependencies(
-  octomap_processor
-  octomap_msgs
-  octomap
-  rclcpp
-  sensor_msgs
-  pcl_conversions
-  PCL
-)
-ament_target_dependencies(
-  commander
+#ament_target_dependencies(state_machine_node
+#  octomap_msgs
+#  octomap
+#  rclcpp
+#  sensor_msgs
+#  pcl_conversions
+#  PCL
+#)
+ament_target_dependencies(move_robot_service_node
   moveit_ros_planning_interface
   rclcpp
-)
-
-ament_target_dependencies(
-  planner
-  rclcpp
-  sensor_msgs
-  octomap_msgs
-  pcl_conversions
-  PCL
-  std_srvs
-  geometry_msgs
-  tf2_geometry_msgs
-  tf2
-)
-
-ament_target_dependencies(
-  move_robot
-  rclcpp
-  moveit_ros_planning_interface
   std_srvs
   geometry_msgs 
 )
 
-#difference between this and ament_target_dependencies??
-target_link_libraries(octomap_processor ${PCL_LIBRARIES})
 
 rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
-target_link_libraries(move_robot "${cpp_typesupport_target}")
-target_link_libraries(planner "${cpp_typesupport_target}")
+target_link_libraries(move_robot_service_node "${cpp_typesupport_target}")
+target_link_libraries(state_machine_node "${cpp_typesupport_target}")
 
-#add_dependencies()?
 
 # nodes
-install(TARGETS commander octomap_processor planner move_robot
+install(TARGETS state_machine_node move_robot_service_node
   DESTINATION lib/${PROJECT_NAME})
 
 # launch files
