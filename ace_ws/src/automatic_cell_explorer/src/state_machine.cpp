@@ -65,11 +65,14 @@ void StateMachineNode::handle_capture(){
 }
 
 void StateMachineNode::handle_calculate_nbv(){
-    //RCLCPP_INFO(this->get_logger(), "State: Calculate_NBV");
+    
     std::cout << "Hanle calculate NBV function" << std::endl;
     //read the newes octomap_full message, 
 
     //CalculateNBV calculate_nbv = CalculateNBV();
+    CalculateNBV nbv_calculator(planning_scene_);
+    double occupied_volume = nbv_calculator.calculate_occupied_volume();
+    std::cout << "Occupied volume: " << occupied_volume << " cubic meters" << std::endl;
 
 
     // Transition to 
@@ -85,7 +88,7 @@ void StateMachineNode::handle_move_robot(){
     
     // Transition to 
     current_state_ = State::Finished;
-    //handle_capture();
+ 
 
 }
 
@@ -98,25 +101,28 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
         octomap::OcTree* received_tree = dynamic_cast<octomap::OcTree*>(abstract_tree);
 
         if (received_tree) {
-            // You can now use the received_tree to update your planning_scene_
+            
             planning_scene_->swapContent(*received_tree);
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
+
+            //do stuff to planning scene
+
             current_state_ = State::Calculate_NBV;
-            
 
         } else {
             RCLCPP_ERROR(this->get_logger(), "Failed to convert message to OcTree.");
+            current_state_ = State::Error;
         }
     } else {
         RCLCPP_ERROR(this->get_logger(), "Received empty or invalid Octomap message.");
+        current_state_ = State::Error;
     }
 
 }
 
 void StateMachineNode::execute_state_machine()
 {
-    rclcpp::Rate loop_rate(10); // Adjust rate as needed
-
+    rclcpp::Rate loop_rate(10); 
     while (rclcpp::ok()) {
         switch (current_state_) {
             case State::Initialize:
@@ -131,9 +137,10 @@ void StateMachineNode::execute_state_machine()
                 RCLCPP_INFO(this->get_logger(), "waiting for callback");
 
                 while (current_state_ == State::WaitingForCallback && rclcpp::ok()) {
+                    //can add a timer and trigger new capture if stuck.
                     RCLCPP_INFO(this->get_logger(), "waiting for callback");
-                    rclcpp::spin_some(this->shared_from_this());  // Spin to process callbacks
-                    loop_rate.sleep();  // Sleep to avoid tight loop spinning
+                    rclcpp::spin_some(this->shared_from_this());  
+                    loop_rate.sleep();  
                 }
                 break;
 
@@ -157,7 +164,6 @@ void StateMachineNode::execute_state_machine()
                 return;
                 break;
         }
-
         
     }
 }

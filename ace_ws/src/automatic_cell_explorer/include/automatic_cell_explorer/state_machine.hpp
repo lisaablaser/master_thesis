@@ -9,7 +9,7 @@
 #include <atomic>
 //#include "automatic_cell_explorer/srv/move_to_nbv.hpp" 
 
-enum class State { Initialize, Capture, Calculate_NBV, Move_robot, Finished, WaitingForCallback};
+enum class State {Initialize, Capture, Calculate_NBV, Move_robot, Finished, WaitingForCallback, Error};
 
 class StateMachineNode : public rclcpp::Node
 {
