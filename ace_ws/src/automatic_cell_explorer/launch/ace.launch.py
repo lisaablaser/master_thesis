@@ -86,7 +86,7 @@ def launch_setup(context, *args, **kwargs):
         actions=[
             Node(
                 package="automatic_cell_explorer",
-                executable="move_robot",
+                executable="move_robot_service_node",
                 name="move_robot_nodeS",
                 output="screen",
             )
@@ -96,8 +96,8 @@ def launch_setup(context, *args, **kwargs):
     nodes_to_launch = [
         ur_sim_moveit_launch,
         octomap_server_node,
-        octomap_processor_node,
-        planner_node,
+        # octomap_processor_node,
+        # planner_node,
         move_robot_node,
         # commander_node,
     ]
