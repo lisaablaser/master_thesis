@@ -14,7 +14,7 @@ StateMachineNode::StateMachineNode() : Node("state_machine_node"), current_state
     //    this->create_publisher<sensor_msgs::msg::PointCloud2>("/octomap_pointcloud", 10);
 
     octomap_subscriber_ =
-      this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", 10, std::bind(&StateMachineNode::update_planning_scene, this, std::placeholders::_1));
+      this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", rclcpp::QoS(1), std::bind(&StateMachineNode::update_planning_scene, this, std::placeholders::_1));
 
     planning_scene_ = std::make_shared<octomap::OcTree>(0.1);
     //move_robot_client_ = this->create_client<automatic_cell_explorer::srv::MoveToNbv>("/move_robot_to_pose");
@@ -42,10 +42,10 @@ void StateMachineNode::handle_initialize(){
 }
 
 void StateMachineNode::handle_capture(){
-    //RCLCPP_INFO(this->get_logger(), "State: Capture");
+    //Sends trigger, transitions to wait_for_callback
+   
     std::cout << "Handle capture function" << std::endl;
 
-    //Trigger to start the loop. Should verify it is recieved somehow. 
     auto trigger = std_msgs::msg::Bool();
     trigger.data = true;
     camera_trigger_->publish(trigger);
@@ -54,12 +54,6 @@ void StateMachineNode::handle_capture(){
 
     current_state_ = State::WaitingForCallback;
 
-    //process octomap here??
-    //update planning scene
-    //maybe read the newest octomap_full topic??
-
-    // Transition to 
-    //calback triggers next step
     
 
 }
@@ -134,13 +128,19 @@ void StateMachineNode::execute_state_machine()
                 break;
                 
             case State::WaitingForCallback:
-                RCLCPP_INFO(this->get_logger(), "waiting for callback");
+                {
+                    auto start_time = std::chrono::steady_clock::now();
+                    while (current_state_ == State::WaitingForCallback && rclcpp::ok()) {
+                        rclcpp::spin_some(this->shared_from_this());  
+                        loop_rate.sleep();  
 
-                while (current_state_ == State::WaitingForCallback && rclcpp::ok()) {
-                    //can add a timer and trigger new capture if stuck.
-                    RCLCPP_INFO(this->get_logger(), "waiting for callback");
-                    rclcpp::spin_some(this->shared_from_this());  
-                    loop_rate.sleep();  
+                        auto elapsed_time = std::chrono::steady_clock::now() - start_time;
+                        if (std::chrono::duration_cast<std::chrono::seconds>(elapsed_time).count() > 5) {
+                            RCLCPP_WARN(this->get_logger(), "Callback not received within timeout, triggering new capture");
+                            current_state_ = State::Capture;
+                            break;
+                        }
+                    }
                 }
                 break;
 
