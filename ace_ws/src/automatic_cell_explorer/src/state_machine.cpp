@@ -2,10 +2,15 @@
 #include <octomap_msgs/conversions.h>
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/move_robot_lib.hpp"
-#include "automatic_cell_explorer/calculate_NBV_lib.hpp"
 
 
-StateMachineNode::StateMachineNode() : Node("state_machine_node"), current_state_(State::Initialize), finished_(false)
+
+StateMachineNode::StateMachineNode() 
+    : Node("state_machine_node"), 
+    current_state_(State::Initialize), 
+    finished_(false),
+    planning_scene_(std::make_shared<octomap::OcTree>(0.1)),
+    exploration_planner_(planning_scene_)
 {
     camera_trigger_ = 
         this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
@@ -16,8 +21,8 @@ StateMachineNode::StateMachineNode() : Node("state_machine_node"), current_state
     octomap_subscriber_ =
       this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", rclcpp::QoS(1), std::bind(&StateMachineNode::update_planning_scene, this, std::placeholders::_1));
 
-    planning_scene_ = std::make_shared<octomap::OcTree>(0.1);
     //move_robot_client_ = this->create_client<automatic_cell_explorer::srv::MoveToNbv>("/move_robot_to_pose");
+
 
     // Wait for the service to be available
     //while (!move_robot_client_->wait_for_service(std::chrono::seconds(1))) {
@@ -33,12 +38,8 @@ StateMachineNode::StateMachineNode() : Node("state_machine_node"), current_state
 
 
 void StateMachineNode::handle_initialize(){
-    //RCLCPP_INFO(this->get_logger(), "State: Initialize");
     std::cout << "Handle init function" << std::endl;
-    // Transition to the Capture state
     current_state_ = State::Capture;
-    
-
 }
 
 void StateMachineNode::handle_capture(){
@@ -61,11 +62,11 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     
     std::cout << "Hanle calculate NBV function" << std::endl;
-    //read the newes octomap_full message, 
+    
 
-    //CalculateNBV calculate_nbv = CalculateNBV();
-    CalculateNBV nbv_calculator(planning_scene_);
-    double occupied_volume = nbv_calculator.calculate_occupied_volume();
+    
+    
+    double occupied_volume = exploration_planner_.calculate_occupied_volume();
     std::cout << "Occupied volume: " << occupied_volume << " cubic meters" << std::endl;
 
 

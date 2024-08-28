@@ -7,6 +7,7 @@
 #include <octomap_msgs/msg/octomap.hpp>  
 #include <octomap/octomap.h>
 #include <atomic>
+#include "automatic_cell_explorer/exploration_planner.hpp"
 //#include "automatic_cell_explorer/srv/move_to_nbv.hpp" 
 
 enum class State {Initialize, Capture, Calculate_NBV, Move_robot, Finished, WaitingForCallback, Error};
@@ -21,9 +22,11 @@ public:
 private:
  
     State current_state_;
-    std::shared_ptr<octomap::OcTree> planning_scene_;
-
     std::atomic<bool> finished_;
+    std::shared_ptr<octomap::OcTree> planning_scene_;
+    ExplorationPlanner exploration_planner_;
+
+    
 
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
     //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_publisher_;

@@ -1,13 +1,13 @@
-#ifndef CALCULATE_NBV_LIB_HPP
-#define CALCULATE_NBV_LIB_HPP
+#ifndef EXPLORATION_PLANNER_HPP
+#define EXPLORATION_PLANNER_HPP
 
 #include <memory>
 #include <octomap/octomap.h>
 
-class CalculateNBV
+class ExplorationPlanner
 {
 public:
-  CalculateNBV(std::shared_ptr<octomap::OcTree> planning_scene);
+  ExplorationPlanner(std::shared_ptr<octomap::OcTree> planning_scene);
 
   std::shared_ptr<octomap::point3d> calculate_next_best_view();
 
@@ -23,4 +23,4 @@ private:
 };
 
 
-#endif // CALCULATE_NBV_LIB_HPP
+#endif // EXPLORATION_PLANNER_HPP

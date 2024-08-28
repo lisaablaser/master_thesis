@@ -1,15 +1,15 @@
-#include "automatic_cell_explorer/calculate_NBV_lib.hpp"
+#include "automatic_cell_explorer/exploration_planner.hpp"
 #include <octomap/OcTree.h>
 #include <octomap/Pointcloud.h>
 #include <octomap/math/Vector3.h>
 
 
-CalculateNBV::CalculateNBV(std::shared_ptr<octomap::OcTree> planning_scene)
+ExplorationPlanner::ExplorationPlanner(std::shared_ptr<octomap::OcTree> planning_scene)
     : planning_scene_(planning_scene)
 {
 }
 
-std::shared_ptr<octomap::point3d> CalculateNBV::calculate_next_best_view()
+std::shared_ptr<octomap::point3d> ExplorationPlanner::calculate_next_best_view()
 {
     // Placeholder logic for calculating the next best view
     // In a real scenario, this would involve more complex logic to evaluate
@@ -17,7 +17,7 @@ std::shared_ptr<octomap::point3d> CalculateNBV::calculate_next_best_view()
     return std::make_shared<octomap::point3d>(0.0, 0.0, 0.0);
 }
 
-double CalculateNBV::calculate_occupied_volume() const
+double ExplorationPlanner::calculate_occupied_volume() const
 {
     double volume = 0.0;
     for (auto it = planning_scene_->begin_leafs(), end = planning_scene_->end_leafs(); it != end; ++it) {
@@ -28,7 +28,7 @@ double CalculateNBV::calculate_occupied_volume() const
     return volume;
 }
 
-double CalculateNBV::compute_node_volume(double resolution) const
+double ExplorationPlanner::compute_node_volume(double resolution) const
 {
     // Assuming each occupied node is a cube with side length equal to the resolution
     return resolution * resolution * resolution;
