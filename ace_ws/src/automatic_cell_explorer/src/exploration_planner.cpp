@@ -26,15 +26,28 @@ ExplorationPlanner::ExplorationPlanner(std::shared_ptr<rclcpp::Node> node, std::
     }
     std::cout << "Robot Name of the kinematic model: " << robot_model_->getName() << std::endl;
 
+    // Set Robot State
+    robot_state_ = std::make_shared<moveit::core::RobotState>(robot_model_);
+
+    // Load Planning Scene
+    const moveit::core::JointModelGroup* joint_model_group = robot_state_->getJointModelGroup(PLANNING_GROUP);
+
+    // Error: alloc_consolidate(): unaligned fastbin chunk detected, but runs
+    //planning_scene_ = std::make_shared<planning_scene::PlanningScene>(robot_model_);
+
+
+    // // Configure a valid robot state
+    //planning_scene_->getCurrentStateNonConst().setToDefaultValues(joint_model_group, "ready");
+
 
     // Create the planner instance
     std::unique_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
 
    
-    // planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
+    planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
     
-
-    // planner_instance_.reset(planner_plugin_loader->createUnmanagedInstance("ompl_interface/OMPLPlanner")); // Core dumped
+    // Core dumped, but runs
+    // planner_instance_.reset(planner_plugin_loader->createUnmanagedInstance("ompl_interface/OMPLPlanner")); 
     // RCLCPP_INFO(node_->get_logger(), "Using planning interface '%s'", planner_instance_->getDescription().c_str());
 
 
@@ -48,9 +61,9 @@ robot_trajectory::RobotTrajectory ExplorationPlanner::calculate_nbv(){
     planning_interface::MotionPlanRequest req = generate_request();
 
 
-    // robot_trajectory::RobotTrajectory traj = plan(req);
-    // std::cout << "Counting waypoints in calculate_nbv func: " << traj.getWayPointCount() << std::endl;
-    // std::cout << "Calculating NBV function" << std::endl;
+    robot_trajectory::RobotTrajectory traj = plan(req);
+    std::cout << "Counting waypoints in calculate_nbv func: " << traj.getWayPointCount() << std::endl;
+    std::cout << "Calculating NBV function" << std::endl;
     // return traj;
     //robot_trajectory::RobotTrajectory trajectory = plan(req);
     
@@ -60,24 +73,15 @@ robot_trajectory::RobotTrajectory ExplorationPlanner::calculate_nbv(){
 
 robot_trajectory::RobotTrajectory ExplorationPlanner::plan(planning_interface::MotionPlanRequest req){
 
-    // planning_interface::MotionPlanResponse res;
+    planning_interface::MotionPlanResponse res;
 
-    // if (!planner_instance_) {
-    //     RCLCPP_ERROR(node_->get_logger(), "Planner instance is not initialized");
-    //     return robot_trajectory::RobotTrajectory(robot_model_);
-    // }
-
+    // Corde dumped, crashes
     // planning_interface::PlanningContextPtr context =
     // planner_instance_->getPlanningContext(planning_scene_, req, res.error_code);
 
-    // if (!context)
-    // {
-    //     RCLCPP_ERROR(node_->get_logger(), "Failed to create planning context");
-    //     return robot_trajectory::RobotTrajectory(robot_model_); 
-
-    // }
 
     // context->solve(res);
+
     // if (res.error_code.val != res.error_code.SUCCESS)
     // {
     //     RCLCPP_ERROR(node_->get_logger(), "Could not compute plan successfully");
