@@ -4,6 +4,7 @@
 #include <octomap/math/Vector3.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/kinematic_constraints/utils.h>
+#include <pluginlib/class_loader.hpp>
 
 const std::string PLANNING_GROUP = "ur_manipulator";
 
@@ -26,20 +27,75 @@ ExplorationPlanner::ExplorationPlanner(std::shared_ptr<rclcpp::Node> node, std::
     std::cout << "Robot Name of the kinematic model: " << robot_model_->getName() << std::endl;
 
 
+    // Create the planner instance
+    std::unique_ptr<pluginlib::ClassLoader<planning_interface::PlannerManager>> planner_plugin_loader;
+
+   
+    // planner_plugin_loader.reset(new pluginlib::ClassLoader<planning_interface::PlannerManager>("moveit_core", "planning_interface::PlannerManager"));
+    
+
+    // planner_instance_.reset(planner_plugin_loader->createUnmanagedInstance("ompl_interface/OMPLPlanner")); // Core dumped
+    // RCLCPP_INFO(node_->get_logger(), "Using planning interface '%s'", planner_instance_->getDescription().c_str());
+
+
+
+
+    std::cout << "Initialized Explortion planner sucessfully " << std::endl;
 }
 
 
 robot_trajectory::RobotTrajectory ExplorationPlanner::calculate_nbv(){
     planning_interface::MotionPlanRequest req = generate_request();
 
-    //robot_trajectory::RobotTrajectory traj = plan(req);
-    std::cout << "Calculating NBV function" << std::endl;
-    //return traj;
-    robot_trajectory::RobotTrajectory trajectory(robot_model_, "ur_manipulator");
+
+    // robot_trajectory::RobotTrajectory traj = plan(req);
+    // std::cout << "Counting waypoints in calculate_nbv func: " << traj.getWayPointCount() << std::endl;
+    // std::cout << "Calculating NBV function" << std::endl;
+    // return traj;
+    //robot_trajectory::RobotTrajectory trajectory = plan(req);
     
-    return trajectory;
+    return robot_trajectory::RobotTrajectory(robot_model_);
 
 }
+
+robot_trajectory::RobotTrajectory ExplorationPlanner::plan(planning_interface::MotionPlanRequest req){
+
+    // planning_interface::MotionPlanResponse res;
+
+    // if (!planner_instance_) {
+    //     RCLCPP_ERROR(node_->get_logger(), "Planner instance is not initialized");
+    //     return robot_trajectory::RobotTrajectory(robot_model_);
+    // }
+
+    // planning_interface::PlanningContextPtr context =
+    // planner_instance_->getPlanningContext(planning_scene_, req, res.error_code);
+
+    // if (!context)
+    // {
+    //     RCLCPP_ERROR(node_->get_logger(), "Failed to create planning context");
+    //     return robot_trajectory::RobotTrajectory(robot_model_); 
+
+    // }
+
+    // context->solve(res);
+    // if (res.error_code.val != res.error_code.SUCCESS)
+    // {
+    //     RCLCPP_ERROR(node_->get_logger(), "Could not compute plan successfully");
+    //     return robot_trajectory::RobotTrajectory(robot_model_); 
+  
+    // }
+
+    // if (!res.trajectory) {
+    //     RCLCPP_ERROR(node_->get_logger(), "No valid trajectory found");
+    //     return robot_trajectory::RobotTrajectory(robot_model_); 
+    // }
+
+   
+    // return robot_trajectory::RobotTrajectory(*res.trajectory); 
+    return robot_trajectory::RobotTrajectory(robot_model_);
+    
+}
+
 
 planning_interface::MotionPlanRequest ExplorationPlanner::generate_request()
 
@@ -47,9 +103,9 @@ planning_interface::MotionPlanRequest ExplorationPlanner::generate_request()
     planning_interface::MotionPlanRequest req;
     geometry_msgs::msg::PoseStamped pose;
     pose.header.frame_id = PLANNING_GROUP;
-    pose.pose.position.x = 0.5;
-    pose.pose.position.y = 0.5;
-    pose.pose.position.z = 0.75 + 0.5;
+    pose.pose.position.x = 0.09;
+    pose.pose.position.y = 0.22;
+    pose.pose.position.z = 1.41;
     pose.pose.orientation.w = 1.0;
     
 
@@ -57,6 +113,7 @@ planning_interface::MotionPlanRequest ExplorationPlanner::generate_request()
     double tolerance_angle = 0.01;
     
 
+    //Core dumped. 
     //moveit_msgs::msg::Constraints pose_goal =
     //kinematic_constraints::constructGoalConstraints("tool0", pose, tolerance_pose, tolerance_angle);
  

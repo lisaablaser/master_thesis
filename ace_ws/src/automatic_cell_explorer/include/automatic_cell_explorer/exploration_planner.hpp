@@ -31,7 +31,7 @@ private:
   double compute_node_volume(double resolution) const;
 
   planning_interface::MotionPlanRequest generate_request();
-  //robot_trajectory::RobotTrajectory plan(planning_interface::MotionPlanRequest req);
+  robot_trajectory::RobotTrajectory plan(planning_interface::MotionPlanRequest req);
   
 };
 
