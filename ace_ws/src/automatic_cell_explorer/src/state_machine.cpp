@@ -1,7 +1,7 @@
 #include <iostream>
 #include <octomap_msgs/conversions.h>
 #include "automatic_cell_explorer/state_machine.hpp"
-#include "automatic_cell_explorer/move_robot_lib.hpp"
+
 
 
 

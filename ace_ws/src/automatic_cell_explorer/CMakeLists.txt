@@ -39,7 +39,6 @@ include_directories(
 ## Declare a C++ library, the .cpp files are compiled into a library
 add_library(my_cpp_library
   src/exploration_planner.cpp
-  src/move_robot_lib.cpp
   src/state_machine.cpp
 )
 
