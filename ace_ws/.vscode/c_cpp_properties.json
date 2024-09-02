@@ -5,7 +5,11 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/ros/jazzy/include/**",
-                "~/master_thesis/ace_ws/install/**"
+                "/home/lisa/master_thesis/ace_ws/install/**",
+                "/home/lisa/ws_moveit/install/**",
+                "/usr/include",
+                "/usr/include/eigen3",
+                "${workspaceFolder}/src/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

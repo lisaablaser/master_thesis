@@ -11,6 +11,7 @@
 //#include "automatic_cell_explorer/srv/move_to_nbv.hpp" 
 
 enum class State {Initialize, Capture, Calculate_NBV, Move_robot, Finished, WaitingForCallback, Error};
+using ExplorationPlannerPtr = std::shared_ptr<ExplorationPlanner>;
 
 class StateMachineNode : public rclcpp::Node
 {
@@ -20,11 +21,11 @@ public:
     bool is_finished() const { return finished_; }
 
 private:
- 
+    std::shared_ptr<rclcpp::Node> node_;
     State current_state_;
     std::atomic<bool> finished_;
     std::shared_ptr<octomap::OcTree> planning_scene_;
-    ExplorationPlanner exploration_planner_;
+    ExplorationPlannerPtr exploration_planner_;
 
     
 

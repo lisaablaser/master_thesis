@@ -7,10 +7,11 @@
 
 StateMachineNode::StateMachineNode() 
     : Node("state_machine_node"), 
+    node_(nullptr),
     current_state_(State::Initialize), 
     finished_(false),
     planning_scene_(std::make_shared<octomap::OcTree>(0.1)),
-    exploration_planner_(planning_scene_)
+    exploration_planner_(nullptr)
 {
     camera_trigger_ = 
         this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
@@ -39,6 +40,8 @@ StateMachineNode::StateMachineNode()
 
 void StateMachineNode::handle_initialize(){
     std::cout << "Handle init function" << std::endl;
+    node_ = shared_from_this();
+    exploration_planner_ = std::make_shared<ExplorationPlanner>(node_,planning_scene_);
     current_state_ = State::Capture;
 }
 
@@ -63,11 +66,13 @@ void StateMachineNode::handle_calculate_nbv(){
     
     std::cout << "Hanle calculate NBV function" << std::endl;
     
+    robot_trajectory::RobotTrajectory traj = exploration_planner_->calculate_nbv();
+    std::cout << "Number of waypoints in the trajectory: " << traj.getWayPointCount() << std::endl;
 
     
     
-    double occupied_volume = exploration_planner_.calculate_occupied_volume();
-    std::cout << "Occupied volume: " << occupied_volume << " cubic meters" << std::endl;
+    //double occupied_volume = exploration_planner_.calculate_occupied_volume();
+    //std::cout << "Occupied volume: " << occupied_volume << " cubic meters" << std::endl;
 
 
     // Transition to 
@@ -108,11 +113,12 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             RCLCPP_ERROR(this->get_logger(), "Failed to convert message to OcTree.");
             current_state_ = State::Error;
         }
+        
     } else {
         RCLCPP_ERROR(this->get_logger(), "Received empty or invalid Octomap message.");
         current_state_ = State::Error;
     }
-
+    delete abstract_tree;
 }
 
 void StateMachineNode::execute_state_machine()

@@ -59,6 +59,7 @@ ament_target_dependencies(my_cpp_library
   std_srvs
   tf2
   tf2_geometry_msgs
+  moveit_ros_planning_interface
 )
 
 # Add Google Test
