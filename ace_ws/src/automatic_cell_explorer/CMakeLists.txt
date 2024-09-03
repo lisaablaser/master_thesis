@@ -69,6 +69,11 @@ if(TARGET state_machine_unit_test)
     target_link_libraries(state_machine_unit_test my_cpp_library)
 endif()
 
+ament_add_gtest(exploration_planner_unit_test test/exploration_planner_unit_test.cpp)
+if(TARGET exploration_planner_unit_test)
+    target_link_libraries(exploration_planner_unit_test my_cpp_library)
+endif()
+
 # Add cpp executables, ros nodes
 add_executable(state_machine_node src/main.cpp)
 add_executable(move_robot_service_node src/move_robot_service.cpp)
