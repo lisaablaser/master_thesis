@@ -54,6 +54,10 @@ ExplorationPlanner::ExplorationPlanner(std::shared_ptr<rclcpp::Node> node, std::
     std::cout << "Initialized Explortion Planner sucessfully " << std::endl;
 }
 
+void ExplorationPlanner::update_states(std::shared_ptr<octomap::OcTree> octo_map){
+
+    
+}
 
 robot_trajectory::RobotTrajectory ExplorationPlanner::calculate_nbv(){
     planning_interface::MotionPlanRequest req = generate_request();

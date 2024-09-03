@@ -24,7 +24,7 @@ private:
     std::shared_ptr<rclcpp::Node> node_;
     State current_state_;
     std::atomic<bool> finished_;
-    std::shared_ptr<octomap::OcTree> planning_scene_;
+    std::shared_ptr<octomap::OcTree> octomap_;
     ExplorationPlannerPtr exploration_planner_;
 
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;

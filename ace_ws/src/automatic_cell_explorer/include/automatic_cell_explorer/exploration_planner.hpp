@@ -14,6 +14,7 @@ public:
   ExplorationPlanner(std::shared_ptr<rclcpp::Node> node,std::shared_ptr<octomap::OcTree> octo_map);
 
   robot_trajectory::RobotTrajectory calculate_nbv();
+  void update_states(std::shared_ptr<octomap::OcTree> octo_map);
   double calculate_occupied_volume() const;
 
 private:
@@ -22,7 +23,7 @@ private:
 
   moveit::core::RobotModelPtr robot_model_;
   moveit::core::RobotStatePtr robot_state_;
-  
+
   planning_scene::PlanningScenePtr planning_scene_;
   planning_interface::PlannerManagerPtr planner_instance_;
 

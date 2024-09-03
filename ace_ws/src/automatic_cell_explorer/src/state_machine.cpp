@@ -8,7 +8,7 @@ StateMachineNode::StateMachineNode()
     node_(nullptr),
     current_state_(State::Initialise), 
     finished_(false),
-    planning_scene_(std::make_shared<octomap::OcTree>(0.1)),
+    octomap_(std::make_shared<octomap::OcTree>(0.1)),
     exploration_planner_(nullptr)
 {
     camera_trigger_ = 
@@ -24,7 +24,7 @@ StateMachineNode::StateMachineNode()
 void StateMachineNode::handle_initialise(){
     std::cout << "--State Initialise--" << std::endl;
     node_ = shared_from_this();
-    exploration_planner_ = std::make_shared<ExplorationPlanner>(node_,planning_scene_);
+    exploration_planner_ = std::make_shared<ExplorationPlanner>(node_,octomap_);
 
     current_state_ = State::Capture;
 }
@@ -43,7 +43,8 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     
     std::cout << "--State Calculate Nbv--" << std::endl;
-    
+
+    //exploration_planner.update_states(octomap_);
     robot_trajectory::RobotTrajectory traj = exploration_planner_->calculate_nbv();
     std::cout << "Number of waypoints in the trajectory: " << traj.getWayPointCount() << std::endl;
 
@@ -66,7 +67,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
         if (received_tree) {
             
-            planning_scene_->swapContent(*received_tree);
+            octomap_->swapContent(*received_tree);
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
 
 
