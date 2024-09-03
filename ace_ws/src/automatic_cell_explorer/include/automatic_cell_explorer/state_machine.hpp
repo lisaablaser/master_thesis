@@ -1,17 +1,17 @@
 #ifndef STATE_MACHINE_HPP
 #define STATE_MACHINE_HPP
 
+#include <atomic>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
-//#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <octomap_msgs/msg/octomap.hpp>  
 #include <octomap/octomap.h>
-#include <atomic>
-#include "automatic_cell_explorer/exploration_planner.hpp"
-//#include "automatic_cell_explorer/srv/move_to_nbv.hpp" 
+#include <octomap_msgs/msg/octomap.hpp>  
 
-enum class State {Initialize, Capture, Calculate_NBV, Move_robot, Finished, WaitingForCallback, Error};
-using ExplorationPlannerPtr = std::shared_ptr<ExplorationPlanner>;
+#include "automatic_cell_explorer/exploration_planner.hpp"
+
+typedef std::shared_ptr<ExplorationPlanner> ExplorationPlannerPtr;
+
+enum class State {Initialise, Capture, Calculate_NBV, Move_robot, Finished, WaitingForOctomap, Error};
 
 class StateMachineNode : public rclcpp::Node
 {
@@ -27,28 +27,19 @@ private:
     std::shared_ptr<octomap::OcTree> planning_scene_;
     ExplorationPlannerPtr exploration_planner_;
 
-    
-
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
-    //rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pointcloud_publisher_;
-
     rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_subscriber_;
-    
-    //rclcpp::Client<automatic_cell_explorer::srv::MoveToNbv>::SharedPtr move_robot_client_;
+
 
     // State handling methods
-    void handle_initialize();
+    void handle_initialise();
     void handle_capture();
     void handle_calculate_nbv();
     void handle_move_robot();
 
-    // Helper methods
-
 
     // Callback methods
     void update_planning_scene(const octomap_msgs::msg::Octomap::SharedPtr msg);
-
-    
 
 };
 

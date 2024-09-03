@@ -51,15 +51,12 @@ ExplorationPlanner::ExplorationPlanner(std::shared_ptr<rclcpp::Node> node, std::
     // RCLCPP_INFO(node_->get_logger(), "Using planning interface '%s'", planner_instance_->getDescription().c_str());
 
 
-
-
-    std::cout << "Initialized Explortion planner sucessfully " << std::endl;
+    std::cout << "Initialized Explortion Planner sucessfully " << std::endl;
 }
 
 
 robot_trajectory::RobotTrajectory ExplorationPlanner::calculate_nbv(){
     planning_interface::MotionPlanRequest req = generate_request();
-
 
     robot_trajectory::RobotTrajectory traj = plan(req);
     std::cout << "Counting waypoints in calculate_nbv func: " << traj.getWayPointCount() << std::endl;
@@ -111,19 +108,16 @@ planning_interface::MotionPlanRequest ExplorationPlanner::generate_request()
     pose.pose.position.y = 0.22;
     pose.pose.position.z = 1.41;
     pose.pose.orientation.w = 1.0;
-    
 
     double tolerance_pose = 0.01;
     double tolerance_angle = 0.01;
     
-
     //Core dumped. 
     //moveit_msgs::msg::Constraints pose_goal =
     //kinematic_constraints::constructGoalConstraints("tool0", pose, tolerance_pose, tolerance_angle);
- 
+    //req.goal_constraints.push_back(pose_goal);
 
     req.group_name = PLANNING_GROUP;
-    //req.goal_constraints.push_back(pose_goal);
 
     req.workspace_parameters.min_corner.x = req.workspace_parameters.min_corner.y =
     req.workspace_parameters.min_corner.z = -5.0;
@@ -146,6 +140,5 @@ double ExplorationPlanner::calculate_occupied_volume() const
 
 double ExplorationPlanner::compute_node_volume(double resolution) const
 {
-    // Assuming each occupied node is a cube with side length equal to the resolution
     return resolution * resolution * resolution;
 }
