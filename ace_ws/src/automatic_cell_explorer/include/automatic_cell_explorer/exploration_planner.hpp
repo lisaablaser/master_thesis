@@ -17,6 +17,9 @@ public:
   void update_states(std::shared_ptr<octomap::OcTree> octo_map);
   double calculate_occupied_volume() const;
 
+  void raycast(octomath::Vector3 point, octomath::Vector3 direction);
+  double simulate_view(octomap::pose6d pose);
+
 private:
   std::shared_ptr<rclcpp::Node> node_;
   std::shared_ptr<octomap::OcTree> octo_map_;

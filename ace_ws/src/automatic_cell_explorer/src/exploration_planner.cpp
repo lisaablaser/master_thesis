@@ -54,6 +54,36 @@ ExplorationPlanner::ExplorationPlanner(std::shared_ptr<rclcpp::Node> node, std::
     std::cout << "Initialized Explortion Planner sucessfully " << std::endl;
 }
 
+
+double ExplorationPlanner::simulate_view(octomap::pose6d pose){
+    //Sensor specs, 64,32 deg. TODO:rotate camera sensor to wrist3 orientation
+    //run raycasting in parallell
+    //obs, octomap is in world frame. transform pose from rgbd_camrea to world?
+
+    // Return (double): percentage of unknown voxels seen from that view  
+    const Eigen::Isometry3d& sensor_state = robot_state_->getGlobalLinkTransform("rgbd_camera"); //w.r.t root link
+    auto position = sensor_state.translation();
+    auto sensor_to_world = sensor_state.rotation(); //or other way around
+    //auto direction = sensor_to_world first column??
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Translation: \n" << sensor_state.translation() << "\n");
+    RCLCPP_INFO_STREAM(node_->get_logger(), "Rotation: \n" << sensor_state.rotation() << "\n");
+    int resolution = 1;
+
+    //iterate through the fov, count unknown voxels. 
+    //Debug: create pointcloud of fow. 
+    
+
+}
+
+void ExplorationPlanner::raycast(octomath::Vector3 point, octomath::Vector3 direction){
+    // point: position of sensor in world coordinates
+    // direction: vector of camera z-axia in world coordinates
+    // octomap has origin in wordl frame 
+
+
+    
+}
+
 void ExplorationPlanner::update_states(std::shared_ptr<octomap::OcTree> octo_map){
 
     

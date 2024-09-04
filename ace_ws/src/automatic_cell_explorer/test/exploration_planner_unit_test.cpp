@@ -12,26 +12,34 @@ sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<
 TEST(ExplorationPlannerTest, InitialState)
 {
     rclcpp::init(0, nullptr);
-   
     std::filesystem::path filename = "/home/lisa/master_thesis/ace_ws/src/automatic_cell_explorer/test/data/octomap.bt";
     std::shared_ptr<octomap::OcTree> octree = std::make_shared<octomap::OcTree>(filename);
-
     std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("test_node");
-
     auto publisher = node->create_publisher<sensor_msgs::msg::PointCloud2>("/octomap_point_cloud_centers", 10);
 
-    publisher->publish(convertOctomapToPointCloud2(octree));
+
+    // Raycast
+    octomap::point3d point_hit;
+    octomap::point3d origin;
+
+
+    octomap::point3d direction;
+
+
+    bool occupied = octree->castRay(origin, direction, point_hit, false, 10);
+    octomap::pose6d pose = octomap::pose6d(octomath::Vector3(0.8172, 0.2329, 0.7678),octomath::Quaternion(octomath::Vector3(1,0,0)));
+
 
     std::shared_ptr<ExplorationPlanner> exploration_planner = std::make_shared<ExplorationPlanner>(node, octree);
+    double utility = exploration_planner->simulate_view(pose);
 
     double volume = exploration_planner->calculate_occupied_volume();
     
     std::cout << "occupied volume" << volume << std::endl;
-    // Add assertions to test initial state
-    //ASSERT_TRUE(state_machine.isInitialized());
-    //ASSERT_GT(volume, 0.0);  // Example assertion: volume should be greater than 0
-    
-    // Shut down ROS 2 at the end of the test
+
+    publisher->publish(convertOctomapToPointCloud2(octree));
+
+
     rclcpp::shutdown();
     
 }
