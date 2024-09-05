@@ -8,6 +8,12 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/planning_interface/planning_interface.h> 
 
+struct RayInfo {
+    Eigen::Vector3d start;  // Ray start (sensor origin)
+    Eigen::Vector3d end;    // Ray end (hit point or max range)
+    bool hit_unknown;       // Whether the ray hit an unknown region
+};
+
 class ExplorationPlanner
 {
 public:
@@ -17,8 +23,11 @@ public:
   void update_states(std::shared_ptr<octomap::OcTree> octo_map);
   double calculate_occupied_volume() const;
 
-  void raycast(octomath::Vector3 point, octomath::Vector3 direction);
-  double simulate_view(octomap::pose6d pose);
+
+  std::pair<int, std::vector<RayInfo>> test_sim_view(octomap::OcTree& octree, 
+    double max_range);
+
+
 
 private:
   std::shared_ptr<rclcpp::Node> node_;
@@ -32,6 +41,11 @@ private:
 
   robot_trajectory::RobotTrajectory plan(planning_interface::MotionPlanRequest req);
   planning_interface::MotionPlanRequest generate_request();
+
+  std::pair<int, std::vector<RayInfo>> simulateInformationGainWithRays(
+    const Eigen::Isometry3d& sensor_state, 
+    octomap::OcTree& octree, 
+    double max_range); 
 
   double compute_node_volume(double resolution) const;
   

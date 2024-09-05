@@ -69,6 +69,16 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             
             octomap_->swapContent(*received_tree);
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
+                
+            
+            std::string file_path = "src/automatic_cell_explorer/test/data/test_octomap.bt";
+
+            // Save the octomap to a .bt file
+            if (octomap_->writeBinary(file_path)) {
+                std::cout << "Octomap successfully saved to " << file_path << std::endl;
+            } else {
+                std::cerr << "Failed to save octomap to " << file_path << std::endl;
+            }
 
 
             current_state_ = State::Calculate_NBV;

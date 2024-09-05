@@ -55,34 +55,102 @@ ExplorationPlanner::ExplorationPlanner(std::shared_ptr<rclcpp::Node> node, std::
 }
 
 
-double ExplorationPlanner::simulate_view(octomap::pose6d pose){
-    //Sensor specs, 64,32 deg. TODO:rotate camera sensor to wrist3 orientation
-    //run raycasting in parallell
-    //obs, octomap is in world frame. transform pose from rgbd_camrea to world?
 
-    // Return (double): percentage of unknown voxels seen from that view  
+std::pair<int, std::vector<RayInfo>> ExplorationPlanner::simulateInformationGainWithRays(
+    const Eigen::Isometry3d& sensor_state, 
+    octomap::OcTree& octree, 
+    double max_range = 10.0) 
+{
+    // Field of view parameters (64° horizontally, 32° vertically)
+    const double horizontal_fov = 64.0 * M_PI / 180.0; // Convert degrees to radians
+    const double vertical_fov = 32.0 * M_PI / 180.0;   // Convert degrees to radians
+    const int horizontal_rays = 100; // Number of rays horizontally
+    const int vertical_rays = 50;    // Number of rays vertically
+    
+    double horizontal_step = horizontal_fov / horizontal_rays; // Angular step between rays horizontally
+    double vertical_step = vertical_fov / vertical_rays;       // Angular step between rays vertically
+
+    // Sensor origin in the world frame
+    Eigen::Vector3d sensor_origin = sensor_state.translation();
+
+    // Store rays for visualization (start and end points)
+    std::vector<RayInfo> rays;
+    
+    // Variables to accumulate information gain
+    int information_gain = 0;
+
+    // Iterate over each ray in the horizontal and vertical field of view
+    for (int i = 0; i < horizontal_rays; ++i) {
+        for (int j = 0; j < vertical_rays; ++j) {
+            
+            // Compute the angles for the current ray
+            double horizontal_angle = (i - horizontal_rays / 2) * horizontal_step;
+            double vertical_angle = (j - vertical_rays / 2) * vertical_step;
+
+            // Create the direction vector in the camera frame (assuming Z-forward, X-right, Y-down)
+            Eigen::Vector3d ray_direction_camera(
+                std::cos(vertical_angle) * std::sin(horizontal_angle),  // X direction
+                -std::sin(vertical_angle),                              // Y direction
+                std::cos(vertical_angle) * std::cos(horizontal_angle)   // Z direction (forward)
+            );
+
+            // Create the direction vector in the camera frame (assuming X-forward, Z-right, Y-up)
+            // Eigen::Vector3d ray_direction_camera(
+            //     std::cos(vertical_angle) * std::cos(horizontal_angle),  // X direction (forward)
+            //     std::sin(vertical_angle),                               // Y direction (up)
+            //     std::cos(vertical_angle) * std::sin(horizontal_angle)   // Z direction (right)
+            // );
+
+
+            // Transform the ray direction from camera frame to world frame
+            Eigen::Vector3d ray_direction_world = sensor_state.rotation() * ray_direction_camera;
+
+            // Define the endpoint of the ray (initialized as max range)
+            Eigen::Vector3d ray_end = sensor_origin + ray_direction_world * max_range;
+            bool hit_unknown = false;
+            
+            // Perform raycasting using Octomap
+            octomap::point3d hit_point;
+            if (octree.castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
+                               octomap::point3d(ray_direction_world.x(), ray_direction_world.y(), ray_direction_world.z()),
+                               hit_point, true, max_range)) 
+            {
+                ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
+                
+                // Check if the node at the hit point is unknown (unobserved)
+                octomap::OcTreeNode* node = octree.search(hit_point.x(), hit_point.y(), hit_point.z());
+                if (node == nullptr) {
+                    hit_unknown = true;
+                    information_gain++;
+                } else if (!octree.isNodeOccupied(node)) {
+                    // Also count if the node is free and not observed before
+                    information_gain++;
+                }
+            }
+            else {
+                // The ray did not hit anything within max_range, this can also be treated as unknown space
+                hit_unknown = true;
+                information_gain++;
+            }
+            
+            // Store the ray information for visualization
+            rays.push_back({sensor_origin, ray_end, hit_unknown});
+        }
+    }
+
+    return {information_gain, rays}; // Return information gain and rays for visualization
+}
+
+std::pair<int, std::vector<RayInfo>> ExplorationPlanner::test_sim_view(octomap::OcTree& octree, 
+    double max_range = 10.0){
+
     const Eigen::Isometry3d& sensor_state = robot_state_->getGlobalLinkTransform("rgbd_camera"); //w.r.t root link
-    auto position = sensor_state.translation();
-    auto sensor_to_world = sensor_state.rotation(); //or other way around
-    //auto direction = sensor_to_world first column??
-    RCLCPP_INFO_STREAM(node_->get_logger(), "Translation: \n" << sensor_state.translation() << "\n");
-    RCLCPP_INFO_STREAM(node_->get_logger(), "Rotation: \n" << sensor_state.rotation() << "\n");
-    int resolution = 1;
-
-    //iterate through the fov, count unknown voxels. 
-    //Debug: create pointcloud of fow. 
+    auto [information_gain, rays] = simulateInformationGainWithRays(sensor_state, octree, max_range);
     
-
+    return {information_gain, rays};
 }
 
-void ExplorationPlanner::raycast(octomath::Vector3 point, octomath::Vector3 direction){
-    // point: position of sensor in world coordinates
-    // direction: vector of camera z-axia in world coordinates
-    // octomap has origin in wordl frame 
 
-
-    
-}
 
 void ExplorationPlanner::update_states(std::shared_ptr<octomap::OcTree> octo_map){
 
