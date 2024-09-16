@@ -86,11 +86,6 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::simulateInformationGain
 
             // Create the direction vector in the camera frame (assuming X-forward, Y-right, Z-down)
             // TODO: Debug when robot state is actually updated.. 
-            // Eigen::Vector3d ray_direction_camera(
-            //     std::cos(vertical_angle) * std::cos(horizontal_angle), 
-            //     std::cos(vertical_angle) * std::sin(horizontal_angle),  
-            //     std::sin(vertical_angle)                              
-            // );
             Eigen::Vector3d ray_direction_camera(
                 std::cos(horizontal_angle) * std::cos(vertical_angle), 
                 std::sin(horizontal_angle) * std::cos(vertical_angle),  
@@ -98,34 +93,19 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::simulateInformationGain
             );
 
             Eigen::Vector3d ray_direction_world = sensor_state.rotation() * ray_direction_camera;
-
-            // Define the endpoint of the ray 
-            Eigen::Vector3d ray_end;
-            bool hit_unknown = false;
-            
             octomap::point3d hit_point;
-            
-            if (castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
+
+            bool hit_unknown = castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
                                octomap::point3d(ray_direction_world.x(), ray_direction_world.y(), ray_direction_world.z()),
-                               hit_point, true, max_range)) 
+                               hit_point, false, max_range);
+            
+            if (hit_unknown) 
             {
-                // Hit occupied point
-                ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
-                
+                information_gain++;
             }
-            else {
-                // Hit nothing, search if it us unknown or free
-                octomap::OcTreeNode* node = octree.search(hit_point.x(), hit_point.y(), hit_point.z());
-                if (node == nullptr) {
-                    hit_unknown = true;
-                    ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
-                    information_gain++;
-                } else if (!octree.isNodeOccupied(node)) {
-                    // whole ray is free
-                    ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
-                    
-                }
-            }
+           
+            Eigen::Vector3d ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
+
             rays.push_back({sensor_origin, ray_end, hit_unknown});
         }
     }
@@ -149,8 +129,8 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::test_sim_view(octomap::
 
     //modify since robot pose update does not work
     Eigen::Isometry3d modified_sensor_state = sensor_state;
-    modified_sensor_state.translation().x() += -0.82;
-    modified_sensor_state.translation().y() += 0;
+    modified_sensor_state.translation().x() += -1;
+    modified_sensor_state.translation().y() += 0.5;
     modified_sensor_state.translation().z() += 1.1;
 
     auto [information_gain, rays] = simulateInformationGain(modified_sensor_state, octree, max_range);
@@ -271,13 +251,15 @@ double ExplorationPlanner::compute_node_volume(double resolution) const
 
         octomap::OcTreeNode* startingNode = octo_map_->search(current_key);
         if (startingNode){
-        if (octo_map_->isNodeOccupied(startingNode)){
-            // Occupied node found at origin
-            // (need to convert from key, since origin does not need to be a voxel center)
-            end = octo_map_->keyToCoord(current_key);
-            return true;
-        }
-        } else if(!ignoreUnknown){
+            if (octo_map_->isNodeOccupied(startingNode)){
+                // Occupied node found at origin. Should not happen if poses are sampled from free space
+                // (need to convert from key, since origin does not need to be a voxel center)
+                end = octo_map_->keyToCoord(current_key);
+                return false;
+            }
+        } 
+        //If starting node is unknown. Should not happen for valid sampling
+        else if(!ignoreUnknown){
         end = octo_map_->keyToCoord(current_key);
         return false;
         }
@@ -372,10 +354,10 @@ double ExplorationPlanner::compute_node_volume(double resolution) const
             }
             // otherwise: node is free and valid, raycasting continues
         } else if (!ignoreUnknown){ // no node found, this usually means we are in "unknown" areas
-            std::cout << "Node is unknonw -------" << std::endl;
-            return false;
+           
+            return true;
         }
         } // end while
 
-        return true;
+        return false;
     }
