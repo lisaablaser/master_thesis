@@ -46,6 +46,8 @@ private:
     double max_range); 
 
   double compute_node_volume(double resolution) const;
+  bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP, octomap::point3d& end,
+                                        bool ignoreUnknown, double maxRange) const;
   
 
   

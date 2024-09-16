@@ -32,8 +32,8 @@ void publishRays(const std::vector<RayInfo>& rays,
         end_marker.color.a = 1.0;
         if (rays[i].hit_unknown) {
             end_marker.color.r = 0.0;
-            end_marker.color.g = 0.0;
-            end_marker.color.b = 1.0; // Blue for unknown space
+            end_marker.color.g = 1.0;
+            end_marker.color.b = 1.0; // unknown space
         } else {
             end_marker.color.r = 0.0;
             end_marker.color.g = 1.0;

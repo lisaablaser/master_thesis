@@ -63,7 +63,7 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::simulateInformationGain
 {
 
     const double horizontal_fov = 64.0 * M_PI / 180.0; 
-    const double vertical_fov = 32.0 * M_PI / 180.0;   
+    const double vertical_fov = 36.0 * M_PI / 180.0;   
     const int horizontal_rays = 100;                    // Number of rays horizontally
     const int vertical_rays = 50;                       // Number of rays vertically
     
@@ -105,7 +105,7 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::simulateInformationGain
             
             octomap::point3d hit_point;
             
-            if (octree.castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
+            if (castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
                                octomap::point3d(ray_direction_world.x(), ray_direction_world.y(), ray_direction_world.z()),
                                hit_point, true, max_range)) 
             {
@@ -147,9 +147,11 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::test_sim_view(octomap::
 
     const Eigen::Isometry3d& sensor_state = robot_state_->getGlobalLinkTransform("rgbd_camera"); //w.r.t root link
 
-    //modify to actually look at unknown area
+    //modify since robot pose update does not work
     Eigen::Isometry3d modified_sensor_state = sensor_state;
-    modified_sensor_state.translation().x() += 0;
+    modified_sensor_state.translation().x() += -0.82;
+    modified_sensor_state.translation().y() += 0;
+    modified_sensor_state.translation().z() += 1.1;
 
     auto [information_gain, rays] = simulateInformationGain(modified_sensor_state, octree, max_range);
     
@@ -160,8 +162,9 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::test_sim_view(octomap::
 
 
 void ExplorationPlanner::update_states(std::shared_ptr<octomap::OcTree> octo_map){
+    //do i need to, and is this the correct way to update the octomap?
+    octo_map_ = octo_map;
 
-    
 }
 
 robot_trajectory::RobotTrajectory ExplorationPlanner::calculate_nbv(){
@@ -252,3 +255,127 @@ double ExplorationPlanner::compute_node_volume(double resolution) const
     return resolution * resolution * resolution;
 }
 
+
+
+    bool ExplorationPlanner::castRay(const octomap::point3d& origin, const octomap::point3d& directionP, octomap::point3d& end,
+                                            bool ignoreUnknown, double maxRange) const {
+
+    /// ----------  see OcTreeBase::computeRayKeys  -----------
+
+        // Initialization phase -------------------------------------------------------
+        octomap::OcTreeKey current_key;
+        if ( !octo_map_->coordToKeyChecked(origin, current_key) ) {
+            OCTOMAP_WARNING_STR("Coordinates out of bounds during ray casting");
+            return false;
+        }
+
+        octomap::OcTreeNode* startingNode = octo_map_->search(current_key);
+        if (startingNode){
+        if (octo_map_->isNodeOccupied(startingNode)){
+            // Occupied node found at origin
+            // (need to convert from key, since origin does not need to be a voxel center)
+            end = octo_map_->keyToCoord(current_key);
+            return true;
+        }
+        } else if(!ignoreUnknown){
+        end = octo_map_->keyToCoord(current_key);
+        return false;
+        }
+
+        octomap::point3d direction = directionP.normalized();
+        bool max_range_set = (maxRange > 0.0);
+
+        int step[3];
+        double tMax[3];
+        double tDelta[3];
+
+        for(unsigned int i=0; i < 3; ++i) {
+        // compute step direction
+        if (direction(i) > 0.0) step[i] =  1;
+        else if (direction(i) < 0.0)   step[i] = -1;
+        else step[i] = 0;
+
+        // compute tMax, tDelta
+        if (step[i] != 0) {
+            // corner point of voxel (in direction of ray)
+            double voxelBorder = octo_map_->keyToCoord(current_key[i]);
+            voxelBorder += double(step[i] * octo_map_->getResolution() * 0.5);
+
+            tMax[i] = ( voxelBorder - origin(i) ) / direction(i);
+            tDelta[i] = octo_map_->getResolution() / fabs( direction(i) );
+        }
+        else {
+            tMax[i] =  std::numeric_limits<double>::max();
+            tDelta[i] = std::numeric_limits<double>::max();
+        }
+        }
+
+        if (step[0] == 0 && step[1] == 0 && step[2] == 0){
+            OCTOMAP_ERROR("Raycasting in direction (0,0,0) is not possible!");
+            return false;
+        }
+
+        // for speedup:
+        double maxrange_sq = maxRange *maxRange;
+
+        // Incremental phase  ---------------------------------------------------------
+
+        bool done = false;
+
+        while (!done) {
+        unsigned int dim;
+
+        // find minimum tMax:
+        if (tMax[0] < tMax[1]){
+            if (tMax[0] < tMax[2]) dim = 0;
+            else                   dim = 2;
+        }
+        else {
+            if (tMax[1] < tMax[2]) dim = 1;
+            else                   dim = 2;
+        }
+
+        // check for overflow:
+        if ((step[dim] < 0 && current_key[dim] == 0)
+                || (step[dim] > 0 && current_key[dim] == 2* octo_map_->getTreeDepth()-1)) //->tree_max_val, not sure what this max value means.
+        {
+            OCTOMAP_WARNING("Coordinate hit bounds in dim %d, aborting raycast\n", dim);
+            // return border point nevertheless:
+            end = octo_map_->keyToCoord(current_key);
+            return false;
+        }
+
+        // advance in direction "dim"
+        current_key[dim] += step[dim];
+        tMax[dim] += tDelta[dim];
+
+
+        // generate world coords from key
+        end = octo_map_->keyToCoord(current_key);
+
+        // check for maxrange:
+        if (max_range_set){
+            double dist_from_origin_sq(0.0);
+            for (unsigned int j = 0; j < 3; j++) {
+            dist_from_origin_sq += ((end(j) - origin(j)) * (end(j) - origin(j)));
+            }
+            if (dist_from_origin_sq > maxrange_sq)
+            return false;
+
+        }
+
+        octomap::OcTreeNode* currentNode = octo_map_->search(current_key);
+        if (currentNode){
+            if (octo_map_->isNodeOccupied(currentNode)) {
+            done = true;
+            break;
+            }
+            // otherwise: node is free and valid, raycasting continues
+        } else if (!ignoreUnknown){ // no node found, this usually means we are in "unknown" areas
+            std::cout << "Node is unknonw -------" << std::endl;
+            return false;
+        }
+        } // end while
+
+        return true;
+    }
