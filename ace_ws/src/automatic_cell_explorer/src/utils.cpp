@@ -20,8 +20,8 @@ void publishRays(const std::vector<RayInfo>& rays,
         start_marker.type = end_marker.type = visualization_msgs::msg::Marker::SPHERE;
 
         // Set the scale for the points (size of the sphere)
-        start_marker.scale.x = start_marker.scale.y = start_marker.scale.z = 0.2;  
-        end_marker.scale.x = end_marker.scale.y = end_marker.scale.z = 0.2;        
+        start_marker.scale.x = start_marker.scale.y = start_marker.scale.z = 0.1;  
+        end_marker.scale.x = end_marker.scale.y = end_marker.scale.z = 0.1;        
 
     
         start_marker.color.a = 1.0;
@@ -33,11 +33,11 @@ void publishRays(const std::vector<RayInfo>& rays,
         if (rays[i].hit_unknown) {
             end_marker.color.r = 0.0;
             end_marker.color.g = 1.0;
-            end_marker.color.b = 1.0; // unknown space
+            end_marker.color.b = 0.0; // Green for unknown space
         } else {
             end_marker.color.r = 0.0;
             end_marker.color.g = 1.0;
-            end_marker.color.b = 0.0; // Green for free space
+            end_marker.color.b = 1.0; // For free and occupied space
         }
 
         // Set unique IDs for the markers
@@ -62,7 +62,6 @@ void publishRays(const std::vector<RayInfo>& rays,
 
 
 sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<octomap::OcTree>& octree) {
-    //OBS: everything is stretched, not good representation. 
 
     sensor_msgs::msg::PointCloud2 cloud_msg;
     cloud_msg.header.frame_id = "world";  
