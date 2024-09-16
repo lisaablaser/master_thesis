@@ -8,11 +8,9 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/planning_interface/planning_interface.h> 
 
-struct RayInfo {
-    Eigen::Vector3d start;  // Ray start (sensor origin)
-    Eigen::Vector3d end;    // Ray end (hit point or max range)
-    bool hit_unknown;       // Whether the ray hit an unknown region
-};
+#include "automatic_cell_explorer/utils.hpp"
+
+
 
 class ExplorationPlanner
 {
@@ -42,12 +40,14 @@ private:
   robot_trajectory::RobotTrajectory plan(planning_interface::MotionPlanRequest req);
   planning_interface::MotionPlanRequest generate_request();
 
-  std::pair<int, std::vector<RayInfo>> simulateInformationGainWithRays(
+  std::pair<int, std::vector<RayInfo>> simulateInformationGain(
     const Eigen::Isometry3d& sensor_state, 
     octomap::OcTree& octree, 
     double max_range); 
 
   double compute_node_volume(double resolution) const;
+  
+
   
 };
 

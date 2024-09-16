@@ -5,9 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /PointCloud21
         - /PointCloud21/Topic1
         - /PointCloud21/Autocompute Value Bounds1
+        - /MarkerArray1
       Splitter Ratio: 0.4957627058029175
     Tree Height: 258
   - Class: rviz_common/Selection
@@ -295,6 +295,18 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: false
       Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: MarkerArray
+      Namespaces:
+        raycasting: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /ray_visualization
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -341,7 +353,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 6.619869709014893
+      Distance: 7.950374126434326
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -356,10 +368,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4303971827030182
+      Pitch: 0.38539746403694153
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.9135797023773193
+      Yaw: 2.843580961227417
     Saved: ~
 Window Geometry:
   Displays:
@@ -379,5 +391,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1390
-  X: 2211
-  Y: 212
+  X: 4213
+  Y: 1181

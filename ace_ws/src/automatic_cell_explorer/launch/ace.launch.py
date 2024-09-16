@@ -40,7 +40,11 @@ def launch_setup(context, *args, **kwargs):
                 name="octomap_server",
                 output="screen",
                 parameters=[
-                    {"use_sim_time": True, "resolution": 0.05, "frame_id": "world"}
+                    {
+                        "use_sim_time": True,
+                        "resolution": 0.1,
+                        "frame_id": "world",
+                    }  # maybe should be "rgbd_camera frame"
                 ],
                 remappings=[("/cloud_in", "/rgbd_camera/points")],
             )

@@ -81,6 +81,7 @@
         "any": "cpp",
         "expected": "cpp",
         "regex": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "filesystem": "cpp"
     }
 }

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <octomap_msgs/conversions.h>
 #include "automatic_cell_explorer/state_machine.hpp"
+#include "automatic_cell_explorer/utils.hpp"
 
 
 StateMachineNode::StateMachineNode() 
@@ -43,8 +44,11 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     
     std::cout << "--State Calculate Nbv--" << std::endl;
+    auto rviz_publisher = node_->create_publisher<visualization_msgs::msg::MarkerArray>("ray_visualization", 10);
 
-    //exploration_planner.update_states(octomap_);
+    auto [information_gain, rays] = exploration_planner_->test_sim_view(*octomap_, 100.0);
+    std::cout << "information gain from view" << information_gain << std::endl;
+    publishRays(rays, rviz_publisher);
     robot_trajectory::RobotTrajectory traj = exploration_planner_->calculate_nbv();
     std::cout << "Number of waypoints in the trajectory: " << traj.getWayPointCount() << std::endl;
 
@@ -149,3 +153,4 @@ void StateMachineNode::execute_state_machine()
         
     }
 }
+

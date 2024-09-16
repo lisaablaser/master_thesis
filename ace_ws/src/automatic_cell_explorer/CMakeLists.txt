@@ -40,6 +40,7 @@ include_directories(
 add_library(my_cpp_library
   src/exploration_planner.cpp
   src/state_machine.cpp
+  src/utils.cpp
 )
 
 # Link libraries to the library
