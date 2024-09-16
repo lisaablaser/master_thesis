@@ -86,10 +86,15 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::simulateInformationGain
 
             // Create the direction vector in the camera frame (assuming X-forward, Y-right, Z-down)
             // TODO: Debug when robot state is actually updated.. 
+            // Eigen::Vector3d ray_direction_camera(
+            //     std::cos(vertical_angle) * std::cos(horizontal_angle), 
+            //     std::cos(vertical_angle) * std::sin(horizontal_angle),  
+            //     std::sin(vertical_angle)                              
+            // );
             Eigen::Vector3d ray_direction_camera(
-                std::cos(vertical_angle) * std::cos(horizontal_angle), 
-                std::cos(vertical_angle) * std::sin(horizontal_angle),  
-                std::sin(vertical_angle)                              
+                std::cos(horizontal_angle) * std::cos(vertical_angle), 
+                std::sin(horizontal_angle) * std::cos(vertical_angle),  
+                -std::sin(vertical_angle)                              
             );
 
             Eigen::Vector3d ray_direction_world = sensor_state.rotation() * ray_direction_camera;

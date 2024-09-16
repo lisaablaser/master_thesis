@@ -44,10 +44,10 @@
           <camera>
             <triggered>true</triggered>
             <trigger_topic>/trigger</trigger_topic>
-            <horizontal_fov>1.047</horizontal_fov>
+            <horizontal_fov>1.1170</horizontal_fov>
             <image>
               <width>320</width>
-              <height>240</height>
+              <height>180</height>
             </image>
             <clip>
               <near>0.1</near>
