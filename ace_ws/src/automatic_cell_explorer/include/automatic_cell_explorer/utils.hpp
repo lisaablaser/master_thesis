@@ -18,6 +18,7 @@ void publishRays(const std::vector<RayInfo>& rays,
                  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher);
 
 void printTransform(const Eigen::Isometry3d& transform); 
+void publish_fov_marker(const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y, double range,std::shared_ptr<rclcpp::Node> node_); 
 
 
 #endif // UTILS_HPP

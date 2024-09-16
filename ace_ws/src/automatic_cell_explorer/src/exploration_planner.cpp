@@ -5,6 +5,8 @@
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/kinematic_constraints/utils.h>
 #include <pluginlib/class_loader.hpp>
+#include <tf2_eigen/tf2_eigen.hpp>
+
 
 const std::string PLANNING_GROUP = "ur_manipulator";
 
@@ -125,6 +127,18 @@ std::pair<int, std::vector<RayInfo>> ExplorationPlanner::test_sim_view(octomap::
     modified_sensor_state.translation().z() += 1.1;
 
     auto [information_gain, rays] = simulateInformationGain(modified_sensor_state, octree, max_range);
+
+    static auto pose_pub = node_->create_publisher<geometry_msgs::msg::PoseStamped>("sensor_pose", 10);
+
+
+    geometry_msgs::msg::PoseStamped pose_msg;
+    pose_msg.header.stamp = node_->now();  
+    pose_msg.header.frame_id = "world";     
+    pose_msg.pose = tf2::toMsg(modified_sensor_state);
+    pose_pub->publish(pose_msg);
+
+    publish_fov_marker(sensor_state, 64.0, 36.0, 0.3, node_);
+    
     
     return {information_gain, rays};
 }
