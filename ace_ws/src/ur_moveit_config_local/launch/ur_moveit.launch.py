@@ -122,14 +122,14 @@ def generate_launch_description():
     publish_robot_description = LaunchConfiguration("publish_robot_description")
 
     moveit_config = (
-        MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config")
+        MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config_local")
         .robot_description_semantic(Path("srdf") / "ur.srdf.xacro", {"name": ur_type})
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
         # .moveit_cpp(
         #     file_path=os.path.join(
-        #         get_package_share_directory("ur_moveit_config"),
+        #         get_package_share_directory("ur_moveit_config_local"),
         #         "config",
         #         "moveit_cpp.yaml",
         #     )
@@ -167,7 +167,7 @@ def generate_launch_description():
         ],
     )
 
-    servo_yaml = load_yaml("ur_moveit_config", "config/ur_servo.yaml")
+    servo_yaml = load_yaml("ur_moveit_config_local", "config/ur_servo.yaml")
     servo_params = {"moveit_servo": servo_yaml}
     servo_node = Node(
         package="moveit_servo",
@@ -181,7 +181,7 @@ def generate_launch_description():
     )
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ur_moveit_config"), "config", "moveit.rviz"]
+        [FindPackageShare("ur_moveit_config_local"), "config", "moveit.rviz"]
     )
     rviz_node = Node(
         package="rviz2",
