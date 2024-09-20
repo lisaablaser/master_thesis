@@ -1,17 +1,22 @@
 #include <rclcpp/rclcpp.hpp>
-#include "automatic_cell_explorer/state_machine.hpp"
+#include "automatic_cell_explorer/moveit_interface.hpp"
+#include "automatic_cell_explorer/move_robot_service.hpp"
 
 int main(int argc, char **argv)
 {
 
     rclcpp::init(argc, argv);
-    auto state_machine = std::make_shared<StateMachineNode>();
-    state_machine->execute_state_machine();
+    auto moveit_node = std::make_shared<rclcpp::Node>( //should make const
+    "moveit",
+    rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
+    );
 
+    MvtInterfacePtr mvt_interface =getInterface(moveit_node);
+
+    auto move_robot_node = std::make_shared<MoveRobotNode>(mvt_interface);
     
-    while (rclcpp::ok() && !state_machine->is_finished()) {
-        rclcpp::spin_some(state_machine);
-    }
+    
+    rclcpp::spin(move_robot_node);
 
     std::cout << "Shutting down from main" << std::endl;
     rclcpp::shutdown();

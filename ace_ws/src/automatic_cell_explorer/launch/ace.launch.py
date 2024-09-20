@@ -52,60 +52,31 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    octomap_processor_node = TimerAction(
+    # octomap_processor_node = TimerAction(
+    #    period=5.0,
+    #    actions=[
+    #        Node(
+    #            package="automatic_cell_explorer",
+    #            executable="octomap_processor",
+    #            name="octomap_processor",
+    #            output="screen",
+    #        )
+    #    ],
+    # )
+
+    ace_node = TimerAction(
         period=5.0,
         actions=[
             Node(
                 package="automatic_cell_explorer",
-                executable="octomap_processor",
-                name="octomap_processor",
+                executable="ace",
+                name="ace",
                 output="screen",
             )
         ],
     )
 
-    # commander_node = TimerAction(
-    #     period=20.0,
-    #     actions=[
-    #         Node(
-    #             package="automatic_cell_explorer",
-    #             executable="commander",
-    #             name="commander",
-    #             output="screen",
-    #         )
-    #     ],
-    # )
-    planner_node = TimerAction(
-        period=6.0,
-        actions=[
-            Node(
-                package="automatic_cell_explorer",
-                executable="planner",
-                name="planner",
-                output="screen",
-            )
-        ],
-    )
-    move_robot_node = TimerAction(
-        period=6.0,
-        actions=[
-            Node(
-                package="automatic_cell_explorer",
-                executable="move_robot_service_node",
-                name="move_robot_nodeS",
-                output="screen",
-            )
-        ],
-    )
-
-    nodes_to_launch = [
-        ur_sim_moveit_launch,
-        octomap_server_node,
-        # octomap_processor_node,
-        # planner_node,
-        move_robot_node,
-        # commander_node,
-    ]
+    nodes_to_launch = [ur_sim_moveit_launch, octomap_server_node, ace_node]
 
     return nodes_to_launch
 
