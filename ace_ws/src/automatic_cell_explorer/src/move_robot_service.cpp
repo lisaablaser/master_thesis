@@ -18,7 +18,8 @@ public:
    
     move_robot_service_ = this->create_service<automatic_cell_explorer::srv::MoveToNbv>(
       "/move_robot_to_pose", std::bind(&MoveRobotNode::move_robot_callback, this, std::placeholders::_1, std::placeholders::_2));
-
+    move_group_interface_.startStateMonitor();
+    move_group_interface_.setStartStateToCurrentState();
 
   }
 
@@ -44,6 +45,9 @@ private:
                 request->pose.pose.orientation.w);
     
     move_group_interface_.setPoseTarget(request->pose.pose);
+    const auto &jp = move_group_interface_.getCurrentJointValues();
+    std::cout<<"current jp" << std::endl;
+    
 
     // Plan to the target pose
     auto const [success, plan] = [&move_group_interface = move_group_interface_]{

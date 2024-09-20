@@ -5,6 +5,7 @@ from launch.actions import (
     OpaqueFunction,
     TimerAction,
 )
+import launch_ros
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
@@ -142,6 +143,10 @@ def generate_launch_description():
             ),
             description="Gazebo world file (absolute path or filename from the gazebosim worlds collection) containing a custom world.",
         )
+    )
+
+    declared_arguments.append(
+        launch_ros.actions.SetParameter(name="use_sim_time", value=True)
     )
 
     return LaunchDescription(
