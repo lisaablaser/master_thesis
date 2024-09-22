@@ -16,7 +16,7 @@
 class ExplorationPlanner
 {
 public:
-  ExplorationPlanner(MvtInterfacePtr mvt_interface,std::shared_ptr<octomap::OcTree> octo_map);
+  ExplorationPlanner(MoveGrpPtr mvt_interface,std::shared_ptr<octomap::OcTree> octo_map);
 
   robot_trajectory::RobotTrajectory calculate_nbv();
  
@@ -29,7 +29,7 @@ public:
 
 
 private:
-  MvtInterfacePtr mvt_interface_;
+  MoveGrpPtr mvt_interface_;
   std::shared_ptr<octomap::OcTree> octo_map_;
 
   robot_trajectory::RobotTrajectory plan(planning_interface::MotionPlanRequest req);

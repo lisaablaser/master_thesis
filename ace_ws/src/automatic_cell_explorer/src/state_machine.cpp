@@ -6,7 +6,7 @@
 
 
 
-StateMachineNode::StateMachineNode(MvtInterfacePtr mvt_interface) 
+StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface) 
     : Node("state_machine_node"), 
     node_(nullptr),
     mvt_interface_(mvt_interface),
@@ -30,9 +30,7 @@ StateMachineNode::StateMachineNode(MvtInterfacePtr mvt_interface)
 void StateMachineNode::handle_initialise(){
     std::cout << "--State Initialise--" << std::endl;
     node_ = shared_from_this();
-    //exploration_planner_ = std::make_shared<ExplorationPlanner>(mvt_in,octomap_);
     
-
     current_state_ = State::Capture;
 }
 

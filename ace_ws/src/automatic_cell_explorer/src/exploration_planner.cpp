@@ -10,7 +10,7 @@
 
 
 
-ExplorationPlanner::ExplorationPlanner(MvtInterfacePtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)
+ExplorationPlanner::ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)
     : 
     mvt_interface_(mvt_interface),
     octo_map_(octo_map)

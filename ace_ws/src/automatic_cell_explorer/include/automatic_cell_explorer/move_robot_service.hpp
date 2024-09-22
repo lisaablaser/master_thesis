@@ -17,11 +17,11 @@
 class MoveRobotNode : public rclcpp::Node{
 public:
   using MvToNbv = automatic_cell_explorer::srv::MoveToNbv;
-  MoveRobotNode(MvtInterfacePtr mvt_interface);
+  MoveRobotNode(MoveGrpPtr mvt_interface);
 
 private:
   rclcpp::Service<MvToNbv>::SharedPtr move_robot_service_;
-  MvtInterfacePtr mvt_interface_;
+  MoveGrpPtr mvt_interface_;
 
 
   void move_robot_callback(const std::shared_ptr<MvToNbv::Request> request,

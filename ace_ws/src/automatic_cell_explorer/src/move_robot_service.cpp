@@ -10,7 +10,7 @@
 //change to recieve a trajectory
 
 
-  MoveRobotNode::MoveRobotNode(MvtInterfacePtr mvt_interface)
+  MoveRobotNode::MoveRobotNode(MoveGrpPtr mvt_interface)
   : Node("move_robot_service_node")
   {
     mvt_interface_ =mvt_interface;
