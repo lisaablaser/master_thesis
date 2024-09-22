@@ -50,9 +50,9 @@ def main(args=None):
     )  # Set the current timestamp
     print("time: ", pose_stamped.header.stamp)
     # Set the pose (position and orientation)
-    pose_stamped.pose.position.x = 0.3  # Replace with desired X coordinate
-    pose_stamped.pose.position.y = 0.3  # Replace with desired Y coordinate
-    pose_stamped.pose.position.z = 1.7  # Replace with desired Z coordinate
+    pose_stamped.pose.position.x = 0.4  # Replace with desired X coordinate
+    pose_stamped.pose.position.y = 0.4  # Replace with desired Y coordinate
+    pose_stamped.pose.position.z = 1.5  # Replace with desired Z coordinate
 
     # Set the orientation using a quaternion
     pose_stamped.pose.orientation.x = 0.0

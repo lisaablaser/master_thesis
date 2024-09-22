@@ -9,47 +9,34 @@
 #include <moveit/planning_interface/planning_interface.h> 
 
 #include "automatic_cell_explorer/utils.hpp"
+#include "automatic_cell_explorer/moveit_interface.hpp"
 
 
 
 class ExplorationPlanner
 {
 public:
-  ExplorationPlanner(std::shared_ptr<rclcpp::Node> node,std::shared_ptr<octomap::OcTree> octo_map);
+  ExplorationPlanner(MvtInterfacePtr mvt_interface,std::shared_ptr<octomap::OcTree> octo_map);
 
   robot_trajectory::RobotTrajectory calculate_nbv();
-  void update_states(std::shared_ptr<octomap::OcTree> octo_map);
+ 
   double calculate_occupied_volume() const;
 
 
-  std::pair<int, std::vector<RayInfo>> test_sim_view(octomap::OcTree& octree, 
-    double max_range);
+  RayView getCurrentRayView(
+    double max_range = 100.0);
 
 
 
 private:
-  std::shared_ptr<rclcpp::Node> node_;
+  MvtInterfacePtr mvt_interface_;
   std::shared_ptr<octomap::OcTree> octo_map_;
 
-  moveit::core::RobotModelPtr robot_model_;
-  moveit::core::RobotStatePtr robot_state_;
-
-  planning_scene::PlanningScenePtr planning_scene_;
-  planning_interface::PlannerManagerPtr planner_instance_;
-
   robot_trajectory::RobotTrajectory plan(planning_interface::MotionPlanRequest req);
-  planning_interface::MotionPlanRequest generate_request();
-
-  std::pair<int, std::vector<RayInfo>> simulateInformationGain(
-    const Eigen::Isometry3d& sensor_state, 
-    octomap::OcTree& octree, 
-    double max_range); 
+  planning_interface::MotionPlanRequest generate_nvb_candidate();
 
   double compute_node_volume(double resolution) const;
-  bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP, octomap::point3d& end,
-                                        bool ignoreUnknown, double maxRange) const;
   
-
   
 };
 

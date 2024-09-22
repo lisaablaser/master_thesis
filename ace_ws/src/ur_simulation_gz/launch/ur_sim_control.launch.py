@@ -103,10 +103,10 @@ def launch_setup(context, *args, **kwargs):
         parameters=[{"use_sim_time": True}, robot_description],
     )
 
-    rviz_node = Node(
+    rviz_node = Node(  # this rviz is not launched
         package="rviz2",
         executable="rviz2",
-        name="rviz2",
+        name="rviz2_control",
         output="log",
         arguments=["-d", rviz_config_file],
         parameters=[

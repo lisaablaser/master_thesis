@@ -8,6 +8,7 @@
 #include <octomap_msgs/msg/octomap.hpp>  
 
 #include "automatic_cell_explorer/exploration_planner.hpp"
+#include "automatic_cell_explorer/moveit_interface.hpp"
 
 typedef std::shared_ptr<ExplorationPlanner> ExplorationPlannerPtr;
 
@@ -16,12 +17,13 @@ enum class State {Initialise, Capture, Calculate_NBV, Move_robot, Finished, Wait
 class StateMachineNode : public rclcpp::Node
 {
 public:
-    StateMachineNode();
+    StateMachineNode(MvtInterfacePtr mvt_interface);
     void execute_state_machine();
     bool is_finished() const { return finished_; }
 
 private:
     std::shared_ptr<rclcpp::Node> node_;
+    MvtInterfacePtr mvt_interface_;
     State current_state_;
     std::atomic<bool> finished_;
     std::shared_ptr<octomap::OcTree> octomap_;

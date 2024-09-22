@@ -45,38 +45,36 @@ def launch_setup(context, *args, **kwargs):
                         "use_sim_time": True,
                         "resolution": 0.1,
                         "frame_id": "world",
-                    }  # maybe should be "rgbd_camera frame"
+                    }
                 ],
                 remappings=[("/cloud_in", "/rgbd_camera/points")],
             )
         ],
     )
 
-    # octomap_processor_node = TimerAction(
-    #    period=5.0,
-    #    actions=[
-    #        Node(
-    #            package="automatic_cell_explorer",
-    #            executable="octomap_processor",
-    #            name="octomap_processor",
-    #            output="screen",
-    #        )
-    #    ],
-    # )
-
     ace_node = TimerAction(
-        period=5.0,
+        period=10.0,
         actions=[
             Node(
                 package="automatic_cell_explorer",
                 executable="ace",
-                name="ace",
                 output="screen",
             )
         ],
     )
 
-    nodes_to_launch = [ur_sim_moveit_launch, octomap_server_node, ace_node]
+    moveit_demo_node = TimerAction(
+        period=10.0,
+        actions=[
+            Node(
+                package="automatic_cell_explorer",
+                executable="moveit_demo",
+                output="screen",
+            )
+        ],
+    )
+
+    nodes_to_launch = [ur_sim_moveit_launch, octomap_server_node]
 
     return nodes_to_launch
 

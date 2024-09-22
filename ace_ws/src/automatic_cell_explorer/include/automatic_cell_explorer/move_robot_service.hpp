@@ -1,3 +1,6 @@
+#ifndef MOVE_ROBOT_SERVICE_HPP
+#define MOVE_ROBOT_SERVICE_HPP
+
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
@@ -25,3 +28,5 @@ private:
                            std::shared_ptr<MvToNbv::Response> response);
 
 };
+
+#endif // MOVE_ROBOT_SERVICE_HPP

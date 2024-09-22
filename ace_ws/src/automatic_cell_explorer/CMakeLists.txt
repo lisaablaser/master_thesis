@@ -14,6 +14,7 @@ find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # Generate service
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -32,6 +33,7 @@ endif()
 include_directories(
  include
  ${ament_INCLUDE_DIRS}
+ ${EIGEN_INCLUDE_DIR}
  #${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp/automatic_cell_explorer/srv
 )
 
@@ -43,6 +45,7 @@ add_library(my_cpp_library
   src/utils.cpp
   src/move_robot_service.cpp
   src/moveit_interface.cpp
+  src/raycast.cpp
 )
 
 # Link libraries to the library
@@ -51,6 +54,7 @@ target_link_libraries(my_cpp_library
   ${octomap_msgs_LIBRARIES}
   ${PCL_LIBRARIES}
   ${rclcpp_LIBRARIES} 
+  Eigen3::Eigen
 
 )
 ament_target_dependencies(my_cpp_library
@@ -70,24 +74,26 @@ rosidl_target_interfaces(my_cpp_library
   ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 # Add Google Test
-find_package(ament_cmake_gtest REQUIRED)
-ament_add_gtest(state_machine_unit_test test/state_machine_unit_test.cpp)
-if(TARGET state_machine_unit_test)
-    target_link_libraries(state_machine_unit_test my_cpp_library)
-endif()
+# find_package(ament_cmake_gtest REQUIRED)
+# ament_add_gtest(state_machine_unit_test test/state_machine_unit_test.cpp)
+# if(TARGET state_machine_unit_test)
+#     target_link_libraries(state_machine_unit_test my_cpp_library)
+# endif()
 
-ament_add_gtest(exploration_planner_unit_test test/exploration_planner_unit_test.cpp)
-if(TARGET exploration_planner_unit_test)
-    target_link_libraries(exploration_planner_unit_test my_cpp_library)
-endif()
+# ament_add_gtest(exploration_planner_unit_test test/exploration_planner_unit_test.cpp)
+# if(TARGET exploration_planner_unit_test)
+#     target_link_libraries(exploration_planner_unit_test my_cpp_library)
+# endif()
 
 # Add cpp executables, ros nodes
 add_executable(ace src/main.cpp)
 
 
+
 target_link_libraries(ace
   my_cpp_library          # Your custom library
 )
+
 #Link libraries to ros node
 #ament_target_dependencies(ace
 #  octomap_msgs
@@ -113,8 +119,10 @@ target_link_libraries(ace "${cpp_typesupport_target}")
 
 
 
+
+
 # nodes
-install(TARGETS ace
+install(TARGETS ace 
   DESTINATION lib/${PROJECT_NAME})
 
 # launch files

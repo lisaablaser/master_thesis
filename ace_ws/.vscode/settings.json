@@ -82,6 +82,8 @@
         "expected": "cpp",
         "regex": "cpp",
         "valarray": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp"
     }
 }

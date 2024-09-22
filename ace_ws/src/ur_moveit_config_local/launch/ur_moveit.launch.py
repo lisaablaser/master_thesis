@@ -187,7 +187,7 @@ def generate_launch_description():
         package="rviz2",
         condition=IfCondition(launch_rviz),
         executable="rviz2",
-        name="rviz2_moveit",
+        # name="rviz2_moveit",
         output="log",
         arguments=["-d", rviz_config_file],
         parameters=[

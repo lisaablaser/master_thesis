@@ -39,6 +39,9 @@
     mvt_interface_->setPoseTarget(request->pose.pose);
     const auto &jp = mvt_interface_->getCurrentJointValues();
     std::cout<<"current jp" << std::endl;
+    for (double j:jp){
+      std::cout<<j<<std::endl;
+    }
     
 
     // Plan to the target pose
@@ -53,6 +56,12 @@
       RCLCPP_INFO(this->get_logger(), "Planning succeeded. Executing...");
       mvt_interface_->execute(plan);
       response->success = true;
+
+      const auto &jp_after = mvt_interface_->getCurrentJointValues();
+      std::cout<<"current jp" << std::endl;
+      for (double j:jp_after){
+        std::cout<<j<<std::endl;
+    }
     } else {
       RCLCPP_ERROR(this->get_logger(), "Planning failed!");
       response->success = false;

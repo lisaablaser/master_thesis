@@ -1,16 +1,19 @@
 #include <iostream>
 #include <octomap_msgs/conversions.h>
+#include <tf2_eigen/tf2_eigen.hpp>
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/utils.hpp"
 
 
-StateMachineNode::StateMachineNode() 
+
+StateMachineNode::StateMachineNode(MvtInterfacePtr mvt_interface) 
     : Node("state_machine_node"), 
     node_(nullptr),
+    mvt_interface_(mvt_interface),
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(0.1)),
-    exploration_planner_(nullptr)
+    exploration_planner_(std::make_shared<ExplorationPlanner>(mvt_interface_, octomap_))
 {
     camera_trigger_ = 
         this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
@@ -18,6 +21,8 @@ StateMachineNode::StateMachineNode()
     octomap_subscriber_ =
       this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", rclcpp::QoS(1), std::bind(&StateMachineNode::update_planning_scene, this, std::placeholders::_1));
    
+    std::cout << "Initializing state machine with node name: " << this->get_name() << std::endl;
+
 }
 
 
@@ -25,7 +30,8 @@ StateMachineNode::StateMachineNode()
 void StateMachineNode::handle_initialise(){
     std::cout << "--State Initialise--" << std::endl;
     node_ = shared_from_this();
-    exploration_planner_ = std::make_shared<ExplorationPlanner>(node_,octomap_);
+    //exploration_planner_ = std::make_shared<ExplorationPlanner>(mvt_in,octomap_);
+    
 
     current_state_ = State::Capture;
 }
@@ -45,12 +51,24 @@ void StateMachineNode::handle_calculate_nbv(){
     
     std::cout << "--State Calculate Nbv--" << std::endl;
     auto rviz_publisher = node_->create_publisher<visualization_msgs::msg::MarkerArray>("ray_visualization", 10);
+    static auto pose_pub = node_->create_publisher<geometry_msgs::msg::PoseStamped>("sensor_pose", 10);
 
-    auto [information_gain, rays] = exploration_planner_->test_sim_view(*octomap_, 100.0);
-    std::cout << "information gain from view" << information_gain << std::endl;
-    publishRays(rays, rviz_publisher);
+    RayView ray_view = exploration_planner_->getCurrentRayView();
+    std::cout << "information gain from view: " << ray_view.num_unknowns << std::endl;
+    publishRays(ray_view.rays, rviz_publisher);
     robot_trajectory::RobotTrajectory traj = exploration_planner_->calculate_nbv();
     std::cout << "Number of waypoints in the trajectory: " << traj.getWayPointCount() << std::endl;
+
+    Eigen::Isometry3d&  sensor_state = ray_view.pose;
+
+
+    geometry_msgs::msg::PoseStamped pose_msg;
+    pose_msg.header.stamp = node_->now();  
+    pose_msg.header.frame_id = "world";     
+    pose_msg.pose = tf2::toMsg(sensor_state);
+    pose_pub->publish(pose_msg);
+
+    publish_fov_marker(sensor_state, 64.0, 36.0, 0.3, node_);
 
     current_state_ = State::Move_robot;
 }
@@ -73,16 +91,6 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             
             octomap_->swapContent(*received_tree);
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
-                
-            
-            std::string file_path = "src/automatic_cell_explorer/test/data/test_octomap.bt";
-
-            // Save the octomap to a .bt file
-            if (octomap_->writeBinary(file_path)) {
-                std::cout << "Octomap successfully saved to " << file_path << std::endl;
-            } else {
-                std::cerr << "Failed to save octomap to " << file_path << std::endl;
-            }
 
 
             current_state_ = State::Calculate_NBV;
