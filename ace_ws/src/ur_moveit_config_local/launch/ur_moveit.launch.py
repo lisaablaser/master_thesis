@@ -134,7 +134,7 @@ def generate_launch_description():
         #         "moveit_cpp.yaml",
         #     )
         # )
-        # .sensors_3d(file_path="config/sensors_3d.yaml")
+        .sensors_3d(file_path="config/sensors_3d.yaml")
         .to_moveit_configs()
     )
 
@@ -166,6 +166,20 @@ def generate_launch_description():
             },
         ],
     )
+
+    # sensors_node = Node(
+    #     package="moveit_ros_perception",
+    #     executable="occupancy_map_monitor",
+    #     output="screen",
+    #     parameters=[
+    #         os.path.join(
+    #             get_package_share_directory("ur_moveit_config_local"),
+    #             "config",
+    #             "sensors_3d.yaml",
+    #         ),
+    #     ],
+    # )
+    # ld.add_action(sensors_node)
 
     servo_yaml = load_yaml("ur_moveit_config_local", "config/ur_servo.yaml")
     servo_params = {"moveit_servo": servo_yaml}
