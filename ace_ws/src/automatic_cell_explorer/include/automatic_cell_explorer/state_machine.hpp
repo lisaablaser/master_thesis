@@ -6,6 +6,7 @@
 #include <std_msgs/msg/bool.hpp>
 #include <octomap/octomap.h>
 #include <octomap_msgs/msg/octomap.hpp>  
+#include <moveit_msgs/msg/planning_scene_world.hpp>
 
 #include "automatic_cell_explorer/exploration_planner.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
@@ -31,6 +32,7 @@ private:
 
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
     rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_subscriber_;
+    rclcpp::Publisher<moveit_msgs::msg::PlanningSceneWorld>::SharedPtr world_publisher_;
 
 
     // State handling methods

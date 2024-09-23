@@ -24,7 +24,7 @@ planning_scene_monitor::PlanningSceneMonitorPtr getPlanningSceeneMonitiorPtr(rcl
     psm->startSceneMonitor();
     psm->startWorldGeometryMonitor();
     psm->startStateMonitor();
-    psm->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,"/monitored_planning_scene_test");
+    psm->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,"/monitored_planning_scene");
     psm->providePlanningSceneService();
 
     return psm;

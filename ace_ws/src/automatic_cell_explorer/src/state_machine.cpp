@@ -20,6 +20,10 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface)
 
     octomap_subscriber_ =
       this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", rclcpp::QoS(1), std::bind(&StateMachineNode::update_planning_scene, this, std::placeholders::_1));
+
+
+    world_publisher_ =
+      this->create_publisher<moveit_msgs::msg::PlanningSceneWorld>("/planning_scene_world",rclcpp::SystemDefaultsQoS());
    
     std::cout << "Initializing state machine with node name: " << this->get_name() << std::endl;
 
@@ -75,7 +79,7 @@ void StateMachineNode::handle_move_robot(){
 
     std::cout << "--State MoveRobot--" << std::endl;
 
-    current_state_ = State::Finished;
+    current_state_ = State::Capture;
 }
 
 
@@ -90,6 +94,14 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             octomap_->swapContent(*received_tree);
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
 
+            moveit_msgs::msg::PlanningSceneWorld msg_out;
+            //msg_out.octomap.octomap.id = msg ->id;
+            //msg_out.octomap.octomap.binary = msg->binary;
+            //msg_out.octomap.octomap.data = msg->data;
+            //msg_out.octomap.octomap.header = msg->header;
+            msg_out.octomap.header = msg->header;
+            msg_out.octomap.set__octomap(*msg);
+            world_publisher_->publish(msg_out);
 
             current_state_ = State::Calculate_NBV;
 

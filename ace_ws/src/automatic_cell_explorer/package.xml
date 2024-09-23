@@ -33,6 +33,7 @@
 
 
   <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_msgs</depend>
   <depend>rclcpp</depend>
   <depend>octomap_msgs</depend>
   <depend>octomap</depend>
