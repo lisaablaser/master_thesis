@@ -18,6 +18,9 @@ int main(int argc, char **argv)
     rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
     );
 
+    
+    //pc_node->set_parameter(rclcpp::Parameter("sensors",std::vector<std::string>{"kinect_pointcloud"}));
+
     MoveGrpPtr mvt_interface =getMoveGroupInterface(moveit_node);
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface = getPlanningSceeneMonitiorPtr(pc_node);
 
@@ -28,6 +31,7 @@ int main(int argc, char **argv)
     moveit_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     pc_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     state_machine_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
+
     
     
     
@@ -45,7 +49,16 @@ int main(int argc, char **argv)
         executor.spin();
     });
 
+    std::vector<std::string> topics;
+    plm_interface -> getMonitoredTopics(topics);
+    for (auto t:topics){std::cout<<t << " ";}
+    std::cout<<std::endl;
+
+   
     state_machine_node->execute_state_machine();
+    while (rclcpp::ok() ) {
+    }
+
     
     std::cout << "Shutting down from main" << std::endl;
     rclcpp::shutdown();

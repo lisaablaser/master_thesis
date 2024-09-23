@@ -10,6 +10,9 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+from ament_index_python.packages import get_package_share_directory
+
+
 
 
 def launch_setup(context, *args, **kwargs):
@@ -44,13 +47,28 @@ def launch_setup(context, *args, **kwargs):
                     {
                         "use_sim_time": True,
                         "resolution": 0.1,
-                        "frame_id": "world",
+                        "frame_id": "world",  # or "rgbd_camera??"
                     }
                 ],
                 remappings=[("/cloud_in", "/rgbd_camera/points")],
             )
         ],
     )
+
+    parameters = [
+        {
+            "sensors": ["rgbd_camera"],
+            "rgbd_camera.filtered_cloud_topic": "/filtered_cloud",
+            "rgbd_camera.max_range": 5.0,
+            "rgbd_camera.max_update_rate": 1.0,
+            "rgbd_camera.padding_offset": 0.1,
+            "rgbd_camera.padding_scale": 1.0,
+            "rgbd_camera.point_cloud_topic": "/rgbd_camera/points",
+            "rgbd_camera.point_subsample": 1,
+            "rgbd_camera.sensor_plugin": "occupancy_map_monitor/PointCloudOctomapUpdater",
+            # specify frame_id???
+        }
+    ]
 
     ace_node = TimerAction(
         period=10.0,
@@ -59,6 +77,7 @@ def launch_setup(context, *args, **kwargs):
                 package="automatic_cell_explorer",
                 executable="ace",
                 output="screen",
+                parameters=parameters,
             )
         ],
     )
@@ -74,7 +93,7 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    nodes_to_launch = [ur_sim_moveit_launch, octomap_server_node]
+    nodes_to_launch = [ur_sim_moveit_launch, octomap_server_node, ace_node]
 
     return nodes_to_launch
 

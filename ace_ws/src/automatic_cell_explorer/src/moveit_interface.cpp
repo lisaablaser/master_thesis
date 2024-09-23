@@ -18,14 +18,14 @@ PlnScnPtr getPlanningSceenePtr(){
 //need a worldGeometryMonitor updated by OccupancyMapMpnitor updated by a pointCloudOccupancyMapUpdater. 
 
 planning_scene_monitor::PlanningSceneMonitorPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node){
-    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 
 
     auto psm = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(node,"robot_description");
-    //psm->startSceneMonitor();
-    psm->startWorldGeometryMonitor("/rgbd_camera/points", psm->getRobotModel()->getModelFrame(), 0.5);
-    //bool success = psm->requestPlanningSceneState("/get_planning_scene");
-    psm->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_GEOMETRY);
+    psm->startSceneMonitor();
+    psm->startWorldGeometryMonitor();
+    psm->startStateMonitor();
+    psm->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,"/monitored_planning_scene_test");
+    psm->providePlanningSceneService();
 
     return psm;
 }
