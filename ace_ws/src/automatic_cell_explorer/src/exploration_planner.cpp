@@ -45,59 +45,23 @@ RayView ExplorationPlanner::getCurrentRayView(double max_range){
 
 
 
-robot_trajectory::RobotTrajectory ExplorationPlanner::calculate_nbv(){
-    planning_interface::MotionPlanRequest req = generate_nvb_candidate();
-
-    robot_trajectory::RobotTrajectory traj = plan(req);
-    std::cout << "Counting waypoints in calculate_nbv func: " << traj.getWayPointCount() << std::endl;
+automatic_cell_explorer::srv::MoveToNbv::Request ExplorationPlanner::calculate_nbv(){
     std::cout << "Calculating NBV function" << std::endl;
-    // return traj;
-    //robot_trajectory::RobotTrajectory trajectory = plan(req);
-    
-    return robot_trajectory::RobotTrajectory(mvt_interface_->getRobotModel());
+
+    geometry_msgs::msg::PoseStamped pose = generate_nvb_candidate();
+    moveit::planning_interface::MoveGroupInterface::Plan p = plan(pose);
+
+    automatic_cell_explorer::srv::MoveToNbv::Request req;
+    req.start_state = p.start_state;
+    req.trajectory = p.trajectory;
+
+    return req;
 
 }
 
-robot_trajectory::RobotTrajectory ExplorationPlanner::plan(planning_interface::MotionPlanRequest req){
+moveit::planning_interface::MoveGroupInterface::Plan ExplorationPlanner::plan(geometry_msgs::msg::PoseStamped pose){
 
-    planning_interface::MotionPlanResponse res;
-
-    // Corde dumped, crashes
-    // planning_interface::PlanningContextPtr context =
-    // planner_instance_->getPlanningContext(planning_scene_, req, res.error_code);
-
-
-    // context->solve(res);
-
-    // if (res.error_code.val != res.error_code.SUCCESS)
-    // {
-    //     RCLCPP_ERROR(node_->get_logger(), "Could not compute plan successfully");
-    //     return robot_trajectory::RobotTrajectory(robot_model_); 
-  
-    // }
-
-    // if (!res.trajectory) {
-    //     RCLCPP_ERROR(node_->get_logger(), "No valid trajectory found");
-    //     return robot_trajectory::RobotTrajectory(robot_model_); 
-    // }
-
-   
-    // return robot_trajectory::RobotTrajectory(*res.trajectory); 
-    return robot_trajectory::RobotTrajectory(mvt_interface_->getRobotModel());
-    
-}
-
-
-planning_interface::MotionPlanRequest ExplorationPlanner::generate_nvb_candidate()
-
-{
     planning_interface::MotionPlanRequest req;
-    geometry_msgs::msg::PoseStamped pose;
-    pose.header.frame_id = "world";
-    pose.pose.position.x = 0.09;
-    pose.pose.position.y = 0.22;
-    pose.pose.position.z = 1.41;
-    pose.pose.orientation.w = 1.0;
 
     double tolerance_pose = 0.01;
     double tolerance_angle = 0.01;
@@ -108,8 +72,42 @@ planning_interface::MotionPlanRequest ExplorationPlanner::generate_nvb_candidate
     req.workspace_parameters.min_corner.z = -5.0;
     req.workspace_parameters.max_corner.x = req.workspace_parameters.max_corner.y =
     req.workspace_parameters.max_corner.z = 5.0;
-   
-    return req;
+
+    //update current pose??
+    mvt_interface_->setPoseTarget(pose);
+
+
+    auto const [success, plan] = [&mvt_interface = mvt_interface_]{
+      moveit::planning_interface::MoveGroupInterface::Plan msg;
+      auto const ok = static_cast<bool>(mvt_interface->plan(msg));
+      return std::make_pair(ok, msg);
+    }();
+
+    if(success) {
+      std::cout << "Planning succeeded. Executing..." << std::endl;
+      /// TODO: Return sucess or failure
+      return plan;
+
+    } else {
+      std::cout << "Planning failed!" << std::endl;
+    }
+
+    return plan;
+    
+}
+
+
+geometry_msgs::msg::PoseStamped ExplorationPlanner::generate_nvb_candidate()
+
+{
+    geometry_msgs::msg::PoseStamped pose;
+    pose.header.frame_id = "world";
+    pose.pose.position.x = 0.4;
+    pose.pose.position.y = 0.4;
+    pose.pose.position.z = 1.5;
+    pose.pose.orientation.w = 1.0;
+
+    return pose;
 }
 
 double ExplorationPlanner::calculate_occupied_volume() const

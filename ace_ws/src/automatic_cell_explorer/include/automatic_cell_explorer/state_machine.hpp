@@ -8,6 +8,7 @@
 #include <octomap_msgs/msg/octomap.hpp>  
 #include <moveit_msgs/msg/planning_scene_world.hpp>
 
+#include "automatic_cell_explorer/move_robot_service.hpp"
 #include "automatic_cell_explorer/exploration_planner.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
 
@@ -33,13 +34,14 @@ private:
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
     rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_subscriber_;
     rclcpp::Publisher<moveit_msgs::msg::PlanningSceneWorld>::SharedPtr world_publisher_;
+    rclcpp::Client<automatic_cell_explorer::srv::MoveToNbv>::SharedPtr move_client_;
 
 
     // State handling methods
     void handle_initialise();
     void handle_capture();
     void handle_calculate_nbv();
-    void handle_move_robot();
+    void handle_move_robot(std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Request>);
 
 
     // Callback methods

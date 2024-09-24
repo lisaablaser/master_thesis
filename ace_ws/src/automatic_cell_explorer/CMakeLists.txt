@@ -15,11 +15,11 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(Eigen3 REQUIRED)
-
+find_package(moveit_msgs REQUIRED)
 # Generate service
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/MoveToNbv.srv"
-  DEPENDENCIES geometry_msgs
+  DEPENDENCIES moveit_msgs
 )
 
 ament_export_dependencies(rosidl_default_runtime)
@@ -68,6 +68,7 @@ ament_target_dependencies(my_cpp_library
   tf2
   tf2_geometry_msgs
   moveit_ros_planning_interface
+  moveit_msgs
 )
 
 rosidl_target_interfaces(my_cpp_library

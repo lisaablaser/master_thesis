@@ -24,6 +24,13 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface)
     world_publisher_ =
       this->create_publisher<moveit_msgs::msg::PlanningSceneWorld>("/planning_scene_world",rclcpp::SystemDefaultsQoS());
    
+    move_client_ = 
+        this->create_client<automatic_cell_explorer::srv::MoveToNbv>("move_robot_to_pose");
+
+    while (!move_client_->wait_for_service(std::chrono::seconds(5))) {
+            RCLCPP_INFO(this->get_logger(), "Waiting for the move_robot service to be available...");
+        }
+
     std::cout << "Initializing state machine with node name: " << this->get_name() << std::endl;
 
 }
@@ -52,15 +59,16 @@ void StateMachineNode::handle_calculate_nbv(){
     auto rviz_publisher = node_->create_publisher<visualization_msgs::msg::MarkerArray>("ray_visualization", 10);
     static auto pose_pub = node_->create_publisher<geometry_msgs::msg::PoseStamped>("sensor_pose", 10);
     static auto marker_pub = node_->create_publisher<visualization_msgs::msg::Marker>("camera_fov_marker", 10);
+    
 
     std::cout << "--State Calculate Nbv--" << std::endl;
     
     RayView ray_view = exploration_planner_->getCurrentRayView();
     std::cout << "information gain from view: " << ray_view.num_unknowns << std::endl;
-    
-    robot_trajectory::RobotTrajectory traj = exploration_planner_->calculate_nbv();
-    std::cout << "Number of waypoints in the trajectory: " << traj.getWayPointCount() << std::endl;
 
+    std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Request> request = std::make_shared<automatic_cell_explorer::srv::MoveToNbv::Request>(exploration_planner_->calculate_nbv());
+
+    handle_move_robot(request);
 
     // Vizualize Result
 
@@ -78,11 +86,28 @@ void StateMachineNode::handle_calculate_nbv(){
     current_state_ = State::Move_robot;
 }
 
-void StateMachineNode::handle_move_robot(){
-
+void StateMachineNode::handle_move_robot(std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Request> request){
+/// Call service and wait
     std::cout << "--State MoveRobot--" << std::endl;
 
-    current_state_ = State::Capture;
+    auto future_result = move_client_->async_send_request(request);
+
+    // Block and wait until the response is received
+    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_result) ==
+        rclcpp::FutureReturnCode::SUCCESS)
+    {
+        auto response = future_result.get();
+        if (response->success) {
+            RCLCPP_INFO(this->get_logger(), "Service call succeeded. Robot moved successfully.");
+        } else {
+            RCLCPP_ERROR(this->get_logger(), "Service call failed. Execution was unsuccessful.");
+        }
+    } 
+    else 
+    {
+        RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service.");
+    }
+    current_state_ = State::Finished;
 }
 
 
@@ -156,7 +181,7 @@ void StateMachineNode::execute_state_machine()
                 break;
 
             case State::Move_robot:
-                handle_move_robot();
+                //call handle function here?
                 break;
             
             case State::Finished:
