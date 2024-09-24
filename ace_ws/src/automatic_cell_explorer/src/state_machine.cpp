@@ -21,7 +21,6 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface)
     octomap_subscriber_ =
       this->create_subscription<octomap_msgs::msg::Octomap>("/octomap_full", rclcpp::QoS(1), std::bind(&StateMachineNode::update_planning_scene, this, std::placeholders::_1));
 
-
     world_publisher_ =
       this->create_publisher<moveit_msgs::msg::PlanningSceneWorld>("/planning_scene_world",rclcpp::SystemDefaultsQoS());
    
@@ -29,12 +28,11 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface)
 
 }
 
-
-
 void StateMachineNode::handle_initialise(){
     std::cout << "--State Initialise--" << std::endl;
+
     node_ = shared_from_this();
-    
+
     current_state_ = State::Capture;
 }
 
@@ -54,6 +52,7 @@ void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
     auto rviz_publisher = node_->create_publisher<visualization_msgs::msg::MarkerArray>("ray_visualization", 10);
     static auto pose_pub = node_->create_publisher<geometry_msgs::msg::PoseStamped>("sensor_pose", 10);
+    static auto marker_pub = node_->create_publisher<visualization_msgs::msg::Marker>("camera_fov_marker", 10);
 
     RayView ray_view = exploration_planner_->getCurrentRayView();
     std::cout << "information gain from view: " << ray_view.num_unknowns << std::endl;
@@ -70,7 +69,7 @@ void StateMachineNode::handle_calculate_nbv(){
     pose_msg.pose = tf2::toMsg(sensor_state);
     pose_pub->publish(pose_msg);
 
-    publish_fov_marker(sensor_state, 64.0, 36.0, 0.3, node_);
+    publish_fov_marker(node_, marker_pub, sensor_state, 64.0, 36.0);
 
     current_state_ = State::Move_robot;
 }

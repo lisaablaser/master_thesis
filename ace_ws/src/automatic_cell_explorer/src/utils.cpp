@@ -1,31 +1,29 @@
+#include <visualization_msgs/msg/marker.hpp>
+#include <tf2_eigen/tf2_eigen.hpp>
+#include <Eigen/Geometry>
 
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include "automatic_cell_explorer/utils.hpp" 
 
+
 void publishRays(const std::vector<RayInfo>& rays,
                  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher) 
 {
-    
     visualization_msgs::msg::MarkerArray marker_array;
 
     for (size_t i = 0; i < rays.size(); ++i) {
         
         visualization_msgs::msg::Marker start_marker, end_marker;
 
-        
         start_marker.header.frame_id = end_marker.header.frame_id = "world"; 
         start_marker.ns = end_marker.ns = "raycasting";
         start_marker.action = end_marker.action = visualization_msgs::msg::Marker::ADD;
-        
         start_marker.type = end_marker.type = visualization_msgs::msg::Marker::SPHERE;
-
-        // Set the scale for the points (size of the sphere)
         start_marker.scale.x = start_marker.scale.y = start_marker.scale.z = 0.1;  
         end_marker.scale.x = end_marker.scale.y = end_marker.scale.z = 0.1;        
 
-    
         start_marker.color.a = 1.0;
-        start_marker.color.r = 1.0; // Red for the start point
+        start_marker.color.r = 1.0; 
         start_marker.color.g = 0.0;
         start_marker.color.b = 0.0;
 
@@ -33,18 +31,16 @@ void publishRays(const std::vector<RayInfo>& rays,
         if (rays[i].hit_unknown) {
             end_marker.color.r = 0.0;
             end_marker.color.g = 1.0;
-            end_marker.color.b = 0.0; // Green for unknown space
+            end_marker.color.b = 0.0; 
         } else {
             end_marker.color.r = 0.0;
             end_marker.color.g = 1.0;
-            end_marker.color.b = 1.0; // For free and occupied space
+            end_marker.color.b = 1.0; 
         }
 
-        // Set unique IDs for the markers
-        start_marker.id = i * 2;        // Even ID for start point
-        end_marker.id = i * 2 + 1;      // Odd ID for end point
+        start_marker.id = i * 2;        
+        end_marker.id = i * 2 + 1;      
 
-        // Set the positions for the start and end points
         start_marker.pose.position.x = rays[i].start.x();
         start_marker.pose.position.y = rays[i].start.y();
         start_marker.pose.position.z = rays[i].start.z();
@@ -102,73 +98,58 @@ sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<
 }
 
 void printTransform(const Eigen::Isometry3d& transform) {
-    // Extract the translation (position)
     Eigen::Vector3d translation = transform.translation();
     std::cout << "Translation (x, y, z): " 
               << translation.x() << ", " 
               << translation.y() << ", " 
               << translation.z() << std::endl;
 
-    // Extract the rotation as a quaternion
     Eigen::Quaterniond rotation(transform.rotation());
     std::cout << "Rotation (quaternion): "
               << "w: " << rotation.w() << ", "
               << "x: " << rotation.x() << ", "
               << "y: " << rotation.y() << ", "
               << "z: " << rotation.z() << std::endl;
-
-    // Optional: Print rotation as Euler angles if preferred
-    Eigen::Vector3d euler_angles = transform.rotation().eulerAngles(0, 1, 2); // roll (X), pitch (Y), yaw (Z)
+    Eigen::Vector3d euler_angles = transform.rotation().eulerAngles(0, 1, 2);
     std::cout << "Rotation (Euler angles): "
               << "roll: " << euler_angles.x() << ", "
               << "pitch: " << euler_angles.y() << ", "
               << "yaw: " << euler_angles.z() << std::endl;
 }
 
-#include <visualization_msgs/msg/marker.hpp>
-#include <tf2_eigen/tf2_eigen.hpp>
-#include <Eigen/Geometry>
 
-void publish_fov_marker(const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y, double range, std::shared_ptr<rclcpp::Node> node_) {
-    // Create the ROS node (if not created already)
+void publish_fov_marker(std::shared_ptr<rclcpp::Node> node_, rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher, const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y) {
     
-    static auto marker_pub = node_->create_publisher<visualization_msgs::msg::Marker>("camera_fov_marker", 10);
-
-    // Create the marker
+    double range = 0.3;
     visualization_msgs::msg::Marker marker;
-    marker.header.frame_id = "world";  // Change as per your setup
+    marker.header.frame_id = "world"; 
     marker.header.stamp = node_->now();
     marker.ns = "camera_fov";
     marker.id = 0;
     marker.type = visualization_msgs::msg::Marker::LINE_LIST;
     marker.action = visualization_msgs::msg::Marker::ADD;
-    marker.pose = tf2::toMsg(camera_pose);  // Camera pose in the map frame
+    marker.pose = tf2::toMsg(camera_pose);  
     marker.scale.x = 0.02;  // Line thickness
 
-    // Set color for the FOV lines
     marker.color.r = 0.0f;
     marker.color.g = 1.0f;
     marker.color.b = 0.0f;
     marker.color.a = 1.0f;
 
-    // Camera FOV calculations
     double half_fov_x = fov_x / 2.0;
     double half_fov_y = fov_y / 2.0;
 
-    // Near plane points at a distance of 'range' from the camera
-    Eigen::Vector3d camera_origin = camera_pose.translation();
-    Eigen::Vector3d top_left(-range * tan(half_fov_x), range * tan(half_fov_y), range);
-    Eigen::Vector3d top_right(range * tan(half_fov_x), range * tan(half_fov_y), range);
-    Eigen::Vector3d bottom_left(-range * tan(half_fov_x), -range * tan(half_fov_y), range);
-    Eigen::Vector3d bottom_right(range * tan(half_fov_x), -range * tan(half_fov_y), range);
+    Eigen::Vector3d top_left(range, -range * tan(half_fov_y), range * tan(half_fov_x));     
+    Eigen::Vector3d top_right(range, range * tan(half_fov_y), range * tan(half_fov_x));     
+    Eigen::Vector3d bottom_left(range, -range * tan(half_fov_y), -range * tan(half_fov_x)); 
+    Eigen::Vector3d bottom_right(range, range * tan(half_fov_y), -range * tan(half_fov_x)); 
 
-    // Create FOV lines (camera origin to frustum corners)
     geometry_msgs::msg::Point p_origin, p1, p2, p3, p4;
-    
-    // Origin
-    p_origin.x = p_origin.y = p_origin.z = 0.0;
+ 
+    p_origin.x = 0.0;
+    p_origin.y = 0.0;
+    p_origin.z = 0.0;
 
-    // Corner points of the frustum
     p1.x = top_left.x();
     p1.y = top_left.y();
     p1.z = top_left.z();
@@ -185,18 +166,15 @@ void publish_fov_marker(const Eigen::Isometry3d& camera_pose, double fov_x, doub
     p4.y = bottom_right.y();
     p4.z = bottom_right.z();
 
-    // Add lines from the camera origin to the FOV corners
-    marker.points.push_back(p_origin); marker.points.push_back(p1);  // Origin -> Top left
-    marker.points.push_back(p_origin); marker.points.push_back(p2);  // Origin -> Top right
-    marker.points.push_back(p_origin); marker.points.push_back(p3);  // Origin -> Bottom left
-    marker.points.push_back(p_origin); marker.points.push_back(p4);  // Origin -> Bottom right
+    marker.points.push_back(p_origin); marker.points.push_back(p1);  
+    marker.points.push_back(p_origin); marker.points.push_back(p2);  
+    marker.points.push_back(p_origin); marker.points.push_back(p3);  
+    marker.points.push_back(p_origin); marker.points.push_back(p4);  
 
-    // Add lines to connect the FOV corners (for visualizing the frustum)
-    marker.points.push_back(p1); marker.points.push_back(p2);  // Top left -> Top right
-    marker.points.push_back(p3); marker.points.push_back(p4);  // Bottom left -> Bottom right
-    marker.points.push_back(p1); marker.points.push_back(p3);  // Top left -> Bottom left
-    marker.points.push_back(p2); marker.points.push_back(p4);  // Top right -> Bottom right
+    marker.points.push_back(p1); marker.points.push_back(p2); 
+    marker.points.push_back(p3); marker.points.push_back(p4); 
+    marker.points.push_back(p1); marker.points.push_back(p3);  
+    marker.points.push_back(p2); marker.points.push_back(p4); 
 
-    // Publish the marker
-    marker_pub->publish(marker);
+    publisher->publish(marker);
 }

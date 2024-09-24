@@ -18,9 +18,6 @@ int main(int argc, char **argv)
     rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
     );
 
-    
-    //pc_node->set_parameter(rclcpp::Parameter("sensors",std::vector<std::string>{"kinect_pointcloud"}));
-
     MoveGrpPtr mvt_interface =getMoveGroupInterface(moveit_node);
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface = getPlanningSceeneMonitiorPtr(pc_node);
 
@@ -31,20 +28,14 @@ int main(int argc, char **argv)
     moveit_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     pc_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     state_machine_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
-
-    
-    
     
     rclcpp::executors::MultiThreadedExecutor executor;
 
-    // Add both nodes to the executor
     executor.add_node(moveit_node);
     executor.add_node(move_robot_node);
     executor.add_node(pc_node);
     
 
-
-    // Spin the executor (this will run both nodes concurrently)
     std::thread spin_thread([&executor]() {
         executor.spin();
     });
