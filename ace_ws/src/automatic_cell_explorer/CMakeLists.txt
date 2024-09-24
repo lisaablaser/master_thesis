@@ -18,7 +18,7 @@ find_package(Eigen3 REQUIRED)
 find_package(moveit_msgs REQUIRED)
 # Generate service
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/MoveToNbv.srv"
+  "srv/Execute.srv"
   DEPENDENCIES moveit_msgs
 )
 

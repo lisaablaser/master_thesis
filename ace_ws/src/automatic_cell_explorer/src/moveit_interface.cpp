@@ -17,14 +17,14 @@ PlnScnPtr getPlanningSceenePtr(){
 
 //need a worldGeometryMonitor updated by OccupancyMapMpnitor updated by a pointCloudOccupancyMapUpdater. 
 
-planning_scene_monitor::PlanningSceneMonitorPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node){
+PlnScnMonPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node){
 
 
-    auto psm = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(node,"robot_description");
+    auto psm = std::make_shared<PlnScnMon>(node,"robot_description");
     psm->startSceneMonitor();
     psm->startWorldGeometryMonitor();
     psm->startStateMonitor();
-    psm->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,"/monitored_planning_scene");
+    psm->startPublishingPlanningScene(PlnScnMon::UPDATE_SCENE,"/monitored_planning_scene");
     psm->providePlanningSceneService();
 
     return psm;

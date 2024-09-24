@@ -17,9 +17,10 @@
 class ExplorationPlanner
 {
 public:
-  ExplorationPlanner(MoveGrpPtr mvt_interface,std::shared_ptr<octomap::OcTree> octo_map);
+  
+  ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map);
 
-  automatic_cell_explorer::srv::MoveToNbv::Request calculate_nbv();
+  ExecuteReq calculate_nbv();
  
   double calculate_occupied_volume() const;
 
@@ -33,7 +34,7 @@ private:
   MoveGrpPtr mvt_interface_;
   std::shared_ptr<octomap::OcTree> octo_map_;
 
-  moveit::planning_interface::MoveGroupInterface::Plan plan(geometry_msgs::msg::PoseStamped pose);
+  Plan plan(geometry_msgs::msg::PoseStamped pose);
   geometry_msgs::msg::PoseStamped generate_nvb_candidate();
 
   double compute_node_volume(double resolution) const;

@@ -12,13 +12,16 @@
 #include "automatic_cell_explorer/exploration_planner.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
 
-typedef std::shared_ptr<ExplorationPlanner> ExplorationPlannerPtr;
+
+
 
 enum class State {Initialise, Capture, Calculate_NBV, Move_robot, Finished, WaitingForOctomap, Error};
 
 class StateMachineNode : public rclcpp::Node
 {
 public:
+    using ExplorationPlannerPtr = std::shared_ptr<ExplorationPlanner>;
+
     StateMachineNode(MoveGrpPtr mvt_interface);
     void execute_state_machine();
     bool is_finished() const { return finished_; }
@@ -30,18 +33,19 @@ private:
     std::atomic<bool> finished_;
     std::shared_ptr<octomap::OcTree> octomap_;
     ExplorationPlannerPtr exploration_planner_;
+    ExecuteReq current_req_;
 
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
     rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_subscriber_;
     rclcpp::Publisher<moveit_msgs::msg::PlanningSceneWorld>::SharedPtr world_publisher_;
-    rclcpp::Client<automatic_cell_explorer::srv::MoveToNbv>::SharedPtr move_client_;
+    rclcpp::Client<Execute>::SharedPtr move_client_;
 
 
     // State handling methods
     void handle_initialise();
     void handle_capture();
     void handle_calculate_nbv();
-    void handle_move_robot(std::shared_ptr<automatic_cell_explorer::srv::MoveToNbv::Request>);
+    void handle_move_robot();
 
 
     // Callback methods

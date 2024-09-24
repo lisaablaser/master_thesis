@@ -45,13 +45,13 @@ RayView ExplorationPlanner::getCurrentRayView(double max_range){
 
 
 
-automatic_cell_explorer::srv::MoveToNbv::Request ExplorationPlanner::calculate_nbv(){
+ExecuteReq ExplorationPlanner::calculate_nbv(){
     std::cout << "Calculating NBV function" << std::endl;
 
     geometry_msgs::msg::PoseStamped pose = generate_nvb_candidate();
-    moveit::planning_interface::MoveGroupInterface::Plan p = plan(pose);
+    Plan p = plan(pose);
 
-    automatic_cell_explorer::srv::MoveToNbv::Request req;
+    ExecuteReq req;
     req.start_state = p.start_state;
     req.trajectory = p.trajectory;
 
@@ -59,7 +59,7 @@ automatic_cell_explorer::srv::MoveToNbv::Request ExplorationPlanner::calculate_n
 
 }
 
-moveit::planning_interface::MoveGroupInterface::Plan ExplorationPlanner::plan(geometry_msgs::msg::PoseStamped pose){
+Plan ExplorationPlanner::plan(geometry_msgs::msg::PoseStamped pose){
 
     planning_interface::MotionPlanRequest req;
 
@@ -78,9 +78,9 @@ moveit::planning_interface::MoveGroupInterface::Plan ExplorationPlanner::plan(ge
 
 
     auto const [success, plan] = [&mvt_interface = mvt_interface_]{
-      moveit::planning_interface::MoveGroupInterface::Plan msg;
-      auto const ok = static_cast<bool>(mvt_interface->plan(msg));
-      return std::make_pair(ok, msg);
+      Plan p;
+      auto const ok = static_cast<bool>(mvt_interface->plan(p));
+      return std::make_pair(ok, p);
     }();
 
     if(success) {

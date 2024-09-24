@@ -13,9 +13,11 @@ using MoveGrp = moveit::planning_interface::MoveGroupInterface;
 using MoveGrpPtr = moveit::planning_interface::MoveGroupInterfacePtr; 
 using PlnScn = moveit::planning_interface::PlanningSceneInterface;
 using PlnScnPtr = moveit::planning_interface::PlanningSceneInterfacePtr;
+using PlnScnMon = planning_scene_monitor::PlanningSceneMonitor;
+using PlnScnMonPtr = planning_scene_monitor::PlanningSceneMonitorPtr;
 
 MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node);
 PlnScnPtr getPlanningSceenePtr();
-planning_scene_monitor::PlanningSceneMonitorPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node);
+PlnScnMonPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node);
 
 #endif // MOVEIT_INTERFACE_HPP

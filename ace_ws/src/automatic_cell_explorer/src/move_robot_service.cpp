@@ -10,19 +10,18 @@
 //change to recieve a trajectory
 
 
-  MoveRobotNode::MoveRobotNode(MoveGrpPtr mvt_interface)
+  MoveRobotService::MoveRobotService(MoveGrpPtr mvt_interface)
   : Node("move_robot_service_node")
   {
     mvt_interface_ =mvt_interface;
-    move_robot_service_ = this->create_service<MvToNbv>(
-      "/move_robot_to_pose", std::bind(&MoveRobotNode::move_robot_callback, this, std::placeholders::_1, std::placeholders::_2));
+    move_robot_service_ = this->create_service<Execute>(
+      "/move_robot", std::bind(&MoveRobotService::move_robot_callback, this, std::placeholders::_1, std::placeholders::_2));
 
   }
 
-  void MoveRobotNode::move_robot_callback(const std::shared_ptr<MvToNbv::Request> request,
-                           std::shared_ptr<MvToNbv::Response> response)
+  void MoveRobotService::move_robot_callback(const std::shared_ptr<ExecuteReq> request, std::shared_ptr<ExecuteRes> response)
   {
-  moveit::planning_interface::MoveGroupInterface::Plan plan;
+  Plan plan;
   plan.start_state = request->start_state;
   plan.trajectory = request->trajectory;
 

@@ -21,10 +21,10 @@ int main(int argc, char **argv)
     MoveGrpPtr mvt_interface =getMoveGroupInterface(moveit_node);
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface = getPlanningSceeneMonitiorPtr(pc_node);
 
-    auto move_robot_node = std::make_shared<MoveRobotNode>(mvt_interface);
+    auto move_robot_service_node = std::make_shared<MoveRobotService>(mvt_interface);
     auto state_machine_node = std::make_shared<StateMachineNode>(mvt_interface);
 
-    move_robot_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
+    move_robot_service_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     moveit_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     pc_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     state_machine_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     rclcpp::executors::MultiThreadedExecutor executor;
 
     executor.add_node(moveit_node);
-    executor.add_node(move_robot_node);
+    executor.add_node(move_robot_service_node);
     executor.add_node(pc_node);
     
 
