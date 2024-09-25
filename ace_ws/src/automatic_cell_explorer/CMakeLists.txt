@@ -42,7 +42,7 @@ include_directories(
 add_library(my_cpp_library
   src/exploration_planner.cpp
   src/state_machine.cpp
-  src/utils.cpp
+  src/visualize.cpp
   src/move_robot_service.cpp
   src/moveit_interface.cpp
   src/raycast.cpp

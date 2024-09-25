@@ -2,7 +2,7 @@
 #include <octomap_msgs/conversions.h>
 #include <tf2_eigen/tf2_eigen.hpp>
 #include "automatic_cell_explorer/state_machine.hpp"
-#include "automatic_cell_explorer/utils.hpp"
+#include "automatic_cell_explorer/visualize.hpp"
 
 
 

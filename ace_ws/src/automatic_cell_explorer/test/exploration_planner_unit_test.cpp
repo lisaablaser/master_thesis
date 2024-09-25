@@ -9,7 +9,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <eigen3/Eigen/Geometry>
 #include "automatic_cell_explorer/exploration_planner.hpp"
-#include "automatic_cell_explorer/utils.hpp"
+#include "automatic_cell_explorer/visualize.hpp"
 
 
 TEST(ExplorationPlannerTest, InitialState)

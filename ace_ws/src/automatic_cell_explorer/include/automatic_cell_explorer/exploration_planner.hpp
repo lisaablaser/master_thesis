@@ -10,7 +10,7 @@
 #include <moveit/planning_interface/planning_interface.h> 
 
 #include "automatic_cell_explorer/move_robot_service.hpp"
-#include "automatic_cell_explorer/utils.hpp"
+#include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
 
 struct Nbv{

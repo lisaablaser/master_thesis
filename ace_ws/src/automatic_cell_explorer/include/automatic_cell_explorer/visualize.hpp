@@ -1,5 +1,5 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef VISUALIZE_HPP
+#define VISUALIZE_HPP
 
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
@@ -16,4 +16,4 @@ void printTransform(const Eigen::Isometry3d& transform);
 void publish_fov_marker(std::shared_ptr<rclcpp::Node> node_, rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher, const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y); 
 
 
-#endif // UTILS_HPP
+#endif // VISUALIZE_HPP

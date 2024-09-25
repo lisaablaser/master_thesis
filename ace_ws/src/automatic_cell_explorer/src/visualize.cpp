@@ -3,7 +3,7 @@
 #include <Eigen/Geometry>
 
 #include <sensor_msgs/point_cloud2_iterator.hpp>
-#include "automatic_cell_explorer/utils.hpp" 
+#include "automatic_cell_explorer/visualize.hpp" 
 
 
 void publishRays(const std::vector<RayInfo>& rays,
