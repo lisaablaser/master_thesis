@@ -8,14 +8,12 @@
 #include <std_msgs/msg/bool.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 
-#include "automatic_cell_explorer/srv/execute.hpp"
+
 #include "automatic_cell_explorer/moveit_interface.hpp"
+#include "automatic_cell_explorer/execute_srv.hpp"
 
 
-using Execute = automatic_cell_explorer::srv::Execute;
-using ExecuteReq = automatic_cell_explorer::srv::Execute::Request;
-using ExecuteRes = automatic_cell_explorer::srv::Execute::Response;
-using Plan = moveit::planning_interface::MoveGroupInterface::Plan;
+
 
 class MoveRobotService : public rclcpp::Node{
 public:

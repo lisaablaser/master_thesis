@@ -9,9 +9,9 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/planning_interface/planning_interface.h> 
 
-#include "automatic_cell_explorer/move_robot_service.hpp"
+#include "automatic_cell_explorer/execute_srv.hpp"
 #include "automatic_cell_explorer/visualize.hpp"
-#include "automatic_cell_explorer/moveit_interface.hpp"
+#include "automatic_cell_explorer/moveit_types.hpp"
 
 struct Nbv{
   geometry_msgs::msg::PoseStamped pose;

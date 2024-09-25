@@ -6,8 +6,8 @@
 #include <pluginlib/class_loader.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 
-#include "automatic_cell_explorer/exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner_utils/raycast.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 
 
 

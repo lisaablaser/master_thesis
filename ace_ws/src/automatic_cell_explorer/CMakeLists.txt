@@ -40,14 +40,14 @@ include_directories(
 
 ## Declare a C++ library, the .cpp files are compiled into a library
 add_library(my_cpp_library
-  src/exploration_planner.cpp
   src/state_machine.cpp
   src/visualize.cpp
   src/move_robot_service.cpp
   src/moveit_interface.cpp
-  src/exploration_planner_utils/raycast.cpp
-  src/exploration_planner_utils/evaluate_nbv.cpp
-  src/exploration_planner_utils/sample_nbv.cpp
+  src/exploration_planner/exploration_planner.cpp
+  src/exploration_planner/raycast.cpp
+  src/exploration_planner/evaluate_nbv.cpp
+  src/exploration_planner/sample_nbv.cpp
 )
 
 # Link libraries to the library
