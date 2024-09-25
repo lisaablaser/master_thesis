@@ -1,4 +1,3 @@
-#include "automatic_cell_explorer/exploration_planner.hpp"
 #include <octomap/OcTree.h>
 #include <octomap/Pointcloud.h>
 #include <octomap/math/Vector3.h>
@@ -6,7 +5,9 @@
 #include <moveit/kinematic_constraints/utils.h>
 #include <pluginlib/class_loader.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
-#include "automatic_cell_explorer/raycast.hpp"
+
+#include "automatic_cell_explorer/exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner_utils/raycast.hpp"
 
 
 

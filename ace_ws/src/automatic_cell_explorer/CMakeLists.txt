@@ -45,7 +45,9 @@ add_library(my_cpp_library
   src/visualize.cpp
   src/move_robot_service.cpp
   src/moveit_interface.cpp
-  src/raycast.cpp
+  src/exploration_planner_utils/raycast.cpp
+  src/exploration_planner_utils/evaluate_nbv.cpp
+  src/exploration_planner_utils/sample_nbv.cpp
 )
 
 # Link libraries to the library

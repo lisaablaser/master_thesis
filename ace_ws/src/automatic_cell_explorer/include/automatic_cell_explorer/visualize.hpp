@@ -6,7 +6,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <octomap/octomap.h>
 #include <eigen3/Eigen/Geometry>
-#include "automatic_cell_explorer/raycast.hpp"
+
+#include "automatic_cell_explorer/exploration_planner_utils/raycast.hpp"
 
 sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<octomap::OcTree>& octree); 
 void publishRays(const std::vector<RayInfo>& rays,

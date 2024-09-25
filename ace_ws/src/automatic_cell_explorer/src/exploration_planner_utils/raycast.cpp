@@ -2,7 +2,7 @@
 #include <memory>
 
 #include <octomap/OcTree.h>
-#include "automatic_cell_explorer/raycast.hpp"
+#include "automatic_cell_explorer/exploration_planner_utils/raycast.hpp"
 
 
 
