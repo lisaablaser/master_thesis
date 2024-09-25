@@ -7,7 +7,8 @@
 #include <tf2_eigen/tf2_eigen.hpp>
 
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/raycast.hpp"
+#include "automatic_cell_explorer/exploration_planner/evaluate_nbv.hpp"
+
 
 
 
@@ -19,30 +20,6 @@ ExplorationPlanner::ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr
 {
 
 }
-
-
-RayView ExplorationPlanner::getCurrentRayView(double max_range){
-    /// TODO: move to evaluate_nbv.h
-
-    //take in nbv.pose
-    auto robot_state = mvt_interface_->getCurrentState();
-    auto joint_positions = mvt_interface_->getCurrentJointValues();
-    for(double j: joint_positions){
-
-        std::cout << j << std::endl;
-    }
-    robot_state->printStatePositions();
-    robot_state->update();
-    const Eigen::Isometry3d& sensor_state = robot_state->getGlobalLinkTransform("rgbd_camera");
-
-    robot_state->printStatePositions();
-
-    //modify since robot pose update does not work
-
-    return calculateRayView(sensor_state, octo_map_, max_range);
-}
-
-
 
 ExecuteReq ExplorationPlanner::get_nbv_demo(){
 /*
@@ -75,6 +52,27 @@ ExecuteReq ExplorationPlanner::get_nbv_demo(){
 
 }
 
+std::vector<RayView> ExplorationPlanner::getRayCast(){
+
+    // auto robot_state = mvt_interface_->getCurrentState();
+    // auto joint_positions = mvt_interface_->getCurrentJointValues();
+    // for(double j: joint_positions){
+
+    //     std::cout << j << std::endl;
+    // }
+    // robot_state->printStatePositions();
+    // robot_state->update();
+
+    // const Eigen::Isometry3d& sensor_state = robot_state->getGlobalLinkTransform("rgbd_camera");
+
+    // robot_state->printStatePositions();
+
+    std::vector<RayView> ray_views = getAllRayViews(nbv_candidates_, octo_map_);
+
+
+    return ray_views;
+}
+
 Nbv ExplorationPlanner::popFirstNbv() {
     /// TODO: move to samle_nbv.h
 
@@ -92,9 +90,6 @@ Nbv ExplorationPlanner::popFirstNbv() {
 std::optional<Plan> ExplorationPlanner::plan(geometry_msgs::msg::PoseStamped pose){
 
     planning_interface::MotionPlanRequest req;
-
-    double tolerance_pose = 0.01;
-    double tolerance_angle = 0.01;
 
     req.group_name = "ur_manipulator";
 

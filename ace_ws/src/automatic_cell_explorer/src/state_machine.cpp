@@ -1,15 +1,16 @@
 #include <iostream>
 #include <octomap_msgs/conversions.h>
 #include <tf2_eigen/tf2_eigen.hpp>
+
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/visualize.hpp"
 
 
-
-StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface) 
+StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_tool) 
     : Node("state_machine_node"), 
     node_(nullptr),
     mvt_interface_(mvt_interface),
+    rviz_tool_(rviz_tool),
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(0.1)),
@@ -29,8 +30,8 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface)
         this->create_client<Execute>("move_robot");
 
     while (!move_client_->wait_for_service(std::chrono::seconds(5))) {
-            RCLCPP_INFO(this->get_logger(), "Waiting for the move_robot service to be available...");
-        }
+        RCLCPP_INFO(this->get_logger(), "Waiting for the move_robot service to be available...");
+    }
 
     std::cout << "Initializing state machine with node name: " << this->get_name() << std::endl;
 
@@ -64,13 +65,13 @@ void StateMachineNode::handle_calculate_nbv(){
 
     std::cout << "--State Calculate Nbv--" << std::endl;
     
-    RayView ray_view = exploration_planner_->getCurrentRayView();
-    std::cout << "information gain from view: " << ray_view.num_unknowns << std::endl;
-
-
     /// TODO: also return all nbv_candidates, costs, traj etc. for viz
     ExecuteReq request = exploration_planner_->get_nbv_demo();
     current_req_ = request;
+
+    std::vector<RayView> ray_views = exploration_planner_->getRayCast();
+    RayView ray_view = ray_views.at(0); // error when nbv_candidates is empty.
+    std::cout << "information gain from view: " << ray_view.num_unknowns << std::endl;
 
 
     // Vizualize Result
@@ -87,7 +88,9 @@ void StateMachineNode::handle_calculate_nbv(){
     publishRays(ray_view.rays, rviz_publisher);
 
     /// TODO: add a wait for button
+    std::cout << "Press Enter to continue..." << std::endl;
     
+    rviz_tool_->prompt("Press next");
 
     current_state_ = State::Move_robot;
 }

@@ -12,16 +12,9 @@
 #include "automatic_cell_explorer/execute_srv.hpp"
 #include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/moveit_types.hpp"
+#include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 
-struct Nbv{
-  geometry_msgs::msg::PoseStamped pose;
-  Plan plan;
-  double cost;
-};
 
-struct NbvCandidates{
-  std::vector<Nbv> nbv_candidates;
-};
 
 
 class ExplorationPlanner
@@ -34,9 +27,7 @@ public:
  
   double calculate_occupied_volume() const;
 
-
-  RayView getCurrentRayView(
-    double max_range = 100.0);
+  std::vector<RayView> getRayCast();
 
 private:
   MoveGrpPtr mvt_interface_;

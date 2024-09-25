@@ -29,3 +29,14 @@ PlnScnMonPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node){
 
     return psm;
 }
+
+RvizToolPtr getRvizToolPtr(rclcpp::Node::SharedPtr node, PlnScnMonPtr plm_interface){
+
+    RvizToolPtr moveit_visual_tools = std::make_shared<RvizTool>(
+    node, "world", rviz_visual_tools::RVIZ_MARKER_TOPIC,
+    plm_interface);
+    moveit_visual_tools->deleteAllMarkers();
+    moveit_visual_tools->loadRemoteControl();
+
+    return moveit_visual_tools;
+}

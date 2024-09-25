@@ -17,23 +17,33 @@ int main(int argc, char **argv)
     "pc_node",
     rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
     );
+    auto rviz_node = std::make_shared<rclcpp::Node>(
+    "rviz_tools",
+    rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
+    );
 
-    MoveGrpPtr mvt_interface =getMoveGroupInterface(moveit_node);
+    MoveGrpPtr mvt_interface = getMoveGroupInterface(moveit_node);
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface = getPlanningSceeneMonitiorPtr(pc_node);
+    RvizToolPtr rviz_tool = getRvizToolPtr(rviz_node, plm_interface);
+    
 
     auto move_robot_service_node = std::make_shared<MoveRobotService>(mvt_interface);
-    auto state_machine_node = std::make_shared<StateMachineNode>(mvt_interface);
+    auto state_machine_node = std::make_shared<StateMachineNode>(mvt_interface, rviz_tool);
+
+
 
     move_robot_service_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     moveit_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     pc_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     state_machine_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
+
     
     rclcpp::executors::MultiThreadedExecutor executor;
 
     executor.add_node(moveit_node);
     executor.add_node(move_robot_service_node);
     executor.add_node(pc_node);
+    executor.add_node(rviz_node);
     
 
     std::thread spin_thread([&executor]() {

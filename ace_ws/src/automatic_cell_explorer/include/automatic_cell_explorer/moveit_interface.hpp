@@ -10,5 +10,6 @@
 MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node);
 PlnScnPtr getPlanningSceenePtr();
 PlnScnMonPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node);
+RvizToolPtr getRvizToolPtr(rclcpp::Node::SharedPtr rviz_node, PlnScnMonPtr plm_interface);
 
 #endif // MOVEIT_INTERFACE_HPP

@@ -16,6 +16,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(moveit_msgs REQUIRED)
+find_package(moveit_visual_tools REQUIRED)
 # Generate service
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Execute.srv"
@@ -71,6 +72,7 @@ ament_target_dependencies(my_cpp_library
   tf2_geometry_msgs
   moveit_ros_planning_interface
   moveit_msgs
+  moveit_visual_tools
 )
 
 rosidl_target_interfaces(my_cpp_library

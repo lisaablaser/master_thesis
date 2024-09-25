@@ -9,7 +9,8 @@
                 "/home/lisa/ws_moveit/install/**",
                 "/usr/include",
                 "/usr/include/eigen3",
-                "${workspaceFolder}/src/**"
+                "${workspaceFolder}/src/**",
+                "/home/lisa/workspaces/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
