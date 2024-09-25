@@ -66,8 +66,10 @@ void StateMachineNode::handle_calculate_nbv(){
     
     RayView ray_view = exploration_planner_->getCurrentRayView();
     std::cout << "information gain from view: " << ray_view.num_unknowns << std::endl;
-    ExecuteReq request = exploration_planner_->calculate_nbv();
 
+
+    /// TODO: also return all nbv_candidates, costs, traj etc. for viz
+    ExecuteReq request = exploration_planner_->get_nbv_demo();
     current_req_ = request;
 
 
@@ -83,6 +85,8 @@ void StateMachineNode::handle_calculate_nbv(){
     pose_pub->publish(pose_msg);
     publish_fov_marker(node_, marker_pub, sensor_state, 64.0, 36.0);
     publishRays(ray_view.rays, rviz_publisher);
+
+    /// TODO: add a wait for button
     
 
     current_state_ = State::Move_robot;
@@ -111,7 +115,11 @@ void StateMachineNode::handle_move_robot(){
         RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service.");
     }
     RCLCPP_INFO(this->get_logger(), "Should capture again now");
-    current_state_ = State::Finished;
+
+
+    // If success
+    current_state_ = State::Capture;
+    // If not sucess, get NBV
 }
 
 
@@ -122,15 +130,15 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
         octomap::OcTree* received_tree = dynamic_cast<octomap::OcTree*>(abstract_tree);
 
         if (received_tree) {
-            
+
+            /// TODO: Set initial free space in octomap. 
+
             octomap_->swapContent(*received_tree);
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
 
+            /// TODO: process octomap before published to planning scene. 
+ 
             moveit_msgs::msg::PlanningSceneWorld msg_out;
-            //msg_out.octomap.octomap.id = msg ->id;
-            //msg_out.octomap.octomap.binary = msg->binary;
-            //msg_out.octomap.octomap.data = msg->data;
-            //msg_out.octomap.octomap.header = msg->header;
             msg_out.octomap.header = msg->header;
             msg_out.octomap.set__octomap(*msg);
             world_publisher_->publish(msg_out);

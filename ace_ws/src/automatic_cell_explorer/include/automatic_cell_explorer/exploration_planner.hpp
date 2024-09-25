@@ -2,6 +2,7 @@
 #define EXPLORATION_PLANNER_HPP
 
 #include <memory>
+#include <optional> 
 #include <octomap/octomap.h>
 #include <rclcpp/rclcpp.hpp>
 #include <iostream>
@@ -12,6 +13,15 @@
 #include "automatic_cell_explorer/utils.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
 
+struct Nbv{
+  geometry_msgs::msg::PoseStamped pose;
+  Plan plan;
+  double cost;
+};
+
+struct NbvCandidates{
+  std::vector<Nbv> nbv_candidates;
+};
 
 
 class ExplorationPlanner
@@ -20,7 +30,7 @@ public:
   
   ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map);
 
-  ExecuteReq calculate_nbv();
+  ExecuteReq get_nbv_demo();
  
   double calculate_occupied_volume() const;
 
@@ -28,16 +38,20 @@ public:
   RayView getCurrentRayView(
     double max_range = 100.0);
 
-
-
 private:
   MoveGrpPtr mvt_interface_;
   std::shared_ptr<octomap::OcTree> octo_map_;
+  NbvCandidates nbv_candidates_;
 
-  Plan plan(geometry_msgs::msg::PoseStamped pose);
-  geometry_msgs::msg::PoseStamped generate_nvb_candidate();
+  std::optional<Plan> plan(geometry_msgs::msg::PoseStamped pose);
+  void generate_nvb_candidates_circle(double radius, double height, int resolution_degrees);
 
   double compute_node_volume(double resolution) const;
+  Nbv popFirstNbv();
+
+  //NBV_candidates
+  //select_nbv_from_candidates, and remove
+  //
   
   
 };
