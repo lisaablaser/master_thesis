@@ -20,6 +20,9 @@ ExplorationPlanner::ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr
 {
 
 }
+void ExplorationPlanner::generateCandidates(){
+    generate_nvb_candidates_circle(0.5, 1.5, 10);
+}
 
 ExecuteReq ExplorationPlanner::get_nbv_demo(){
 /*
@@ -52,26 +55,11 @@ ExecuteReq ExplorationPlanner::get_nbv_demo(){
 
 }
 
-std::vector<RayView> ExplorationPlanner::getRayCast(){
-
-    // auto robot_state = mvt_interface_->getCurrentState();
-    // auto joint_positions = mvt_interface_->getCurrentJointValues();
-    // for(double j: joint_positions){
-
-    //     std::cout << j << std::endl;
-    // }
-    // robot_state->printStatePositions();
-    // robot_state->update();
-
-    // const Eigen::Isometry3d& sensor_state = robot_state->getGlobalLinkTransform("rgbd_camera");
-
-    // robot_state->printStatePositions();
-
-    std::vector<RayView> ray_views = getAllRayViews(nbv_candidates_, octo_map_);
-
-
-    return ray_views;
+void ExplorationPlanner::evaluateNbvCandidates(){
+    updteRayViews(nbv_candidates_,octo_map_);
 }
+
+
 
 Nbv ExplorationPlanner::popFirstNbv() {
     /// TODO: move to samle_nbv.h
@@ -87,7 +75,7 @@ Nbv ExplorationPlanner::popFirstNbv() {
     return first_nbv;
 }
 
-std::optional<Plan> ExplorationPlanner::plan(geometry_msgs::msg::PoseStamped pose){
+std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
 
     planning_interface::MotionPlanRequest req;
 
@@ -121,6 +109,7 @@ std::optional<Plan> ExplorationPlanner::plan(geometry_msgs::msg::PoseStamped pos
 }
 
 
+
 void ExplorationPlanner::generate_nvb_candidates_circle(double radius, double height, int resolution_degrees)
 {
     /// TODO: move to generate_nbv.h
@@ -128,21 +117,19 @@ void ExplorationPlanner::generate_nvb_candidates_circle(double radius, double he
     for (int angle_deg = 0; angle_deg < 360; angle_deg += resolution_degrees)
     {
         Nbv nbv;
-        nbv.pose.header.frame_id = "world";
         
         double angle_rad = angle_deg * M_PI / 180.0;
 
-        nbv.pose.pose.position.x = radius * std::cos(angle_rad);
-        nbv.pose.pose.position.y = radius * std::sin(angle_rad);
-        nbv.pose.pose.position.z = height;  
+        Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+        pose.translation() = Eigen::Vector3d(radius * std::cos(angle_rad), 
+                                             radius * std::sin(angle_rad),  
+                                             height);                       
 
-        tf2::Quaternion quaternion;
-        quaternion.setRPY(0, 0, angle_rad);  // Set the yaw to the angle in radians to face outward
-        nbv.pose.pose.orientation.x = quaternion.x();
-        nbv.pose.pose.orientation.y = quaternion.y();
-        nbv.pose.pose.orientation.z = quaternion.z();
-        nbv.pose.pose.orientation.w = quaternion.w();
+        
+        Eigen::AngleAxisd yaw_rotation(angle_rad, Eigen::Vector3d::UnitZ());
+        pose.rotate(yaw_rotation);
 
+        nbv.pose = pose;
         nbv.cost = 0.0; 
         nbv.plan = Plan();
 

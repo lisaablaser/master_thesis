@@ -26,15 +26,20 @@ public:
   ExecuteReq get_nbv_demo();
  
   double calculate_occupied_volume() const;
+  void generateCandidates();
+  void evaluateNbvCandidates();
+  Nbv getNbv(){
+    return popFirstNbv();
+  }
 
-  std::vector<RayView> getRayCast();
+  NbvCandidates getNbvCandidates(){return nbv_candidates_;};
 
 private:
   MoveGrpPtr mvt_interface_;
   std::shared_ptr<octomap::OcTree> octo_map_;
   NbvCandidates nbv_candidates_;
 
-  std::optional<Plan> plan(geometry_msgs::msg::PoseStamped pose);
+  std::optional<Plan> plan(const Eigen::Isometry3d& pose);
   void generate_nvb_candidates_circle(double radius, double height, int resolution_degrees);
 
   double compute_node_volume(double resolution) const;

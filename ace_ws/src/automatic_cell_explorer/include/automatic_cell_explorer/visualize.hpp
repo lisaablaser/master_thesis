@@ -8,13 +8,22 @@
 #include <eigen3/Eigen/Geometry>
 
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
+#include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 
 sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<octomap::OcTree>& octree); 
 void publishRays(const std::vector<RayInfo>& rays,
                  rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher);
 
 void printTransform(const Eigen::Isometry3d& transform); 
-void publish_fov_marker(std::shared_ptr<rclcpp::Node> node_, rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher, const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y); 
-
+void publish_fov_marker(rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher, const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y); 
+void visualizeNbvCandidatesPose(
+    const NbvCandidates& nbv_candidates,
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub);
+void visualizeNbvRayView(
+    const Nbv& nbv,
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub);
+void visualizeNbvFOV(
+    const NbvCandidates& nbv_candidates,
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub);
 
 #endif // VISUALIZE_HPP

@@ -6,7 +6,7 @@
 
 
 
-std::vector<RayView> getAllRayViews(const NbvCandidates& nbvs,  std::shared_ptr<octomap::OcTree> octo_map);
+void updteRayViews(NbvCandidates& nbvs,  std::shared_ptr<octomap::OcTree> octo_map);
 
 
 #endif // EVALUATE_NBV_HPP

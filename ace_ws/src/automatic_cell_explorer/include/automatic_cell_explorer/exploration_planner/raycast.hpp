@@ -15,6 +15,10 @@ struct RayView{
     Eigen::Isometry3d pose;
 };
 
+struct RayViews{
+    std::vector<RayView> ray_views;
+};
+
 
 
 RayView calculateRayView(

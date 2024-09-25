@@ -1,4 +1,8 @@
+
+
 {
+    "cmake.configureOnOpen": true,
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
     "files.associations": {
         "cctype": "cpp",
         "clocale": "cpp",
@@ -100,5 +104,6 @@
         "version": "cpp",
         "core": "cpp",
         "*.inc": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/lisa/master_thesis/ace_ws/src/automatic_cell_explorer"
 }

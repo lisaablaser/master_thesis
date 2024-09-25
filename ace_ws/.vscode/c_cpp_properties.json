@@ -8,6 +8,7 @@
                 "/home/lisa/master_thesis/ace_ws/install/**",
                 "/home/lisa/ws_moveit/install/**",
                 "/usr/include",
+                "/usr/local/include",
                 "/usr/include/eigen3",
                 "${workspaceFolder}/src/**",
                 "/home/lisa/workspaces/**"

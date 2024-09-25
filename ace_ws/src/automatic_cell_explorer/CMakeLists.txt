@@ -139,4 +139,6 @@ install(
   DESTINATION share/${PROJECT_NAME}/worlds
 )
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 ament_package()

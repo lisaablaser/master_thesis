@@ -2,11 +2,13 @@
 #define NBV_HPP
 
 #include "automatic_cell_explorer/moveit_types.hpp"
+#include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 
 
 struct Nbv{
-  geometry_msgs::msg::PoseStamped pose;
+  Eigen::Isometry3d pose;
   Plan plan;
+  RayView ray_view;
   double cost;
 };
 
