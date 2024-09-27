@@ -9,6 +9,8 @@ using OctrePtr = std::shared_ptr<octomap::OcTree>;
 
 
 void clearSpaceAroundOrigin(octomap::OcTree* received_tree, double x, double y, double z, double resolution);
+void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree, double x, double y, double z, double resolution);
+
 OctrePtr extractUnknownOctree(const octomap::OcTree* octree);
 OctrePtr extractFreeOctree(const octomap::OcTree* octree);
 OctrePtr extractFrontierOctree(const octomap::OcTree* octree);

@@ -141,7 +141,11 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
         if (received_tree) {
 
-            clearSpaceAroundOrigin(received_tree, 1.0, 1.0, 2.0, 0.01);
+            // Inital safe space
+            clearSpaceAroundOrigin(received_tree, 1.5, 1.0, 2.0, 0.01);
+            octomap_ = std::make_shared<octomap::OcTree>(*received_tree);
+
+            // Extract to visualize only
             OctrePtr unknown_tree = extractUnknownOctree(received_tree);
             OctrePtr free_tree = extractFreeOctree(received_tree);
             OctrePtr frontier_tree = extractFrontierOctree(received_tree);
@@ -154,15 +158,20 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             free_space_pub->publish(free_pc);
             frontiers_pub->publish(frontiers_pc);
 
+            
+            // Modify planning scene to avoid unknown space
+            markUnknownSpaceAsObstacles(received_tree, 2.0, 2.0, 2.0, 0.01);
 
-            octomap_->swapContent(*received_tree);
+
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
 
             /// TODO: process octomap before published to planning scene. 
  
             moveit_msgs::msg::PlanningSceneWorld msg_out;
             msg_out.octomap.header = msg->header;
-            msg_out.octomap.set__octomap(*msg);
+            if (!octomap_msgs::fullMapToMsg(*received_tree, msg_out.octomap.octomap)) {
+                RCLCPP_ERROR(this->get_logger(), "Failed to convert modified OcTree back to Octomap message.");
+            }
             world_publisher_->publish(msg_out);
 
             current_state_ = State::Calculate_NBV;

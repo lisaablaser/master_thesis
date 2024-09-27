@@ -13,10 +13,30 @@ void clearSpaceAroundOrigin(octomap::OcTree* received_tree, double x, double y, 
         }
     }
 
-    // prune the tree to update it after modifications
     received_tree->updateInnerOccupancy();
 }
 
+void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree, double x, double y, double z, double resolution) {
+    double z_offset = 0.72;
+    for (double i = -x / 2.0; i <= x / 2.0; i += resolution) {
+        for (double j = -y / 2.0; j <= y / 2.0; j += resolution) {
+            for (double k = z_offset - z / 2.0; k <= z_offset + z / 2.0; k += resolution) {
+    
+                octomap::point3d point(i, j, k);
+                
+                octomap::OcTreeNode* node = received_tree->search(point);
+                
+                if (node == nullptr) {
+                    
+                    received_tree->updateNode(point, true); 
+                }
+            }
+        }
+    }
+
+    // Optionally, update inner nodes to reflect changes in the tree structure
+    received_tree->updateInnerOccupancy();
+}
 
 OctrePtr extractUnknownOctree(const octomap::OcTree* octree) {
 
