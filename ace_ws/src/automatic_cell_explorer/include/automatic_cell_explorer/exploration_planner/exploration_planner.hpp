@@ -18,19 +18,20 @@
 
 
 class ExplorationPlanner
+/// TODO: make this a template function
 {
 public:
   
   ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map);
 
   ExecuteReq get_nbv_demo();
- 
+
+  // Helper functions to visualize
   double calculate_occupied_volume() const;
-  void generateCandidates();
+  void generateCandidates() {generate_nvb_candidates_circle(0.5, 1.5, 10);}
   void evaluateNbvCandidates();
   Nbv getNbv() const;
-
-  NbvCandidates getNbvCandidates(){return nbv_candidates_;};
+  NbvCandidates getNbvCandidates()const{return nbv_candidates_;};
 
 private:
   MoveGrpPtr mvt_interface_;
@@ -42,10 +43,6 @@ private:
 
   double compute_node_volume(double resolution) const;
   Nbv popFirstNbv();
-
-  //NBV_candidates
-  //select_nbv_from_candidates, and remove
-  //
   
   
 };

@@ -3,6 +3,7 @@
 #include <tf2_eigen/tf2_eigen.hpp>
 
 #include "automatic_cell_explorer/state_machine.hpp"
+#include "automatic_cell_explorer/octomap_processor.hpp"
 #include "automatic_cell_explorer/visualize.hpp"
 
 
@@ -65,8 +66,6 @@ void StateMachineNode::handle_calculate_nbv(){
     auto nbv_candidates_pose_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates", 10);
     auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates_fov", 10);
     
-
-
     std::cout << "--State Calculate Nbv--" << std::endl;
     
     // Demo Explortion Planner
@@ -87,9 +86,10 @@ void StateMachineNode::handle_calculate_nbv(){
     visualizeNbvFov(nbv, 64.0, 36.0, marker_pub);
     visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
     visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
-    //publishRays(ray_view.rays, rviz_publisher);
+    publishRays(nbv.ray_view.rays, rviz_publisher);
 
 
+    // Progress to Nbv
     rviz_tool_->prompt("Press next");
     ExecuteReq request = exploration_planner_->get_nbv_demo();
     current_req_ = request;
@@ -129,13 +129,31 @@ void StateMachineNode::handle_move_robot(){
 
 void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::SharedPtr msg)
 {
+    
+    auto unknown_space_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("unknown_space", 10);
+    auto free_space_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("free_space", 10);
+    auto frontiers_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("frontiers", 10);
+
+
     octomap::AbstractOcTree* abstract_tree = octomap_msgs::msgToMap(*msg);
     if (abstract_tree) {
         octomap::OcTree* received_tree = dynamic_cast<octomap::OcTree*>(abstract_tree);
 
         if (received_tree) {
 
-            /// TODO: Set initial free space in octomap. 
+            clearSpaceAroundOrigin(received_tree, 1.0, 1.0, 2.0, 0.01);
+            OctrePtr unknown_tree = extractUnknownOctree(received_tree);
+            OctrePtr free_tree = extractFreeOctree(received_tree);
+            OctrePtr frontier_tree = extractFrontierOctree(received_tree);
+
+            sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
+            sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
+            sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
+
+            unknown_space_pub->publish(unknown_pc);
+            free_space_pub->publish(free_pc);
+            frontiers_pub->publish(frontiers_pc);
+
 
             octomap_->swapContent(*received_tree);
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");

@@ -20,9 +20,7 @@ ExplorationPlanner::ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr
 {
 
 }
-void ExplorationPlanner::generateCandidates(){
-    generate_nvb_candidates_circle(0.5, 1.5, 10);
-}
+
 
 ExecuteReq ExplorationPlanner::get_nbv_demo(){
 /*
