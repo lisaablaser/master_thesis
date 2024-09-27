@@ -142,7 +142,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
         if (received_tree) {
 
             // Inital safe space
-            clearSpaceAroundOrigin(received_tree, 1.5, 1.0, 2.0, 0.01);
+            createinitialSafeSpace(received_tree, 1.5, 1.0, 2.0, 0.01);
             octomap_ = std::make_shared<octomap::OcTree>(*received_tree);
 
             // Extract to visualize only
@@ -159,13 +159,11 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             frontiers_pub->publish(frontiers_pc);
 
             
-            // Modify planning scene to avoid unknown space
             markUnknownSpaceAsObstacles(received_tree, 2.0, 2.0, 2.0, 0.01);
 
 
             RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
 
-            /// TODO: process octomap before published to planning scene. 
  
             moveit_msgs::msg::PlanningSceneWorld msg_out;
             msg_out.octomap.header = msg->header;

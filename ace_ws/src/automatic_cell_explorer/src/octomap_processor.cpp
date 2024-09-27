@@ -1,7 +1,7 @@
 #include "automatic_cell_explorer/octomap_processor.hpp"
 
 
-void clearSpaceAroundOrigin(octomap::OcTree* received_tree, double x, double y, double z, double resolution) {
+void createinitialSafeSpace(octomap::OcTree* received_tree, double x, double y, double z, double resolution) {
     double z_offset = 0.72;
     
     for (double i = -x / 2.0; i <= x / 2.0; i += resolution) {
