@@ -28,9 +28,7 @@ public:
   double calculate_occupied_volume() const;
   void generateCandidates();
   void evaluateNbvCandidates();
-  Nbv getNbv(){
-    return popFirstNbv();
-  }
+  Nbv getNbv() const;
 
   NbvCandidates getNbvCandidates(){return nbv_candidates_;};
 

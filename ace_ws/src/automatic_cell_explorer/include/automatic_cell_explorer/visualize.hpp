@@ -10,20 +10,17 @@
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 
+using MarkerAPublisher = rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr;
+using MarkerPublisher = rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr;
+
+void visualizeNbvFov(const Nbv & nbv, double fov_x, double fov_y, MarkerPublisher publisher); 
+void visualizeNbvCandidatesPose( const NbvCandidates& nbv_candidates, MarkerAPublisher marker_pub);
+void visualizeNbvRayView( const Nbv& nbv, MarkerAPublisher marker_pub);
+void visualizeNbvCandidatesFOV( const NbvCandidates& nbv_candidates, MarkerAPublisher marker_pub);
+
 sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<octomap::OcTree>& octree); 
-void publishRays(const std::vector<RayInfo>& rays,
-                 rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher);
+void publishRays(const std::vector<RayInfo>& rays, MarkerAPublisher publisher);
 
 void printTransform(const Eigen::Isometry3d& transform); 
-void publish_fov_marker(rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher, const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y); 
-void visualizeNbvCandidatesPose(
-    const NbvCandidates& nbv_candidates,
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub);
-void visualizeNbvRayView(
-    const Nbv& nbv,
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub);
-void visualizeNbvFOV(
-    const NbvCandidates& nbv_candidates,
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub);
 
 #endif // VISUALIZE_HPP

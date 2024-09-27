@@ -37,6 +37,7 @@ ExecuteReq ExplorationPlanner::get_nbv_demo(){
 
     Nbv nbv = popFirstNbv();
 
+    
     auto result = plan(nbv.pose);
 
     if (result) {
@@ -60,9 +61,25 @@ void ExplorationPlanner::evaluateNbvCandidates(){
 }
 
 
+Nbv ExplorationPlanner::getNbv() const{
+    /*
+        Get the next Nbv candidate.
+    */
+     if (nbv_candidates_.nbv_candidates.empty()) {
+        throw std::runtime_error("No candidates available to pop.");
+    }
+
+    Nbv first_nbv = nbv_candidates_.nbv_candidates.front();
+
+    return first_nbv;
+
+}
 
 Nbv ExplorationPlanner::popFirstNbv() {
     /// TODO: move to samle_nbv.h
+    /*
+        Returns and deletes the nbv. 
+    */
 
     if (nbv_candidates_.nbv_candidates.empty()) {
         throw std::runtime_error("No candidates available to pop.");

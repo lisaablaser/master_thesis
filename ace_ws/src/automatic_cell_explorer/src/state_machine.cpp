@@ -59,46 +59,40 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     
     auto rviz_publisher = node_->create_publisher<visualization_msgs::msg::MarkerArray>("ray_visualization", 10);
-    static auto pose_pub = node_->create_publisher<geometry_msgs::msg::PoseStamped>("sensor_pose", 10);
-    static auto marker_pub = node_->create_publisher<visualization_msgs::msg::Marker>("camera_fov_marker", 10);
-    auto nbv_candidates_pose_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates", 10);
-    auto nbv_candidates_ray_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidate_rays", 10);
-    auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidate_fov", 10);
+
+    auto marker_pub = node_->create_publisher<visualization_msgs::msg::Marker>("nbv_fov", 10);
     auto nbv_ray_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_ray", 10);
+    auto nbv_candidates_pose_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates", 10);
+    auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates_fov", 10);
+    
 
 
     std::cout << "--State Calculate Nbv--" << std::endl;
     
-    /// TODO: also return all nbv_candidates, costs, traj etc. for viz
-    //exploration_planner_->generateCandidates();
-   
-    
-
-    ExecuteReq request = exploration_planner_->get_nbv_demo();
-    current_req_ = request;
-
-    //Nbv nbv = exploration_planner_->getNbv();
-    //visualizeNbvRayView(nbv, nbv_ray_pub); //test from view samled in free space. 
-
+    // Demo Explortion Planner
 
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
-    visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
 
+    if(nbv_candidates.nbv_candidates.empty()){
+        exploration_planner_->generateCandidates();
+        nbv_candidates = exploration_planner_->getNbvCandidates();
+    }
+   
+    Nbv nbv = exploration_planner_->getNbv();
     exploration_planner_->evaluateNbvCandidates();
-    visualizeNbvFOV(nbv_candidates, nbv_candidates_fov_pub);
-    //visualizeNbvCandidatesRayViews(nbv_candidates, nbv_candidates_ray_pub); //too hevy for rviz
-    
 
-    rviz_tool_->prompt("Press next");
+    // Visualizations
 
-
-
-
-    //pose_pub->publish(pose_msg);
-    //publish_fov_marker(marker_pub, sensor_state, 64.0, 36.0);
+    visualizeNbvRayView(nbv, nbv_ray_pub); //test from view samled in free space. 
+    visualizeNbvFov(nbv, 64.0, 36.0, marker_pub);
+    visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
+    visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
     //publishRays(ray_view.rays, rviz_publisher);
 
 
+    rviz_tool_->prompt("Press next");
+    ExecuteReq request = exploration_planner_->get_nbv_demo();
+    current_req_ = request;
 
     current_state_ = State::Move_robot;
 }

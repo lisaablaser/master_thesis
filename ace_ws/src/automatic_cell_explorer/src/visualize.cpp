@@ -7,7 +7,7 @@
 
 
 void publishRays(const std::vector<RayInfo>& rays,
-                 rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher) 
+                 MarkerAPublisher publisher) 
 {
     visualization_msgs::msg::MarkerArray marker_array;
 
@@ -118,8 +118,9 @@ void printTransform(const Eigen::Isometry3d& transform) {
 }
 
 
-void publish_fov_marker(rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr publisher, const Eigen::Isometry3d& camera_pose, double fov_x, double fov_y) {
+void visualizeNbvFov(const Nbv & nbv, double fov_x, double fov_y, MarkerPublisher publisher) {
     
+    Eigen::Isometry3d camera_pose = nbv.pose;
     double range = 0.3;
     visualization_msgs::msg::Marker marker;
     marker.header.frame_id = "world"; 
@@ -181,7 +182,7 @@ void publish_fov_marker(rclcpp::Publisher<visualization_msgs::msg::Marker>::Shar
 
 void visualizeNbvCandidatesPose(
     const NbvCandidates& nbv_candidates,
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub)
+    MarkerAPublisher marker_pub)
 {
     /*
         Visualize all nbv candidate poses as arrows
@@ -225,7 +226,7 @@ void visualizeNbvCandidatesPose(
 
 void visualizeNbvRayView(
     const Nbv& nbv,
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub)
+    MarkerAPublisher marker_pub)
 {
     visualization_msgs::msg::MarkerArray marker_array;
     int marker_id = 0;  // Unique ID for each marker
@@ -278,9 +279,9 @@ void visualizeNbvRayView(
     marker_pub->publish(marker_array);
 }
 
-void visualizeNbvFOV(
+void visualizeNbvCandidatesFOV(
     const NbvCandidates& nbv_candidates,
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr marker_pub)
+    MarkerAPublisher marker_pub)
 {
     visualization_msgs::msg::MarkerArray marker_array;
     int marker_id = 0;  
