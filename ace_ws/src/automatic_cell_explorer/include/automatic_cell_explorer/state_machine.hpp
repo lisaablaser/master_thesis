@@ -12,6 +12,7 @@
 #include "automatic_cell_explorer/move_robot_service.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
 
 
 

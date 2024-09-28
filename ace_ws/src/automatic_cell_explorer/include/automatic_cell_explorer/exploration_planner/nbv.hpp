@@ -10,6 +10,7 @@ struct Nbv{
   Plan plan;
   RayView ray_view;
   double cost;
+
 };
 
 struct NbvCandidates{

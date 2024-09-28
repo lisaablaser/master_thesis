@@ -50,6 +50,7 @@ add_library(my_cpp_library
   src/exploration_planner/raycast.cpp
   src/exploration_planner/evaluate_nbv.cpp
   src/exploration_planner/sample_nbv.cpp
+  src/exploration_planner/demo_exploration_planner.cpp
 )
 
 # Link libraries to the library

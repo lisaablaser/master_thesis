@@ -2,7 +2,7 @@
 
 
 
-void updteRayViews(NbvCandidates& nbvs,  std::shared_ptr<octomap::OcTree> octo_map){
+void updateRayViews(NbvCandidates& nbvs,  std::shared_ptr<octomap::OcTree> octo_map){
     double max_range = 10.0;
 
     for(Nbv &nbv: nbvs.nbv_candidates){

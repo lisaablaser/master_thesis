@@ -5,6 +5,7 @@
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/octomap_processor.hpp"
 #include "automatic_cell_explorer/visualize.hpp"
+#include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
 
 
 StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_tool) 
@@ -15,7 +16,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_to
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(0.1)),
-    exploration_planner_(std::make_shared<ExplorationPlanner>(mvt_interface_, octomap_)),
+    exploration_planner_(std::make_shared<DemoExplorationPlanner>(mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 
@@ -69,17 +70,19 @@ void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
     
     // Demo Explortion Planner
+    exploration_planner_->calculateNbvCandidates();
 
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
 
-    if(nbv_candidates.nbv_candidates.empty()){
-        exploration_planner_->generateCandidates();
-        nbv_candidates = exploration_planner_->getNbvCandidates();
-    }
-   
-    Nbv nbv = exploration_planner_->getNbv();
-    exploration_planner_->evaluateNbvCandidates();
+    Nbv nbv = exploration_planner_->selectNbv();
 
+    if (exploration_planner_->terminationCriteria()){
+        finished_ = true;
+        current_state_ = State::Finished;
+        return;
+
+    }
+    
     // Visualizations
 
     visualizeNbvRayView(nbv, nbv_ray_pub); //test from view samled in free space. 
@@ -91,9 +94,12 @@ void StateMachineNode::handle_calculate_nbv(){
 
     // Progress to Nbv
     rviz_tool_->prompt("Press next");
-    ExecuteReq request = exploration_planner_->get_nbv_demo();
-    current_req_ = request;
 
+    ExecuteReq req;
+    req.start_state = nbv.plan.start_state;
+    req.trajectory = nbv.plan.trajectory;
+   
+    current_req_ = req;
     current_state_ = State::Move_robot;
 }
 
