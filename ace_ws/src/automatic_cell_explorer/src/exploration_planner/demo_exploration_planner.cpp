@@ -1,17 +1,13 @@
 #include <octomap/OcTree.h>
 #include <octomap/Pointcloud.h>
 #include <octomap/math/Vector3.h>
-#include <moveit/robot_model_loader/robot_model_loader.h>
-#include <moveit/kinematic_constraints/utils.h>
-#include <pluginlib/class_loader.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
+#include <pluginlib/class_loader.hpp>
+#include <moveit/kinematic_constraints/utils.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
 
-#include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
 #include "automatic_cell_explorer/exploration_planner/evaluate_nbv.hpp"
 #include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
-
-
-
 
 void DemoExplorationPlanner::calculateNbvCandidates() {
 /*

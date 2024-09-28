@@ -1,7 +1,6 @@
-
 #include <memory>
-
 #include <octomap/OcTree.h>
+
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 
 
@@ -31,12 +30,9 @@ RayView calculateRayView(
     for (int i = 0; i < horizontal_rays; ++i) {
         for (int j = 0; j < vertical_rays; ++j) {
             
-            // Compute the angles for the current ray
             double horizontal_angle = (i - horizontal_rays / 2) * horizontal_step;
             double vertical_angle = (j - vertical_rays / 2) * vertical_step;
 
-            // Create the direction vector in the camera frame (assuming X-forward, Y-right, Z-down)
-            // TODO: Debug when robot state is actually updated.. 
             Eigen::Vector3d ray_direction_camera(
                 std::cos(horizontal_angle) * std::cos(vertical_angle), 
                 std::sin(horizontal_angle) * std::cos(vertical_angle),  
@@ -60,7 +56,6 @@ RayView calculateRayView(
             ray_view.rays.push_back({sensor_origin, ray_end, hit_unknown});
         }
     }
-
 
     return ray_view;
 }

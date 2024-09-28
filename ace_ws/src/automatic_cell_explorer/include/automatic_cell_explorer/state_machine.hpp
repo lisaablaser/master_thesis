@@ -11,6 +11,7 @@
 
 #include "automatic_cell_explorer/move_robot_service.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
+#include "automatic_cell_explorer/octomap_processor.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
 #include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
 
@@ -33,7 +34,7 @@ private:
     RvizToolPtr rviz_tool_;
     State current_state_;
     std::atomic<bool> finished_;
-    std::shared_ptr<octomap::OcTree> octomap_;
+    OctrePtr octomap_;
     ExplorationPlannerPtr exploration_planner_;
     ExecuteReq current_req_;
     
@@ -43,17 +44,14 @@ private:
     rclcpp::Publisher<moveit_msgs::msg::PlanningSceneWorld>::SharedPtr world_publisher_;
     rclcpp::Client<Execute>::SharedPtr move_client_;
 
-    
 
-
-    // State handling methods
     void handle_initialise();
     void handle_capture();
     void handle_calculate_nbv();
     void handle_move_robot();
 
 
-    // Callback methods
+    // Callback
     void update_planning_scene(const octomap_msgs::msg::Octomap::SharedPtr msg);
 
 };

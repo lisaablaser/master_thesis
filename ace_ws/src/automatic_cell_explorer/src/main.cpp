@@ -7,7 +7,6 @@
 
 int main(int argc, char **argv)
 {
-    
     rclcpp::init(argc, argv);
     auto moveit_node = std::make_shared<rclcpp::Node>(
     "moveit",
@@ -26,18 +25,14 @@ int main(int argc, char **argv)
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface = getPlanningSceeneMonitiorPtr(pc_node);
     RvizToolPtr rviz_tool = getRvizToolPtr(rviz_node, plm_interface);
     
-
     auto move_robot_service_node = std::make_shared<MoveRobotService>(mvt_interface);
     auto state_machine_node = std::make_shared<StateMachineNode>(mvt_interface, rviz_tool);
-
-
 
     move_robot_service_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     moveit_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     pc_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     state_machine_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
-    
     rclcpp::executors::MultiThreadedExecutor executor;
 
     executor.add_node(moveit_node);
@@ -54,12 +49,10 @@ int main(int argc, char **argv)
     plm_interface -> getMonitoredTopics(topics);
     for (auto t:topics){std::cout<<t << " ";}
     std::cout<<std::endl;
-
    
     state_machine_node->execute_state_machine();
     while (rclcpp::ok() ) {
     }
-
     
     std::cout << "Shutting down from main" << std::endl;
     rclcpp::shutdown();

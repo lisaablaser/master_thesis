@@ -1,7 +1,7 @@
 #include "automatic_cell_explorer/octomap_processor.hpp"
 
 
-void createinitialSafeSpace(octomap::OcTree* received_tree, double x, double y, double z, double resolution) {
+void createInitialSafeSpace(octomap::OcTree* received_tree, double x, double y, double z, double resolution) {
     double z_offset = 0.72;
     
     for (double i = -x / 2.0; i <= x / 2.0; i += resolution) {
@@ -34,7 +34,6 @@ void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree, double x, doubl
         }
     }
 
-    // Optionally, update inner nodes to reflect changes in the tree structure
     received_tree->updateInnerOccupancy();
 }
 
@@ -55,7 +54,7 @@ OctrePtr extractUnknownOctree(const octomap::OcTree* octree) {
     octomap::OcTreeKey minKey, maxKey;
     if (!octree->coordToKeyChecked(min, minKey) || !octree->coordToKeyChecked(max, maxKey)) {
         
-        return unknownVoxelsTree; // Return the empty tree in case of out-of-bounds error
+        return unknownVoxelsTree;
     }
 
     for (double x = min.x(); x <= max.x(); x += resolution) {
@@ -63,7 +62,7 @@ OctrePtr extractUnknownOctree(const octomap::OcTree* octree) {
             for (double z = min.z(); z <= max.z(); z += resolution) {
                 octomap::OcTreeKey key = octree->coordToKey(x, y, z);
                 octomap::OcTreeNode* node = octree->search(key);
-                if (!node) { // Node does not exist, indicating an unknown area
+                if (!node) {
                     unknownVoxelsTree->updateNode(octomap::point3d(x, y, z), true);
                 }
             }
@@ -112,7 +111,7 @@ OctrePtr extractFrontierOctree(const octomap::OcTree* octree) {
 
     for (octomap::OcTree::leaf_iterator it = octree->begin_leafs(), end = octree->end_leafs(); it != end; ++it) {
         if (octree->isNodeOccupied(*it)) {
-            continue; // Skip occupied nodes
+            continue; 
         } else {
             // The node is free. Check if any of its neighbors are unknown
             bool isFrontier = false;

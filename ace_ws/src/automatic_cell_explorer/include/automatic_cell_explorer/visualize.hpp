@@ -1,14 +1,14 @@
 #ifndef VISUALIZE_HPP
 #define VISUALIZE_HPP
 
-#include <visualization_msgs/msg/marker_array.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <octomap/octomap.h>
 #include <eigen3/Eigen/Geometry>
+#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
-#include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
+#include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 
 using MarkerAPublisher = rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr;
 using MarkerPublisher = rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr;

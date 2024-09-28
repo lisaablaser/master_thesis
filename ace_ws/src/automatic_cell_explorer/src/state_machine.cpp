@@ -1,10 +1,9 @@
 #include <iostream>
-#include <octomap_msgs/conversions.h>
 #include <tf2_eigen/tf2_eigen.hpp>
+#include <octomap_msgs/conversions.h>
 
-#include "automatic_cell_explorer/state_machine.hpp"
-#include "automatic_cell_explorer/octomap_processor.hpp"
 #include "automatic_cell_explorer/visualize.hpp"
+#include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
 
 
@@ -36,7 +35,6 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_to
     }
 
     std::cout << "Initializing state machine with node name: " << this->get_name() << std::endl;
-
 }
 
 void StateMachineNode::handle_initialise(){
@@ -59,24 +57,23 @@ void StateMachineNode::handle_capture(){
 }
 
 void StateMachineNode::handle_calculate_nbv(){
+    std::cout << "--State Calculate Nbv--" << std::endl;
     
     auto rviz_publisher = node_->create_publisher<visualization_msgs::msg::MarkerArray>("ray_visualization", 10);
-
     auto marker_pub = node_->create_publisher<visualization_msgs::msg::Marker>("nbv_fov", 10);
     auto nbv_ray_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_ray", 10);
     auto nbv_candidates_pose_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates", 10);
     auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates_fov", 10);
     
-    std::cout << "--State Calculate Nbv--" << std::endl;
+  
     
-    // Demo Explortion Planner
+
     exploration_planner_->calculateNbvCandidates();
-
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
-
     Nbv nbv = exploration_planner_->selectNbv();
 
     if (exploration_planner_->terminationCriteria()){
+        std::cout << "Planner reached termination criteria" << std::endl;
         finished_ = true;
         current_state_ = State::Finished;
         return;
@@ -84,27 +81,23 @@ void StateMachineNode::handle_calculate_nbv(){
     }
     
     // Visualizations
-
-    visualizeNbvRayView(nbv, nbv_ray_pub); //test from view samled in free space. 
+    visualizeNbvRayView(nbv, nbv_ray_pub); /// TODO: improve ray visualization
     visualizeNbvFov(nbv, 64.0, 36.0, marker_pub);
     visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
     visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
     publishRays(nbv.ray_view.rays, rviz_publisher);
 
 
-    // Progress to Nbv
+    // Progress
     rviz_tool_->prompt("Press next");
-
     ExecuteReq req;
     req.start_state = nbv.plan.start_state;
     req.trajectory = nbv.plan.trajectory;
-   
     current_req_ = req;
     current_state_ = State::Move_robot;
 }
 
 void StateMachineNode::handle_move_robot(){
-/// Call service and wait
     std::cout << "--State MoveRobot--" << std::endl;
 
     auto request_ptr = std::make_shared<ExecuteReq>(current_req_);
@@ -127,50 +120,45 @@ void StateMachineNode::handle_move_robot(){
     RCLCPP_INFO(this->get_logger(), "Should capture again now");
 
 
-    // If success
+    
     current_state_ = State::Capture;
-    // If not sucess, get NBV
+    // If not sucess, chnge to calculateNbv state. 
 }
 
 
 void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::SharedPtr msg)
 {
-    
+    RCLCPP_INFO(this->get_logger(), "New octompa recieved, updating planning scene.");
     auto unknown_space_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("unknown_space", 10);
     auto free_space_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("free_space", 10);
     auto frontiers_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("frontiers", 10);
 
-
     octomap::AbstractOcTree* abstract_tree = octomap_msgs::msgToMap(*msg);
+
+    // If this is too slow, waitForCallback timer is activsated, and new trigger is sent...
     if (abstract_tree) {
         octomap::OcTree* received_tree = dynamic_cast<octomap::OcTree*>(abstract_tree);
 
         if (received_tree) {
 
-            // Inital safe space
-            createinitialSafeSpace(received_tree, 1.5, 1.0, 2.0, 0.01);
+            RCLCPP_INFO(this->get_logger(), "Tree recieved.");
+            // Update octo map
+            createInitialSafeSpace(received_tree, 1.5, 1.0, 2.0, 0.01);
             octomap_ = std::make_shared<octomap::OcTree>(*received_tree);
 
-            // Extract to visualize only
+            // Visualize
             OctrePtr unknown_tree = extractUnknownOctree(received_tree);
             OctrePtr free_tree = extractFreeOctree(received_tree);
             OctrePtr frontier_tree = extractFrontierOctree(received_tree);
-
             sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
             sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
             sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
-
             unknown_space_pub->publish(unknown_pc);
             free_space_pub->publish(free_pc);
             frontiers_pub->publish(frontiers_pc);
 
-            
+            // Update PlanningScene
             markUnknownSpaceAsObstacles(received_tree, 2.0, 2.0, 2.0, 0.01);
-
-
-            RCLCPP_INFO(this->get_logger(), "Planning scene updated with new Octomap data.");
-
- 
             moveit_msgs::msg::PlanningSceneWorld msg_out;
             msg_out.octomap.header = msg->header;
             if (!octomap_msgs::fullMapToMsg(*received_tree, msg_out.octomap.octomap)) {
@@ -178,6 +166,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             }
             world_publisher_->publish(msg_out);
 
+            RCLCPP_INFO(this->get_logger(), "setting next state to CalculateNBV.");
             current_state_ = State::Calculate_NBV;
 
         } else {
@@ -189,6 +178,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
         RCLCPP_ERROR(this->get_logger(), "Received empty or invalid Octomap message.");
         current_state_ = State::Error;
     }
+
     delete abstract_tree;
 }
 
@@ -214,7 +204,7 @@ void StateMachineNode::execute_state_machine()
                         loop_rate.sleep();  
 
                         auto elapsed_time = std::chrono::steady_clock::now() - start_time;
-                        if (std::chrono::duration_cast<std::chrono::seconds>(elapsed_time).count() > 5) {
+                        if (std::chrono::duration_cast<std::chrono::seconds>(elapsed_time).count() > 10) {
                             RCLCPP_WARN(this->get_logger(), "Callback not received within timeout, triggering new capture");
                             current_state_ = State::Capture;
                             break;
