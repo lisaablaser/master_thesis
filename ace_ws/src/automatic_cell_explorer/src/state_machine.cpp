@@ -66,11 +66,15 @@ void StateMachineNode::handle_calculate_nbv(){
     auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates_fov", 10);
     
   
-    
+    auto start_time = std::chrono::high_resolution_clock::now();
 
     exploration_planner_->calculateNbvCandidates();
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
     Nbv nbv = exploration_planner_->selectNbv();
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    RCLCPP_INFO(this->get_logger(), "----------------- Calculated NBV in %ld ms", duration.count());
 
     if (exploration_planner_->terminationCriteria()){
         std::cout << "Planner reached termination criteria" << std::endl;
@@ -141,30 +145,37 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
         if (received_tree) {
 
-            RCLCPP_INFO(this->get_logger(), "Tree recieved.");
+            auto start_time = std::chrono::high_resolution_clock::now();
+            
             // Update octo map
             createInitialSafeSpace(received_tree, 1.5, 1.0, 2.0, 0.01);
             octomap_ = std::make_shared<octomap::OcTree>(*received_tree);
 
             // Visualize
-            OctrePtr unknown_tree = extractUnknownOctree(received_tree);
-            OctrePtr free_tree = extractFreeOctree(received_tree);
-            OctrePtr frontier_tree = extractFrontierOctree(received_tree);
-            sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
-            sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
-            sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
-            unknown_space_pub->publish(unknown_pc);
-            free_space_pub->publish(free_pc);
-            frontiers_pub->publish(frontiers_pc);
+            // OctrePtr unknown_tree = extractUnknownOctree(received_tree);
+            // OctrePtr free_tree = extractFreeOctree(received_tree);
+            // OctrePtr frontier_tree = extractFrontierOctree(received_tree);
+            // sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
+            // sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
+            // sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
+            // unknown_space_pub->publish(unknown_pc);
+            // free_space_pub->publish(free_pc);
+            // frontiers_pub->publish(frontiers_pc);
 
             // Update PlanningScene
-            markUnknownSpaceAsObstacles(received_tree, 2.0, 2.0, 2.0, 0.01);
+            //markUnknownSpaceAsObstacles(received_tree, 2.0, 2.0, 2.0, 0.01);
+            //updatePlanningScene(received_tree, unknown_tree);
             moveit_msgs::msg::PlanningSceneWorld msg_out;
             msg_out.octomap.header = msg->header;
             if (!octomap_msgs::fullMapToMsg(*received_tree, msg_out.octomap.octomap)) {
                 RCLCPP_ERROR(this->get_logger(), "Failed to convert modified OcTree back to Octomap message.");
             }
             world_publisher_->publish(msg_out);
+
+            auto end_time = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+            RCLCPP_INFO(this->get_logger(), "--------------- Octomap processed in %ld ms", duration.count());
+
 
             RCLCPP_INFO(this->get_logger(), "setting next state to CalculateNBV.");
             current_state_ = State::Calculate_NBV;

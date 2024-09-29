@@ -16,7 +16,27 @@ void createInitialSafeSpace(octomap::OcTree* received_tree, double x, double y, 
     received_tree->updateInnerOccupancy();
 }
 
+void updatePlanningScene(octomap::OcTree* received_tree, OctrePtr unknownVoxelsTree) {
+    /*
+        For now, faster method to update planning scene. But results in sparse updates.
+    */
+    
+    for (auto it = unknownVoxelsTree->begin_leafs(), end = unknownVoxelsTree->end_leafs(); it != end; ++it) {
+        octomap::point3d point = it.getCoordinate();  
+        double size = it.getSize();                  
+
+        
+        received_tree->updateNode(point, true);
+    }
+
+    
+    received_tree->updateInnerOccupancy();
+}
+
 void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree, double x, double y, double z, double resolution) {
+    /*
+        very slow...
+    */
     double z_offset = 0.72;
     for (double i = -x / 2.0; i <= x / 2.0; i += resolution) {
         for (double j = -y / 2.0; j <= y / 2.0; j += resolution) {
@@ -69,7 +89,7 @@ OctrePtr extractUnknownOctree(const octomap::OcTree* octree) {
         }
     }
     unknownVoxelsTree->updateInnerOccupancy();
-    unknownVoxelsTree->prune();
+    //unknownVoxelsTree->prune();
     
     return unknownVoxelsTree;
 }

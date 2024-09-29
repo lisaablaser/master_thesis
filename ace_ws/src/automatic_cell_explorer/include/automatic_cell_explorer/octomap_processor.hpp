@@ -8,6 +8,7 @@ using OctrePtr = std::shared_ptr<octomap::OcTree>;
 
 
 void createInitialSafeSpace(octomap::OcTree* received_tree, double x, double y, double z, double resolution);
+void updatePlanningScene(octomap::OcTree* received_tree, OctrePtr unknownVoxelsTree);
 void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree, double x, double y, double z, double resolution);
 
 OctrePtr extractUnknownOctree(const octomap::OcTree* octree);
