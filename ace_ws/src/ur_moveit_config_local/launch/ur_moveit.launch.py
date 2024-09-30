@@ -135,6 +135,7 @@ def generate_launch_description():
         #     )
         # )
         .sensors_3d(file_path="config/sensors_3d.yaml")
+        .robot_description_kinematics()
         .to_moveit_configs()
     )
 

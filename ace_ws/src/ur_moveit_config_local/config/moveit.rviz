@@ -303,19 +303,19 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        nbv_candidates: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /nbv_candidates
+        Value: /nbv_candidates_fov
       Value: true
     - Class: rviz_default_plugins/Marker
       Enabled: true
       Name: Marker
       Namespaces:
-        camera_fov: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -382,25 +382,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 9.50524616241455
+      Distance: 5.259397983551025
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.369348406791687
-        Y: 0.12298040837049484
-        Z: 0.6825821399688721
+        X: 0.5238282680511475
+        Y: -0.5169823169708252
+        Z: 0.8961883783340454
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7203974723815918
+      Pitch: 0.42039743065834045
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.7135727405548096
+      Yaw: 4.83857536315918
     Saved: ~
 Window Geometry:
   Displays:
@@ -423,4 +423,4 @@ Window Geometry:
     collapsed: false
   Width: 1390
   X: 2145
-  Y: 175
+  Y: 174

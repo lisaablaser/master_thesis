@@ -15,6 +15,9 @@ std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
 
   mvt_interface_->setPoseTarget(pose);
 
+  /// TODO: configure this somewhere else?
+  mvt_interface_->setPlanningTime(0.1); 
+
   auto const [success, plan] = [&mvt_interface = mvt_interface_]{
     Plan p;
     auto const ok = static_cast<bool>(mvt_interface->plan(p));
