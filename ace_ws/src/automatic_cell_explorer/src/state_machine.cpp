@@ -66,6 +66,7 @@ void StateMachineNode::handle_calculate_nbv(){
     auto nbv_candidates_pose_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates", 10);
     auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates_fov", 10);
     
+    exploration_planner_->updateOctomap(octomap_);
   
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -79,7 +80,7 @@ void StateMachineNode::handle_calculate_nbv(){
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     RCLCPP_INFO(this->get_logger(), "----------------- Calculated NBV in %ld ms", duration.count());
 
-    rviz_tool_->prompt("Press next");
+    
 
     Nbv nbv = exploration_planner_->selectNbv();
 
@@ -97,6 +98,8 @@ void StateMachineNode::handle_calculate_nbv(){
     visualizeNbvFov(nbv, 64.0, 36.0, marker_pub);
     
     publishRays(nbv.ray_view.rays, rviz_publisher);
+
+    //rviz_tool_->prompt("Press next");
 
     // Progress
     
@@ -159,14 +162,14 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             // Visualize
             OctrePtr unknown_tree = extractUnknownOctree(received_tree);
-            // OctrePtr free_tree = extractFreeOctree(received_tree);
-            // OctrePtr frontier_tree = extractFrontierOctree(received_tree);
-            // sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
-            // sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
-            // sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
-            // unknown_space_pub->publish(unknown_pc);
-            // free_space_pub->publish(free_pc);
-            // frontiers_pub->publish(frontiers_pc);
+            OctrePtr free_tree = extractFreeOctree(received_tree);
+            OctrePtr frontier_tree = extractFrontierOctree(received_tree);
+            sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
+            sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
+            sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
+            unknown_space_pub->publish(unknown_pc);
+            free_space_pub->publish(free_pc);
+            frontiers_pub->publish(frontiers_pc);
 
             // Update PlanningScene
             markUnknownSpaceAsObstacles(received_tree, 2.0, 2.0, 2.0, 0.01);

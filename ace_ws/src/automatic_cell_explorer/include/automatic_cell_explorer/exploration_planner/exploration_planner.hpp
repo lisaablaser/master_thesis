@@ -24,6 +24,11 @@ public:
     virtual void calculateNbvCandidates() = 0;  
     virtual Nbv selectNbv() = 0; 
     virtual bool terminationCriteria() const = 0;
+
+    void updateOctomap(std::shared_ptr<octomap::OcTree> octomap){
+        octo_map_ = octomap;
+    }
+    
     
     NbvCandidates getNbvCandidates() const {
         return nbv_candidates_;
