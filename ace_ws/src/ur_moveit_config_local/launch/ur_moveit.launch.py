@@ -164,8 +164,10 @@ def generate_launch_description():
             {
                 "use_sim_time": use_sim_time,
                 "publish_robot_description_semantic": publish_robot_description_semantic,
+                "publish_robot_decription": publish_robot_description,
             },
         ],
+        arguments=['--ros-args', '--log-level', 'FATAL']
     )
 
     # sensors_node = Node(

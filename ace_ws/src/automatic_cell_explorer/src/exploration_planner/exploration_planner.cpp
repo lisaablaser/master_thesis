@@ -25,11 +25,11 @@ std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
   }();
 
   if(success) {
-    std::cout << "Planning succeeded. Executing..." << std::endl;
+
     return plan;
 
   } else {
-    std::cout << "Planning failed!" << std::endl;
+
     return std::nullopt; 
 
   }
