@@ -11,6 +11,7 @@ void publishRays(const std::vector<RayInfo>& rays,
 {
     visualization_msgs::msg::MarkerArray marker_array;
 
+
     for (size_t i = 0; i < rays.size(); ++i) {
         
         visualization_msgs::msg::Marker start_marker, end_marker;
@@ -28,15 +29,21 @@ void publishRays(const std::vector<RayInfo>& rays,
         start_marker.color.b = 0.0;
 
         end_marker.color.a = 1.0;
-        if (rays[i].hit_unknown) {
+        if (rays[i].node_state == NodeState::Unknown) {
             end_marker.color.r = 0.0;
             end_marker.color.g = 1.0;
             end_marker.color.b = 0.0; 
-        } else {
-            end_marker.color.r = 0.0;
-            end_marker.color.g = 1.0;
-            end_marker.color.b = 1.0; 
         }
+        if (rays[i].node_state == NodeState::Occupied) {
+            end_marker.color.r = 1.0;
+            end_marker.color.g = 0.0;
+            end_marker.color.b = 0.0; 
+        }
+        if (rays[i].node_state == NodeState::Free) {
+            end_marker.color.r = 0.0;
+            end_marker.color.g = 0.0;
+            end_marker.color.b = 1.0; 
+        } 
 
         start_marker.id = i * 2;        
         end_marker.id = i * 2 + 1;      
@@ -245,7 +252,7 @@ void visualizeNbvRayView(
         marker.scale.x = 0.02;  // Line thickness
 
         // Set color based on whether the ray hit an unknown region
-        if (ray.hit_unknown) {
+        if (ray.node_state == NodeState::Unknown) {
             marker.color.r = 1.0f;  // Red for unknown hit
             marker.color.g = 0.0f;
             marker.color.b = 0.0f;

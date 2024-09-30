@@ -15,14 +15,17 @@ void ImprovedExplorationPlanner::calculateNbvCandidates() {
     /*
         Improved Planner. 
     */
+
     generateCandidates();
     evaluateNbvCandidates();
-    // Evaluate candidates to set cost
+
 }
+
 
 Nbv ImprovedExplorationPlanner::selectNbv(){
     /*
         Get the next Nbv candidate, Plans are alraeady calculated.
+        Select the one with highes information gain. 
     */
     if (nbv_candidates_.nbv_candidates.empty()) {
         throw std::runtime_error("The nbv_candidates vector is empty");
@@ -50,7 +53,7 @@ bool ImprovedExplorationPlanner::terminationCriteria() const {
 
 void ImprovedExplorationPlanner::evaluateNbvCandidates(){
     /*
-        Just for inspection, evaluation does not affect the Nbv Selection.
+        Evaluates the candidates with rycasting. 
     */
     updateRayViews(nbv_candidates_,octo_map_);
 
@@ -64,12 +67,11 @@ void ImprovedExplorationPlanner::evaluateNbvCandidates(){
 
 void ImprovedExplorationPlanner::generateCandidates()
 /*
-    Rando generate candidates.   
+    Random generate candidates. Append if plan exists. 
 */
 {
     size_t N = 10;
     double offset = 0.72;
-    nbv_candidates_.nbv_candidates.clear();
     nbv_candidates_.nbv_candidates.clear();
 
     double x_min = -1.0, x_max = 1.0;

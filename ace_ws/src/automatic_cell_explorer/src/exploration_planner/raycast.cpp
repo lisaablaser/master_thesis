@@ -40,20 +40,36 @@ RayView calculateRayView(
             );
 
             Eigen::Vector3d ray_direction_world = sensor_state.rotation() * ray_direction_camera;
+            Eigen::Vector3d ray_end;
+    
+            NodeState node_state = NodeState::Occupied;
             octomap::point3d hit_point;
 
-            bool hit_unknown = castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
+            if (octo_map->castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
                                octomap::point3d(ray_direction_world.x(), ray_direction_world.y(), ray_direction_world.z()),
-                               hit_point, false, max_range, octo_map);
-            
-            if (hit_unknown) 
+                               hit_point, false, max_range)) 
             {
-                ray_view.num_unknowns++;
+                // Hit occupied point
+                ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
+                node_state = NodeState::Occupied;
+                
             }
-           
-            Eigen::Vector3d ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
+            else {
+                // Hit nothing, search if it us unknown or free
+                octomap::OcTreeNode* node = octo_map->search(hit_point.x(), hit_point.y(), hit_point.z());
+                if (node == nullptr) {
+                    node_state = NodeState::Unknown;
 
-            ray_view.rays.push_back({sensor_origin, ray_end, hit_unknown});
+                    ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
+                    ray_view.num_unknowns++;
+                } else if (!octo_map->isNodeOccupied(node)) {
+                    // whole ray is free
+                    ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
+                    node_state = NodeState::Free;
+                }
+            }
+
+            ray_view.rays.push_back({sensor_origin, ray_end, node_state});
         }
     }
 
@@ -62,16 +78,17 @@ RayView calculateRayView(
 
 
 
-bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP, octomap::point3d& end,
-                        bool ignoreUnknown, double maxRange, std::shared_ptr<octomap::OcTree> octo_map){
+NodeState castRay(const octomap::point3d& origin, const octomap::point3d& directionP, octomap::point3d& end,
+                     double maxRange, std::shared_ptr<octomap::OcTree> octo_map){
 
 /// Simple raycast method. TODO: more advanced method aviding voxel leaks.
+    bool ignoreUnknown = false;
 
     // Initialization phase -------------------------------------------------------
     octomap::OcTreeKey current_key;
     if ( !octo_map->coordToKeyChecked(origin, current_key) ) {
         OCTOMAP_WARNING_STR("Coordinates out of bounds during ray casting");
-        return false;
+        return NodeState::Error;
     }
 
     octomap::OcTreeNode* startingNode = octo_map->search(current_key);
@@ -80,13 +97,13 @@ bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP,
             // Occupied node found at origin. Should not happen if poses are sampled from free space
             // (need to convert from key, since origin does not need to be a voxel center)
             end = octo_map->keyToCoord(current_key);
-            return false;
+            return NodeState::Occupied;
         }
     } 
     //If starting node is unknown. Should not happen for valid sampling
     else if(!ignoreUnknown){
     end = octo_map->keyToCoord(current_key);
-    return false;
+    return NodeState::Unknown;
     }
 
     octomap::point3d direction = directionP.normalized();
@@ -119,7 +136,7 @@ bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP,
 
     if (step[0] == 0 && step[1] == 0 && step[2] == 0){
         OCTOMAP_ERROR("Raycasting in direction (0,0,0) is not possible!");
-        return false;
+        return NodeState::Occupied;
     }
 
     // for speedup:
@@ -149,7 +166,7 @@ bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP,
         OCTOMAP_WARNING("Coordinate hit bounds in dim %d, aborting raycast\n", dim);
         // return border point nevertheless:
         end = octo_map->keyToCoord(current_key);
-        return false;
+        return NodeState::Occupied;
     }
 
     // advance in direction "dim"
@@ -164,9 +181,11 @@ bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP,
         for (unsigned int j = 0; j < 3; j++) {
         dist_from_origin_sq += ((end(j) - origin(j)) * (end(j) - origin(j)));
         }
-        if (dist_from_origin_sq > maxrange_sq)
-        return false;
-
+        if (dist_from_origin_sq > maxrange_sq){
+            std::cout << "maxe range met" << std::endl;
+            return NodeState::Occupied;
+        }
+        
     }
 
     octomap::OcTreeNode* currentNode = octo_map->search(current_key);
@@ -176,11 +195,11 @@ bool castRay(const octomap::point3d& origin, const octomap::point3d& directionP,
         break;
         }
         // otherwise: node is free and valid, raycasting continues
-    } else if (!ignoreUnknown){ // no node found, this usually means we are in "unknown" areas
+    } else{ // no node found, this usually means we are in "unknown" areas
         
-        return true;
+        return NodeState::Unknown;
     }
     } // end while
 
-    return false;
+    return NodeState::Occupied;
 }

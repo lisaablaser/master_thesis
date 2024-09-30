@@ -6,7 +6,7 @@ void createInitialSafeSpace(octomap::OcTree* received_tree, double x, double y, 
     
     for (double i = -x / 2.0; i <= x / 2.0; i += resolution) {
         for (double j = -y / 2.0; j <= y / 2.0; j += resolution) {
-            for (double k = 0.8 ; k <= z+ z_offset; k += resolution) {
+            for (double k = 0.8 ; k <= z/2.0+ z_offset; k += resolution) {
                 octomap::point3d point(i, j, k);
                 received_tree->updateNode(point, false);  
             }
@@ -62,7 +62,7 @@ OctrePtr extractUnknownOctree(const octomap::OcTree* octree) {
     double exploration_dims = 1.0;
     double z_offset = 0.72;
     
-    double resolution = octree->getResolution();
+    double resolution = 0.01;//octree->getResolution();
 
     OctrePtr unknownVoxelsTree = std::make_shared<octomap::OcTree>(octree->getResolution());
     
@@ -95,7 +95,7 @@ OctrePtr extractUnknownOctree(const octomap::OcTree* octree) {
 }
 
 OctrePtr extractFreeOctree(const octomap::OcTree* octree) {
-    double exploration_dims = 1.0;
+    double exploration_dims = 2.0;
     double z_offset = 0.72;
     
     double resolution = octree->getResolution();
