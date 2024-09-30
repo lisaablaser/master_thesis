@@ -2,11 +2,11 @@
 
 
 void createInitialSafeSpace(octomap::OcTree* received_tree, double x, double y, double z, double resolution) {
-    double z_offset = 0.72;
+    double z_offset = 0.755;
     
     for (double i = -x / 2.0; i <= x / 2.0; i += resolution) {
         for (double j = -y / 2.0; j <= y / 2.0; j += resolution) {
-            for (double k = z_offset; k <= z+ z_offset; k += resolution) {
+            for (double k = 0.8 ; k <= z+ z_offset; k += resolution) {
                 octomap::point3d point(i, j, k);
                 received_tree->updateNode(point, false);  
             }
@@ -37,10 +37,10 @@ void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree, double x, doubl
     /*
         very slow...
     */
-    double z_offset = 0.72;
+    double z_offset = 0.755;
     for (double i = -x / 2.0; i <= x / 2.0; i += resolution) {
         for (double j = -y / 2.0; j <= y / 2.0; j += resolution) {
-            for (double k = z_offset - z / 2.0; k <= z_offset + z / 2.0; k += resolution) {
+            for (double k = z_offset-resolution; k <= z_offset + z / 2.0; k += resolution) {
     
                 octomap::point3d point(i, j, k);
                 
@@ -66,7 +66,7 @@ OctrePtr extractUnknownOctree(const octomap::OcTree* octree) {
 
     OctrePtr unknownVoxelsTree = std::make_shared<octomap::OcTree>(octree->getResolution());
     
-    octomap::point3d center(0.0, 0.0, z_offset);
+    octomap::point3d center(0.0, 0.0, z_offset-resolution);
     double searchRadius = exploration_dims;// - resolution;
     octomap::point3d min = center - octomap::point3d(searchRadius, searchRadius, 0.0);
     octomap::point3d max = center + octomap::point3d(searchRadius, searchRadius, 2*searchRadius);
