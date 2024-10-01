@@ -6,7 +6,7 @@
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/improved_exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planner_v2.hpp"
 
 
 StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_tool) 
@@ -17,7 +17,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_to
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
-    exploration_planner_(std::make_shared<ImprovedExplorationPlanner>(mvt_interface_, octomap_)),
+    exploration_planner_(std::make_shared<ExplorationPlannerV2>(mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 

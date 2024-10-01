@@ -9,9 +9,9 @@
 
 #include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/evaluate_nbv.hpp"
-#include "automatic_cell_explorer/exploration_planner/improved_exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planner_v2.hpp"
 
-void ImprovedExplorationPlanner::calculateNbvCandidates() {
+void ExplorationPlannerV2::calculateNbvCandidates() {
     /*
         Improved Planner. 
     */
@@ -22,7 +22,7 @@ void ImprovedExplorationPlanner::calculateNbvCandidates() {
 }
 
 
-Nbv ImprovedExplorationPlanner::selectNbv(){
+Nbv ExplorationPlannerV2::selectNbv(){
     /*
         Get the next Nbv candidate, Plans are alraeady calculated.
         Select the one with highes information gain. 
@@ -44,14 +44,14 @@ Nbv ImprovedExplorationPlanner::selectNbv(){
     
    
 }
-bool ImprovedExplorationPlanner::terminationCriteria() const {
+bool ExplorationPlannerV2::terminationCriteria() const {
     /*
         Termination Criteria from Improved planner: When nbv_candidates are empty.
     */
     return (nbv_candidates_.nbv_candidates.empty());
 }
 
-void ImprovedExplorationPlanner::evaluateNbvCandidates(){
+void ExplorationPlannerV2::evaluateNbvCandidates(){
     /*
         Evaluates the candidates with rycasting. 
     */
@@ -65,7 +65,7 @@ void ImprovedExplorationPlanner::evaluateNbvCandidates(){
 }
 
 
-void ImprovedExplorationPlanner::generateCandidates()
+void ExplorationPlannerV2::generateCandidates()
 /*
     Random generate candidates. Append if plan exists. 
 */
