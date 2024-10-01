@@ -10,8 +10,10 @@
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 
-using MarkerAPublisher = rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr;
-using MarkerPublisher = rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr;
+using Marker = visualization_msgs::msg::Marker;
+using MarkerArray = visualization_msgs::msg::MarkerArray;
+using MarkerPublisher = rclcpp::Publisher<Marker>::SharedPtr;
+using MarkerAPublisher = rclcpp::Publisher<MarkerArray>::SharedPtr;
 
 void visualizeRayDots(const Nbv & nbv, MarkerAPublisher publisher);
 void visualizeNbvFov(const Nbv & nbv, MarkerPublisher publisher); 

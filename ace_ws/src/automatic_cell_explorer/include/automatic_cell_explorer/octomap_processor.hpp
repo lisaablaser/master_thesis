@@ -11,9 +11,11 @@ void createInitialSafeSpace(octomap::OcTree* received_tree);
 void updatePlanningScene(octomap::OcTree* received_tree, OctreePtr unknownVoxelsTree);
 void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree);
 
-OctreePtr extractUnknownOctree(const octomap::OcTree* octree);
-OctreePtr extractFreeOctree(const octomap::OcTree* octree);
-OctreePtr extractFrontierOctree(const octomap::OcTree* octree);
-OctreePtr extractFrontierOctreeInBounds(const octomap::OcTree* octree);
+OctreePtr extractUnknownOctree(const OctreePtr octree);
+OctreePtr extractFreeOctree(const OctreePtr octree);
+OctreePtr extractFrontierOctree(const OctreePtr octree);
+OctreePtr extractFrontierOctreeInBounds(const OctreePtr octree);
+
+double calculateOccupiedVolume(const OctreePtr octree);
 
 #endif // OCTOMAP_PROCESSOR_HPP

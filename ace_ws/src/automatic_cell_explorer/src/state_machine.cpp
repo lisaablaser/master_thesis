@@ -1,6 +1,7 @@
 #include <iostream>
 #include <tf2_eigen/tf2_eigen.hpp>
 #include <octomap_msgs/conversions.h>
+#include "std_msgs/msg/float64.hpp"
 
 #include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/state_machine.hpp"
@@ -61,14 +62,13 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
     
-    auto nbv_ray_dots_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_ray_dots", 10);
-    auto nbv_fov_pub = node_->create_publisher<visualization_msgs::msg::Marker>("nbv_fov", 10);
-    auto nbv_ray_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_ray", 10);
-    auto nbv_candidates_pose_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates", 10);
-    auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates_fov", 10);
+    auto nbv_ray_dots_pub = node_->create_publisher<MarkerArray>("nbv_ray_dots", 10);
+    auto nbv_fov_pub = node_->create_publisher<Marker>("nbv_fov", 10);
+    auto nbv_ray_pub = node_->create_publisher<MarkerArray>("nbv_ray", 10);
+    auto nbv_candidates_pose_pub = node_->create_publisher<MarkerArray>("nbv_candidates", 10);
+    auto nbv_candidates_fov_pub = node_->create_publisher<MarkerArray>("nbv_candidates_fov", 10);
   
     auto start_time = std::chrono::high_resolution_clock::now();
-
 
     exploration_planner_->updateOctomap(octomap_);
     exploration_planner_->calculateNbvCandidates();
@@ -94,6 +94,12 @@ void StateMachineNode::handle_calculate_nbv(){
     visualizeNbvRayView(nbv, nbv_ray_pub);
     visualizeNbvFov(nbv, nbv_fov_pub);
     visualizeRayDots(nbv, nbv_ray_dots_pub);
+
+    // Send Stats
+    auto nbv_time_pub = this->create_publisher<std_msgs::msg::Float64>("/nbv_time", rclcpp::QoS(10).reliable());
+    auto nbv_time_msg = std_msgs::msg::Float64();
+    nbv_time_msg.data = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(); //To seconds
+    nbv_time_pub->publish(nbv_time_msg);
 
     //rviz_tool_->prompt("Press next");
     ExecuteReq req;
@@ -148,24 +154,12 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             auto start_time = std::chrono::high_resolution_clock::now();
             
-            // Update octo map
+            // Update internal octomap
             createInitialSafeSpace(received_tree);
             octomap_ = std::make_shared<octomap::OcTree>(*received_tree);
 
-            // Visualize
-            OctreePtr unknown_tree = extractUnknownOctree(received_tree);
-            OctreePtr free_tree = extractFreeOctree(received_tree);
-            OctreePtr frontier_tree = extractFrontierOctreeInBounds(received_tree);
-            sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
-            sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
-            sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
-            unknown_space_pub->publish(unknown_pc);
-            free_space_pub->publish(free_pc);
-            frontiers_pub->publish(frontiers_pc);
-
             // Update PlanningScene
             markUnknownSpaceAsObstacles(received_tree);
-            //updatePlanningScene(received_tree, unknown_tree);
             moveit_msgs::msg::PlanningSceneWorld msg_out;
             msg_out.octomap.header = msg->header;
             if (!octomap_msgs::fullMapToMsg(*received_tree, msg_out.octomap.octomap)) {
@@ -178,7 +172,29 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             RCLCPP_INFO(this->get_logger(), "--------------- Octomap processed in %ld ms", duration.count());
 
 
-            RCLCPP_INFO(this->get_logger(), "setting next state to CalculateNBV.");
+            // Visualize
+            OctreePtr unknown_tree = extractUnknownOctree(octomap_);
+            OctreePtr free_tree = extractFreeOctree(octomap_);
+            OctreePtr frontier_tree = extractFrontierOctreeInBounds(octomap_);
+            sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
+            sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
+            sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
+            unknown_space_pub->publish(unknown_pc);
+            free_space_pub->publish(free_pc);
+            frontiers_pub->publish(frontiers_pc);
+
+            // Publish progress
+            auto unknown_voxel_pub = this->create_publisher<std_msgs::msg::Float64>("/voxel_count", rclcpp::QoS(10).reliable());
+            auto u_msg = std_msgs::msg::Float64();
+            double unknown_voxel_count = calculateOccupiedVolume(unknown_tree);
+            u_msg.data = unknown_voxel_count;
+            unknown_voxel_pub->publish(u_msg);
+
+            std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
+
+
+
+            RCLCPP_INFO(this->get_logger(), "Setting next state to CalculateNBV.");
             current_state_ = State::Calculate_NBV;
 
         } else {

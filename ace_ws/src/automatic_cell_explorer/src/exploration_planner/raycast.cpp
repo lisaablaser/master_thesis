@@ -22,10 +22,7 @@ RayView calculateRayView(
     double half_vertical_fov = vertical_fov / 2.0;
 
     const int horizontal_rays = 100;            
-    const int vertical_rays = 50;                 
-    
-    double horizontal_step = horizontal_fov / horizontal_rays; 
-    double vertical_step = vertical_fov / vertical_rays;       
+    const int vertical_rays = 50;                       
 
 
     Eigen::Vector3d sensor_origin = sensor_state.translation();
@@ -36,9 +33,6 @@ RayView calculateRayView(
     for (int i = 0; i < horizontal_rays; ++i) {
         for (int j = 0; j < vertical_rays; ++j) {
             
-            //double horizontal_angle = (i - horizontal_rays / 2) * horizontal_step;
-            //double vertical_angle = (j - vertical_rays / 2) * vertical_step;
-
             double horizontal_angle = (i / static_cast<double>(horizontal_rays - 1)) * horizontal_fov - half_horizontal_fov;
             double vertical_angle = (j / static_cast<double>(vertical_rays - 1)) * vertical_fov - half_vertical_fov;
 

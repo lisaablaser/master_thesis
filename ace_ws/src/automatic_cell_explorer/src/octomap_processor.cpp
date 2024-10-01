@@ -59,7 +59,7 @@ void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree) {
     received_tree->updateInnerOccupancy();
 }
 
-OctreePtr extractUnknownOctree(const octomap::OcTree* octree) {
+OctreePtr extractUnknownOctree(const OctreePtr octree) {
 
     double resolution = RES_LARGE;
     WorkspaceBounds bounds = WORK_SPACE;
@@ -85,7 +85,7 @@ OctreePtr extractUnknownOctree(const octomap::OcTree* octree) {
     return unknownVoxelsTree;
 }
 
-OctreePtr extractFreeOctree(const octomap::OcTree* octree) {
+OctreePtr extractFreeOctree(const OctreePtr octree) {
     double resolution = RES_LARGE;
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -110,7 +110,7 @@ OctreePtr extractFreeOctree(const octomap::OcTree* octree) {
     return freeVoxelsTree;
 }
 
-OctreePtr extractFrontierOctree(const octomap::OcTree* octree) {
+OctreePtr extractFrontierOctree(const OctreePtr octree) {
     double resolution = RES_LARGE;
     OctreePtr frontierVoxelsTree = std::make_shared<octomap::OcTree>(resolution);
 
@@ -145,7 +145,7 @@ OctreePtr extractFrontierOctree(const octomap::OcTree* octree) {
     return frontierVoxelsTree;
 }
 
-OctreePtr extractFrontierOctreeInBounds(const octomap::OcTree* octree) {
+OctreePtr extractFrontierOctreeInBounds(const OctreePtr octree) {
     /// TODO: får ikke med seg alle frontiers på sidene. 
 
     double resolution = RES_LARGE;
@@ -193,4 +193,21 @@ OctreePtr extractFrontierOctreeInBounds(const octomap::OcTree* octree) {
     frontierVoxelsTree->updateInnerOccupancy();
     frontierVoxelsTree->prune();
     return frontierVoxelsTree;
+}
+
+double calculateOccupiedVolume(const OctreePtr octree) {
+    WorkspaceBounds bounds = WORK_SPACE;
+    
+    double volume = 0.0;
+    for (octomap::OcTree::leaf_iterator it = octree->begin_leafs(), end=octree->end_leafs(); it != end; ++it) {
+        if (octree->isNodeOccupied(*it)) {
+            double nodeVolume = std::pow(it.getSize(), 3); 
+            volume += nodeVolume;
+        }
+    }
+    double total_volume = (bounds.max_x-bounds.min_x)*(bounds.max_y-bounds.min_y)*(bounds.max_z-bounds.min_z);
+
+    double percentage_explored = 100 - (volume/total_volume)*100;
+
+    return percentage_explored;
 }
