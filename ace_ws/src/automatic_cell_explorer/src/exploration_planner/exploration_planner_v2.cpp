@@ -40,13 +40,13 @@ Nbv ExplorationPlannerV2::selectNbv(){
     }
     std::cout << "Cost of Nbv is: " << highest_cost_nbv.ray_view.num_unknowns << std::endl;
 
-    return highest_cost_nbv; //nbv is not deleted from the list, but does not matter if we regenerte the list every time. 
+    return highest_cost_nbv;
     
    
 }
 bool ExplorationPlannerV2::terminationCriteria() const {
     /*
-        Termination Criteria from Improved planner: When nbv_candidates are empty.
+        Termination Criteria: When nbv_candidates are empty.
     */
     return (nbv_candidates_.nbv_candidates.empty());
 }
@@ -70,35 +70,38 @@ void ExplorationPlannerV2::generateCandidates()
     Random generate candidates. Append if plan exists. 
 */
 {
-    size_t N = 10;
-    double offset = 0.72;
     nbv_candidates_.nbv_candidates.clear();
 
-    double x_min = -1.0, x_max = 1.0;
-    double y_min = -1.0, y_max = 1.0;
-    double z_min = offset + 0.0, z_max = offset + 1.0;
+    WorkspaceBounds bounds = WORK_SPACE;
+    OrigoOffset origo = ORIGO;
 
     double roll_min = -M_PI, roll_max = M_PI;
-    double pitch_min = -M_PI_2, pitch_max = M_PI_2;
+    double pitch_min = -M_PI, pitch_max = M_PI;
     double yaw_min = -M_PI, yaw_max = M_PI;
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis_x(x_min, x_max);
-    std::uniform_real_distribution<> dis_y(y_min, y_max);
-    std::uniform_real_distribution<> dis_z(z_min, z_max);
+    std::uniform_real_distribution<> dis_x(bounds.min_x, bounds.max_x);
+    std::uniform_real_distribution<> dis_y(bounds.min_y, bounds.max_y);
+    std::uniform_real_distribution<> dis_z(bounds.min_z+ origo.z, bounds.max_z+origo.z);
     std::uniform_real_distribution<> dis_roll(roll_min, roll_max);
     std::uniform_real_distribution<> dis_pitch(pitch_min, pitch_max);
     std::uniform_real_distribution<> dis_yaw(yaw_min, yaw_max);
 
-    while(nbv_candidates_.nbv_candidates.size() != N){
+    while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
 
         Nbv nbv;
         
-        // Generate random position (translation)
         double x = dis_x(gen);
         double y = dis_y(gen);
         double z = dis_z(gen);
+
+        octomap::OcTreeNode* node = octo_map_->search(x, y, z); 
+
+        // If the voxel is unknown space or is occupied, skip to the next iteration
+        if (!node || octo_map_->isNodeOccupied(node)) {
+            continue;
+        }
         
         // Generate random orientation (rotation using Euler angles)
         double roll = dis_roll(gen);

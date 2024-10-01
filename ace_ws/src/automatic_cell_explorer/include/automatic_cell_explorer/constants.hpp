@@ -33,3 +33,4 @@ const double RES_LARGE = 0.1;
 const double MAX_RANGE = 2.0;
 const double FOV_H     = 64;
 const double FOV_V     = 36;
+const size_t N_SAMPLES = 10;
