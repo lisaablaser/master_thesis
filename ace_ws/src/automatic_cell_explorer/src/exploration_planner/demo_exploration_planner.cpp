@@ -14,6 +14,7 @@ void DemoExplorationPlanner::calculateNbvCandidates() {
     Demo Planner
 */
     if(nbv_candidates_.nbv_candidates.empty()){
+        generateCandidates(0.5, 1.5, 10);
         return;
     }
     evaluateNbvCandidates();
@@ -44,7 +45,8 @@ bool DemoExplorationPlanner::terminationCriteria() const {
     /*
         Termination Criteria from Demo planner: When nbv_candidates are empty.
     */
-    return (nbv_candidates_.nbv_candidates.empty());
+    bool terminate = nbv_candidates_.nbv_candidates.empty();
+    return false;
 }
 
 void DemoExplorationPlanner::evaluateNbvCandidates(){

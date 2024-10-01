@@ -4,6 +4,7 @@
 
 #include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/state_machine.hpp"
+#include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
 #include "automatic_cell_explorer/exploration_planner/improved_exploration_planner.hpp"
 
@@ -15,8 +16,8 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_to
     rviz_tool_(rviz_tool),
     current_state_(State::Initialise), 
     finished_(false),
-    octomap_(std::make_shared<octomap::OcTree>(0.1)),
-    exploration_planner_(std::make_shared<ImprovedExplorationPlanner>(mvt_interface_, octomap_)),
+    octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
+    exploration_planner_(std::make_shared<DemoExplorationPlanner>(mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 
@@ -60,30 +61,24 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
     
-    auto rviz_publisher = node_->create_publisher<visualization_msgs::msg::MarkerArray>("ray_visualization", 10);
-    auto marker_pub = node_->create_publisher<visualization_msgs::msg::Marker>("nbv_fov", 10);
+    auto nbv_ray_dots_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_ray_dots", 10);
+    auto nbv_fov_pub = node_->create_publisher<visualization_msgs::msg::Marker>("nbv_fov", 10);
     auto nbv_ray_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_ray", 10);
     auto nbv_candidates_pose_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates", 10);
     auto nbv_candidates_fov_pub = node_->create_publisher<visualization_msgs::msg::MarkerArray>("nbv_candidates_fov", 10);
-    
-    exploration_planner_->updateOctomap(octomap_);
   
     auto start_time = std::chrono::high_resolution_clock::now();
 
+
+    exploration_planner_->updateOctomap(octomap_);
     exploration_planner_->calculateNbvCandidates();
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
+    Nbv nbv = exploration_planner_->selectNbv();
 
-    visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
-    visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     RCLCPP_INFO(this->get_logger(), "----------------- Calculated NBV in %ld ms", duration.count());
-
-    
-
-    Nbv nbv = exploration_planner_->selectNbv();
-
 
     if (exploration_planner_->terminationCriteria()){
         std::cout << "Planner reached termination criteria" << std::endl;
@@ -94,15 +89,13 @@ void StateMachineNode::handle_calculate_nbv(){
     }
     
     // Visualizations
-    visualizeNbvRayView(nbv, nbv_ray_pub); /// TODO: improve ray visualization
-    visualizeNbvFov(nbv, 64.0, 36.0, marker_pub);
-    
-    publishRays(nbv.ray_view.rays, rviz_publisher);
+    visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
+    visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
+    visualizeNbvRayView(nbv, nbv_ray_pub);
+    visualizeNbvFov(nbv, nbv_fov_pub);
+    visualizeRayDots(nbv, nbv_ray_dots_pub);
 
     //rviz_tool_->prompt("Press next");
-
-    // Progress
-    
     ExecuteReq req;
     req.start_state = nbv.plan.start_state;
     req.trajectory = nbv.plan.trajectory;
@@ -114,12 +107,12 @@ void StateMachineNode::handle_move_robot(){
     std::cout << "--State MoveRobot--" << std::endl;
 
     auto request_ptr = std::make_shared<ExecuteReq>(current_req_);
-    auto future_result = move_client_->async_send_request(request_ptr);
+    auto result = move_client_->async_send_request(request_ptr);
 
-    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), future_result) ==
+    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) ==
         rclcpp::FutureReturnCode::SUCCESS)
     {
-        auto response = future_result.get();
+        auto response = result.get();
         if (response->success) {
             RCLCPP_INFO(this->get_logger(), "Service call succeeded. Robot moved successfully.");
         } else {
@@ -132,10 +125,9 @@ void StateMachineNode::handle_move_robot(){
     }
     RCLCPP_INFO(this->get_logger(), "Should capture again now");
 
-
     
     current_state_ = State::Capture;
-    // If not sucess, chnge to calculateNbv state. 
+    /// TODO: Error handle if execution fails.
 }
 
 
@@ -157,13 +149,13 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             auto start_time = std::chrono::high_resolution_clock::now();
             
             // Update octo map
-            createInitialSafeSpace(received_tree, 1.5, 0.8, 2.0, 0.01);
+            createInitialSafeSpace(received_tree);
             octomap_ = std::make_shared<octomap::OcTree>(*received_tree);
 
             // Visualize
-            OctrePtr unknown_tree = extractUnknownOctree(received_tree);
-            OctrePtr free_tree = extractFreeOctree(received_tree);
-            OctrePtr frontier_tree = extractFrontierOctree(received_tree);
+            OctreePtr unknown_tree = extractUnknownOctree(received_tree);
+            OctreePtr free_tree = extractFreeOctree(received_tree);
+            OctreePtr frontier_tree = extractFrontierOctreeInBounds(received_tree);
             sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
             sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
             sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
@@ -172,7 +164,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             frontiers_pub->publish(frontiers_pc);
 
             // Update PlanningScene
-            markUnknownSpaceAsObstacles(received_tree, 2.0, 2.0, 2.0, 0.01);
+            markUnknownSpaceAsObstacles(received_tree);
             //updatePlanningScene(received_tree, unknown_tree);
             moveit_msgs::msg::PlanningSceneWorld msg_out;
             msg_out.octomap.header = msg->header;

@@ -4,15 +4,16 @@
 #include <octomap/octomap.h>
 #include <memory>
 
-using OctrePtr = std::shared_ptr<octomap::OcTree>;
+using OctreePtr = std::shared_ptr<octomap::OcTree>;
 
 
-void createInitialSafeSpace(octomap::OcTree* received_tree, double x, double y, double z, double resolution);
-void updatePlanningScene(octomap::OcTree* received_tree, OctrePtr unknownVoxelsTree);
-void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree, double x, double y, double z, double resolution);
+void createInitialSafeSpace(octomap::OcTree* received_tree);
+void updatePlanningScene(octomap::OcTree* received_tree, OctreePtr unknownVoxelsTree);
+void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree);
 
-OctrePtr extractUnknownOctree(const octomap::OcTree* octree);
-OctrePtr extractFreeOctree(const octomap::OcTree* octree);
-OctrePtr extractFrontierOctree(const octomap::OcTree* octree);
+OctreePtr extractUnknownOctree(const octomap::OcTree* octree);
+OctreePtr extractFreeOctree(const octomap::OcTree* octree);
+OctreePtr extractFrontierOctree(const octomap::OcTree* octree);
+OctreePtr extractFrontierOctreeInBounds(const octomap::OcTree* octree);
 
 #endif // OCTOMAP_PROCESSOR_HPP

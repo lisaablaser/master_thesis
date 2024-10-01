@@ -1,6 +1,8 @@
 #include <memory>
 #include <octomap/OcTree.h>
 
+
+#include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 
 
@@ -13,10 +15,14 @@ RayView calculateRayView(
     RayView ray_view;
     ray_view.pose = sensor_state;
 
-    const double horizontal_fov = 64.0 * M_PI / 180.0; 
-    const double vertical_fov = 36.0 * M_PI / 180.0;   
-    const int horizontal_rays = 100;                    // Number of rays horizontally
-    const int vertical_rays = 50;                       // Number of rays vertically
+    const double horizontal_fov = FOV_H * M_PI / 180.0; 
+    const double vertical_fov = FOV_V * M_PI / 180.0;   
+
+    double half_horizontal_fov = horizontal_fov / 2.0;
+    double half_vertical_fov = vertical_fov / 2.0;
+
+    const int horizontal_rays = 100;            
+    const int vertical_rays = 50;                 
     
     double horizontal_step = horizontal_fov / horizontal_rays; 
     double vertical_step = vertical_fov / vertical_rays;       
@@ -30,8 +36,11 @@ RayView calculateRayView(
     for (int i = 0; i < horizontal_rays; ++i) {
         for (int j = 0; j < vertical_rays; ++j) {
             
-            double horizontal_angle = (i - horizontal_rays / 2) * horizontal_step;
-            double vertical_angle = (j - vertical_rays / 2) * vertical_step;
+            //double horizontal_angle = (i - horizontal_rays / 2) * horizontal_step;
+            //double vertical_angle = (j - vertical_rays / 2) * vertical_step;
+
+            double horizontal_angle = (i / static_cast<double>(horizontal_rays - 1)) * horizontal_fov - half_horizontal_fov;
+            double vertical_angle = (j / static_cast<double>(vertical_rays - 1)) * vertical_fov - half_vertical_fov;
 
             Eigen::Vector3d ray_direction_camera(
                 std::cos(horizontal_angle) * std::cos(vertical_angle), 

@@ -3,14 +3,15 @@
 #include <Eigen/Geometry>
 
 #include <sensor_msgs/point_cloud2_iterator.hpp>
+#include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/visualize.hpp" 
 
 
-void publishRays(const std::vector<RayInfo>& rays,
+void visualizeRayDots(const Nbv & nbv,
                  MarkerAPublisher publisher) 
 {
+    std::vector<RayInfo> rays = nbv.ray_view.rays;
     visualization_msgs::msg::MarkerArray marker_array;
-
 
     for (size_t i = 0; i < rays.size(); ++i) {
         
@@ -63,6 +64,215 @@ void publishRays(const std::vector<RayInfo>& rays,
     publisher->publish(marker_array);
 }
 
+
+void visualizeNbvFov(const Nbv & nbv, MarkerPublisher publisher) {
+    
+    Eigen::Isometry3d camera_pose = nbv.pose;
+    double range = 0.3;
+    visualization_msgs::msg::Marker marker;
+    marker.header.frame_id = "world"; 
+    marker.ns = "camera_fov";
+    marker.id = 0;
+    marker.type = visualization_msgs::msg::Marker::LINE_LIST;
+    marker.action = visualization_msgs::msg::Marker::ADD;
+    marker.pose = tf2::toMsg(camera_pose);  
+    marker.scale.x = 0.02; 
+
+    marker.color.r = 0.0f;
+    marker.color.g = 0.0f;
+    marker.color.b = 1.0f;
+    marker.color.a = 1.0f;
+
+
+    double half_fov_h = FOV_H * M_PI / 360.0;
+    double half_fov_v = FOV_V * M_PI / 360.0;
+    
+    Eigen::Vector3d top_left(range, -range * tan(half_fov_h), range * tan(half_fov_v));     
+    Eigen::Vector3d top_right(range, range * tan(half_fov_h), range * tan(half_fov_v));     
+    Eigen::Vector3d bottom_left(range, -range * tan(half_fov_h), -range * tan(half_fov_v)); 
+    Eigen::Vector3d bottom_right(range, range * tan(half_fov_h), -range * tan(half_fov_v)); 
+
+    geometry_msgs::msg::Point p_origin, p1, p2, p3, p4;
+ 
+    p_origin.x = 0.0;
+    p_origin.y = 0.0;
+    p_origin.z = 0.0;
+
+    p1.x = top_left.x();
+    p1.y = top_left.y();
+    p1.z = top_left.z();
+
+    p2.x = top_right.x();
+    p2.y = top_right.y();
+    p2.z = top_right.z();
+
+    p3.x = bottom_left.x();
+    p3.y = bottom_left.y();
+    p3.z = bottom_left.z();
+
+    p4.x = bottom_right.x();
+    p4.y = bottom_right.y();
+    p4.z = bottom_right.z();
+
+    marker.points.push_back(p_origin); marker.points.push_back(p1);  
+    marker.points.push_back(p_origin); marker.points.push_back(p2);  
+    marker.points.push_back(p_origin); marker.points.push_back(p3);  
+    marker.points.push_back(p_origin); marker.points.push_back(p4);  
+
+    marker.points.push_back(p1); marker.points.push_back(p2); 
+    marker.points.push_back(p3); marker.points.push_back(p4); 
+    marker.points.push_back(p1); marker.points.push_back(p3);  
+    marker.points.push_back(p2); marker.points.push_back(p4); 
+
+    publisher->publish(marker);
+}
+
+
+void visualizeNbvCandidatesPose(
+    const NbvCandidates& nbv_candidates,
+    MarkerAPublisher marker_pub)
+{
+    /*
+        Visualize all nbv candidate poses as arrows
+    */
+    visualization_msgs::msg::MarkerArray marker_array;
+
+    int id = 0;
+    for (const auto& nbv : nbv_candidates.nbv_candidates) {
+        visualization_msgs::msg::Marker marker;
+
+        marker.header.frame_id = "world";
+        marker.ns = "nbv_candidates";
+        marker.id = id++;
+        marker.type = visualization_msgs::msg::Marker::ARROW; 
+
+        marker.scale.x = 0.2; 
+        marker.scale.y = 0.05; 
+        marker.scale.z = 0.05; 
+
+
+        marker.color.r = 1.0f;
+        marker.color.g = 0.0f;
+        marker.color.b = 0.0f;
+        marker.color.a = 1.0f;
+
+        geometry_msgs::msg::Pose pose_msg = tf2::toMsg(nbv.pose);
+        marker.pose = pose_msg;
+
+        marker_array.markers.push_back(marker);
+    }
+
+    marker_pub->publish(marker_array);
+}
+
+void visualizeNbvRayView(
+    const Nbv& nbv,
+    MarkerAPublisher marker_pub)
+{
+    visualization_msgs::msg::MarkerArray marker_array;
+    int marker_id = 0; 
+
+    const RayView& ray_view = nbv.ray_view;
+
+    for (const auto& ray : ray_view.rays) {
+        visualization_msgs::msg::Marker marker;
+        marker.header.frame_id = "world";  
+        marker.ns = "ray_view";
+        marker.id = marker_id++;  
+        marker.type = visualization_msgs::msg::Marker::LINE_LIST; 
+
+        marker.scale.x = 0.02; 
+      
+        if (ray.node_state == NodeState::Unknown) {
+            marker.color.r = 1.0f; 
+            marker.color.g = 0.0f;
+            marker.color.b = 0.0f;
+        } else {
+            marker.color.r = 0.0f;
+            marker.color.g = 1.0f;  
+            marker.color.b = 0.0f;
+        }
+        marker.color.a = 1.0f;  
+
+        geometry_msgs::msg::Point start_point;
+        start_point.x = ray.start.x();
+        start_point.y = ray.start.y();
+        start_point.z = ray.start.z();
+
+        geometry_msgs::msg::Point end_point;
+        end_point.x = ray.end.x();
+        end_point.y = ray.end.y();
+        end_point.z = ray.end.z();
+
+        marker.points.push_back(start_point);  
+        marker.points.push_back(end_point);   
+
+        
+        marker_array.markers.push_back(marker);
+    }
+
+    marker_pub->publish(marker_array);
+}
+
+void visualizeNbvCandidatesFOV(
+    const NbvCandidates& nbv_candidates,
+    MarkerAPublisher marker_pub)
+{
+    visualization_msgs::msg::MarkerArray marker_array;
+    int marker_id = 0;  
+
+    for (const auto& nbv : nbv_candidates.nbv_candidates) {
+        
+        visualization_msgs::msg::Marker fov_marker;
+        fov_marker.header.frame_id = "world";
+        fov_marker.ns = "camera_fov";
+        fov_marker.id = marker_id++;
+        fov_marker.type = visualization_msgs::msg::Marker::LINE_LIST;
+        fov_marker.action = visualization_msgs::msg::Marker::ADD;
+        fov_marker.pose = tf2::toMsg(nbv.pose);
+        fov_marker.scale.x = 0.02;  
+        fov_marker.color.r = 0.0f;
+        fov_marker.color.g = 1.0f;
+        fov_marker.color.b = 0.0f;
+        fov_marker.color.a = 1.0f;
+
+        
+        double range = 0.3;
+
+        double half_fov_h = FOV_H * M_PI / 360.0;
+        double half_fov_v = FOV_V * M_PI / 360.0;
+        
+        Eigen::Vector3d top_left(range, -range * tan(half_fov_h), range * tan(half_fov_v));     
+        Eigen::Vector3d top_right(range, range * tan(half_fov_h), range * tan(half_fov_v));     
+        Eigen::Vector3d bottom_left(range, -range * tan(half_fov_h), -range * tan(half_fov_v)); 
+        Eigen::Vector3d bottom_right(range, range * tan(half_fov_h), -range * tan(half_fov_v)); 
+
+        geometry_msgs::msg::Point p_origin, p1, p2, p3, p4;
+        p_origin.x = 0.0;
+        p_origin.y = 0.0;
+        p_origin.z = 0.0;
+
+        p1.x = top_left.x(); p1.y = top_left.y(); p1.z = top_left.z();
+        p2.x = top_right.x(); p2.y = top_right.y(); p2.z = top_right.z();
+        p3.x = bottom_left.x(); p3.y = bottom_left.y(); p3.z = bottom_left.z();
+        p4.x = bottom_right.x(); p4.y = bottom_right.y(); p4.z = bottom_right.z();
+
+      
+        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p1);  
+        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p2);  
+        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p3);  
+        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p4);  
+
+        fov_marker.points.push_back(p1); fov_marker.points.push_back(p2); 
+        fov_marker.points.push_back(p3); fov_marker.points.push_back(p4); 
+        fov_marker.points.push_back(p1); fov_marker.points.push_back(p3);  
+        fov_marker.points.push_back(p2); fov_marker.points.push_back(p4); 
+
+        marker_array.markers.push_back(fov_marker);
+    }
+
+    marker_pub->publish(marker_array);
+}
 
 sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<octomap::OcTree>& octree) {
 
@@ -122,228 +332,4 @@ void printTransform(const Eigen::Isometry3d& transform) {
               << "roll: " << euler_angles.x() << ", "
               << "pitch: " << euler_angles.y() << ", "
               << "yaw: " << euler_angles.z() << std::endl;
-}
-
-
-void visualizeNbvFov(const Nbv & nbv, double fov_x, double fov_y, MarkerPublisher publisher) {
-    
-    Eigen::Isometry3d camera_pose = nbv.pose;
-    double range = 0.3;
-    visualization_msgs::msg::Marker marker;
-    marker.header.frame_id = "world"; 
-    marker.ns = "camera_fov";
-    marker.id = 0;
-    marker.type = visualization_msgs::msg::Marker::LINE_LIST;
-    marker.action = visualization_msgs::msg::Marker::ADD;
-    marker.pose = tf2::toMsg(camera_pose);  
-    marker.scale.x = 0.02;  // Line thickness
-
-    marker.color.r = 0.0f;
-    marker.color.g = 1.0f;
-    marker.color.b = 0.0f;
-    marker.color.a = 1.0f;
-
-    double half_fov_x = fov_x / 2.0;
-    double half_fov_y = fov_y / 2.0;
-
-    Eigen::Vector3d top_left(range, -range * tan(half_fov_y), range * tan(half_fov_x));     
-    Eigen::Vector3d top_right(range, range * tan(half_fov_y), range * tan(half_fov_x));     
-    Eigen::Vector3d bottom_left(range, -range * tan(half_fov_y), -range * tan(half_fov_x)); 
-    Eigen::Vector3d bottom_right(range, range * tan(half_fov_y), -range * tan(half_fov_x)); 
-
-    geometry_msgs::msg::Point p_origin, p1, p2, p3, p4;
- 
-    p_origin.x = 0.0;
-    p_origin.y = 0.0;
-    p_origin.z = 0.0;
-
-    p1.x = top_left.x();
-    p1.y = top_left.y();
-    p1.z = top_left.z();
-
-    p2.x = top_right.x();
-    p2.y = top_right.y();
-    p2.z = top_right.z();
-
-    p3.x = bottom_left.x();
-    p3.y = bottom_left.y();
-    p3.z = bottom_left.z();
-
-    p4.x = bottom_right.x();
-    p4.y = bottom_right.y();
-    p4.z = bottom_right.z();
-
-    marker.points.push_back(p_origin); marker.points.push_back(p1);  
-    marker.points.push_back(p_origin); marker.points.push_back(p2);  
-    marker.points.push_back(p_origin); marker.points.push_back(p3);  
-    marker.points.push_back(p_origin); marker.points.push_back(p4);  
-
-    marker.points.push_back(p1); marker.points.push_back(p2); 
-    marker.points.push_back(p3); marker.points.push_back(p4); 
-    marker.points.push_back(p1); marker.points.push_back(p3);  
-    marker.points.push_back(p2); marker.points.push_back(p4); 
-
-    publisher->publish(marker);
-}
-
-
-void visualizeNbvCandidatesPose(
-    const NbvCandidates& nbv_candidates,
-    MarkerAPublisher marker_pub)
-{
-    /*
-        Visualize all nbv candidate poses as arrows
-    */
-    visualization_msgs::msg::MarkerArray marker_array;
-
-    int id = 0;
-    for (const auto& nbv : nbv_candidates.nbv_candidates) {
-        // Create a marker to represent the NBV pose
-        visualization_msgs::msg::Marker marker;
-
-        // Set marker properties
-        marker.header.frame_id = "world";
-        //marker.header.stamp = node->get_clock()->now();
-        marker.ns = "nbv_candidates";
-        marker.id = id++;
-        marker.type = visualization_msgs::msg::Marker::ARROW; // You can also use CUBE or AXIS
-
-        // Set the marker scale (size of the arrow)
-        marker.scale.x = 0.2;  // Arrow length
-        marker.scale.y = 0.05; // Arrow width
-        marker.scale.z = 0.05; // Arrow height
-
-        // Set the color (red for arrows)
-        marker.color.r = 1.0f;
-        marker.color.g = 0.0f;
-        marker.color.b = 0.0f;
-        marker.color.a = 1.0f;
-
-        // Convert Eigen::Isometry3d to geometry_msgs::msg::Pose
-        geometry_msgs::msg::Pose pose_msg = tf2::toMsg(nbv.pose);
-        marker.pose = pose_msg;
-
-        // Add marker to the array
-        marker_array.markers.push_back(marker);
-    }
-
-    // Publish the marker array to visualize in RViz
-    marker_pub->publish(marker_array);
-}
-
-void visualizeNbvRayView(
-    const Nbv& nbv,
-    MarkerAPublisher marker_pub)
-{
-    visualization_msgs::msg::MarkerArray marker_array;
-    int marker_id = 0;  // Unique ID for each marker
-
-    const RayView& ray_view = nbv.ray_view;
-
-    for (const auto& ray : ray_view.rays) {
-        // Create a marker for each ray
-        visualization_msgs::msg::Marker marker;
-        marker.header.frame_id = "world";  // Ensure this matches RViz's fixed frame
-        marker.ns = "ray_view";
-        marker.id = marker_id++;  // Unique marker ID
-        marker.type = visualization_msgs::msg::Marker::LINE_LIST;  // Lines to visualize rays
-
-        // Set the scale of the line (width of the ray)
-        marker.scale.x = 0.02;  // Line thickness
-
-        // Set color based on whether the ray hit an unknown region
-        if (ray.node_state == NodeState::Unknown) {
-            marker.color.r = 1.0f;  // Red for unknown hit
-            marker.color.g = 0.0f;
-            marker.color.b = 0.0f;
-        } else {
-            marker.color.r = 0.0f;
-            marker.color.g = 1.0f;  // Green for known hit
-            marker.color.b = 0.0f;
-        }
-        marker.color.a = 1.0f;  // Fully opaque
-
-        // Create two points for the start and end of the ray
-        geometry_msgs::msg::Point start_point;
-        start_point.x = ray.start.x();
-        start_point.y = ray.start.y();
-        start_point.z = ray.start.z();
-
-        geometry_msgs::msg::Point end_point;
-        end_point.x = ray.end.x();
-        end_point.y = ray.end.y();
-        end_point.z = ray.end.z();
-
-        // Add the points to the marker
-        marker.points.push_back(start_point);  // Add start point
-        marker.points.push_back(end_point);    // Add end point
-
-        // Add this marker to the marker array
-        marker_array.markers.push_back(marker);
-    }
-
-    // Publish the marker array to visualize in RViz
-    marker_pub->publish(marker_array);
-}
-
-void visualizeNbvCandidatesFOV(
-    const NbvCandidates& nbv_candidates,
-    MarkerAPublisher marker_pub)
-{
-    visualization_msgs::msg::MarkerArray marker_array;
-    int marker_id = 0;  
-
-    for (const auto& nbv : nbv_candidates.nbv_candidates) {
-        
-        visualization_msgs::msg::Marker fov_marker;
-        fov_marker.header.frame_id = "world";
-        fov_marker.ns = "camera_fov";
-        fov_marker.id = marker_id++;
-        fov_marker.type = visualization_msgs::msg::Marker::LINE_LIST;
-        fov_marker.action = visualization_msgs::msg::Marker::ADD;
-        fov_marker.pose = tf2::toMsg(nbv.pose);
-        fov_marker.scale.x = 0.02;  
-        fov_marker.color.r = 0.0f;
-        fov_marker.color.g = 1.0f;
-        fov_marker.color.b = 0.0f;
-        fov_marker.color.a = 1.0f;
-
-        
-        double range = 0.3;
-        double fov_x = 64.0;  
-        double fov_y = 36.0;  
-
-        double half_fov_x = fov_x / 2.0;
-        double half_fov_y = fov_y / 2.0;
-
-        Eigen::Vector3d top_left(range, -range * tan(half_fov_y), range * tan(half_fov_x));     
-        Eigen::Vector3d top_right(range, range * tan(half_fov_y), range * tan(half_fov_x));     
-        Eigen::Vector3d bottom_left(range, -range * tan(half_fov_y), -range * tan(half_fov_x)); 
-        Eigen::Vector3d bottom_right(range, range * tan(half_fov_y), -range * tan(half_fov_x)); 
-
-        geometry_msgs::msg::Point p_origin, p1, p2, p3, p4;
-        p_origin.x = 0.0;
-        p_origin.y = 0.0;
-        p_origin.z = 0.0;
-
-        p1.x = top_left.x(); p1.y = top_left.y(); p1.z = top_left.z();
-        p2.x = top_right.x(); p2.y = top_right.y(); p2.z = top_right.z();
-        p3.x = bottom_left.x(); p3.y = bottom_left.y(); p3.z = bottom_left.z();
-        p4.x = bottom_right.x(); p4.y = bottom_right.y(); p4.z = bottom_right.z();
-
-      
-        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p1);  
-        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p2);  
-        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p3);  
-        fov_marker.points.push_back(p_origin); fov_marker.points.push_back(p4);  
-
-        fov_marker.points.push_back(p1); fov_marker.points.push_back(p2); 
-        fov_marker.points.push_back(p3); fov_marker.points.push_back(p4); 
-        fov_marker.points.push_back(p1); fov_marker.points.push_back(p3);  
-        fov_marker.points.push_back(p2); fov_marker.points.push_back(p4); 
-
-        marker_array.markers.push_back(fov_marker);
-    }
-
-    marker_pub->publish(marker_array);
 }

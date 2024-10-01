@@ -34,7 +34,7 @@ private:
     RvizToolPtr rviz_tool_;
     State current_state_;
     std::atomic<bool> finished_;
-    OctrePtr octomap_;
+    OctreePtr octomap_;
     ExplorationPlannerPtr exploration_planner_;
     ExecuteReq current_req_;
     
