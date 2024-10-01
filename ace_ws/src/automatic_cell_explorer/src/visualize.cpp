@@ -79,8 +79,8 @@ void visualizeNbvFov(const Nbv & nbv, MarkerPublisher publisher) {
     marker.scale.x = 0.02; 
 
     marker.color.r = 0.0f;
-    marker.color.g = 0.0f;
-    marker.color.b = 1.0f;
+    marker.color.g = 1.0f;
+    marker.color.b = 0.0f;
     marker.color.a = 1.0f;
 
 

@@ -17,7 +17,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_to
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
-    exploration_planner_(std::make_shared<DemoExplorationPlanner>(mvt_interface_, octomap_)),
+    exploration_planner_(std::make_shared<ImprovedExplorationPlanner>(mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 
