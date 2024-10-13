@@ -103,21 +103,14 @@ void ExplorationPlannerV2::generateCandidates()
             continue;
         }
         
-        // Generate random orientation (rotation using Euler angles)
-        double roll = dis_roll(gen);
-        double pitch = dis_pitch(gen);
-        double yaw = dis_yaw(gen);
+        Eigen::Quaternion q_r = Eigen::Quaterniond::UnitRandom();
         
-        // Convert Euler angles to rotation matrix
-        Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
-        Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
-        Eigen::AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
-        
-        Eigen::Quaterniond q = yawAngle * pitchAngle * rollAngle; 
 
         nbv.pose = Eigen::Isometry3d::Identity();
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
-        nbv.pose.rotate(q);
+        nbv.pose.rotate(q_r);
+
+        
 
 
         auto result = plan(nbv.pose);
