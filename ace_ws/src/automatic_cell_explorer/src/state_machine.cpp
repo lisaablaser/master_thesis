@@ -7,18 +7,20 @@
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planner_v2.hpp"
+#include "automatic_cell_explorer/exploration_planner/random_exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/random_exploration_planner_v2.hpp"
 
 
-StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_tool) 
+StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_monitor::PlanningSceneMonitorPtr plm_interface, RvizToolPtr rviz_tool) 
     : Node("state_machine_node"), 
     node_(nullptr),
     mvt_interface_(mvt_interface),
+    plm_interface_(plm_interface),
     rviz_tool_(rviz_tool),
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
-    exploration_planner_(std::make_shared<ExplorationPlannerV2>(mvt_interface_, octomap_)),
+    exploration_planner_(std::make_shared<RandomExplorationPlanner>(mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 
@@ -37,8 +39,11 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_to
         RCLCPP_INFO(this->get_logger(), "Waiting for the move_robot service to be available...");
     }
 
+
+
     std::cout << "Initializing state machine with node name: " << this->get_name() << std::endl;
 }
+
 
 void StateMachineNode::handle_initialise(){
     std::cout << "--State Initialise--" << std::endl;

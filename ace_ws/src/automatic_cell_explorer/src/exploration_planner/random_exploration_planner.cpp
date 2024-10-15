@@ -9,11 +9,11 @@
 
 #include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/evaluate_nbv.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planner_v2.hpp"
+#include "automatic_cell_explorer/exploration_planner/random_exploration_planner.hpp"
 
-void ExplorationPlannerV2::calculateNbvCandidates() {
+void RandomExplorationPlanner::calculateNbvCandidates() {
     /*
-        Improved Planner. 
+        Improved random generator Planner. 
     */
 
     generateCandidates();
@@ -22,7 +22,7 @@ void ExplorationPlannerV2::calculateNbvCandidates() {
 }
 
 
-Nbv ExplorationPlannerV2::selectNbv(){
+Nbv RandomExplorationPlanner::selectNbv(){
     /*
         Get the next Nbv candidate, Plans are alraeady calculated.
         Select the one with highes information gain. 
@@ -32,6 +32,7 @@ Nbv ExplorationPlannerV2::selectNbv(){
     }
 
     Nbv highest_cost_nbv = nbv_candidates_.nbv_candidates.at(0);
+    //should be deleted
 
     for (const auto& nbv : nbv_candidates_.nbv_candidates) {
         if (nbv.ray_view.num_unknowns > highest_cost_nbv.ray_view.num_unknowns) {
@@ -44,18 +45,24 @@ Nbv ExplorationPlannerV2::selectNbv(){
     
    
 }
-bool ExplorationPlannerV2::terminationCriteria() const {
+bool RandomExplorationPlanner::terminationCriteria() const {
     /*
         Termination Criteria: When nbv_candidates are empty.
     */
+   //beter criteria. 
     return (nbv_candidates_.nbv_candidates.empty());
 }
 
-void ExplorationPlannerV2::evaluateNbvCandidates(){
+void RandomExplorationPlanner::evaluateNbvCandidates(){
     /*
         Evaluates the candidates with rycasting. 
     */
+
+    //update ray views should only modify ray_views
     updateRayViews(nbv_candidates_,octo_map_);
+    //calculate nbv.utility = gain - cost
+    calculateGain();
+    calculateCost();
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
     for(Nbv nbv: nbv_candidates_.nbv_candidates){
@@ -63,14 +70,54 @@ void ExplorationPlannerV2::evaluateNbvCandidates(){
     }
 
 }
+void RandomExplorationPlanner::calculateGain(){
+    /*
+        calculate number of unknown voxels that are within workspace bounds. 
+
+    */
 
 
-void ExplorationPlannerV2::generateCandidates()
+
+
+}
+void RandomExplorationPlanner::calculateCost(){
+    /*
+        calculate number of unknown voxels that are within workspace bounds. 
+
+    */
+
+
+
+
+}
+void RandomExplorationPlanner::update_trajectories(){
+    //updates trajectories from new state, and removes the onec with no valid trajectory
+
+    for (auto it = nbv_candidates_.nbv_candidates.begin(); it != nbv_candidates_.nbv_candidates.end(); )
+    {
+
+        auto result = plan(it->pose);
+
+        if (result) {
+   
+            Plan valid_plan = *result;
+            it->plan = valid_plan;
+            ++it;  
+        }
+        else {
+            it = nbv_candidates_.nbv_candidates.erase(it);
+        }
+    }
+}
+
+
+void RandomExplorationPlanner::generateCandidates()
 /*
     Random generate candidates. Append if plan exists. 
 */
 {
-    nbv_candidates_.nbv_candidates.clear();
+    //nbv_candidates_.nbv_candidates.clear();
+    update_trajectories();
 
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -109,8 +156,6 @@ void ExplorationPlannerV2::generateCandidates()
         nbv.pose = Eigen::Isometry3d::Identity();
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
         nbv.pose.rotate(q_r);
-
-        
 
 
         auto result = plan(nbv.pose);
