@@ -2,7 +2,10 @@
 
 
 void updateRayViews(NbvCandidates& nbvs,  std::shared_ptr<octomap::OcTree> octo_map){
-    double max_range = 2.0;
+   // add as constant/variable later. 
+    double max_range = 0.93;
+
+    // or range worksapce bounds in all directions???
     
     std::cout << "updating ray views " << std::endl;
     for(Nbv &nbv: nbvs.nbv_candidates){

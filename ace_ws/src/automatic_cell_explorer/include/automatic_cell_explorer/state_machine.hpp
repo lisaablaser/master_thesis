@@ -24,13 +24,14 @@ class StateMachineNode : public rclcpp::Node
 public:
     using ExplorationPlannerPtr = std::shared_ptr<ExplorationPlanner>;
 
-    StateMachineNode(MoveGrpPtr mvt_interface, RvizToolPtr rviz_tool);
+    StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_monitor::PlanningSceneMonitorPtr plm_interface, RvizToolPtr rviz_tool);
     void execute_state_machine();
     bool is_finished() const { return finished_; }
 
 private:
     std::shared_ptr<rclcpp::Node> node_;
     MoveGrpPtr mvt_interface_;
+    planning_scene_monitor::PlanningSceneMonitorPtr plm_interface_;
     RvizToolPtr rviz_tool_;
     State current_state_;
     std::atomic<bool> finished_;
@@ -44,7 +45,7 @@ private:
     rclcpp::Publisher<moveit_msgs::msg::PlanningSceneWorld>::SharedPtr world_publisher_;
     rclcpp::Client<Execute>::SharedPtr move_client_;
 
-
+    
     void handle_initialise();
     void handle_capture();
     void handle_calculate_nbv();

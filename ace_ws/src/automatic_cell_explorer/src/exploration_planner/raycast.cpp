@@ -83,6 +83,8 @@ RayView calculateRayView(
 
 NodeState castRay(const octomap::point3d& origin, const octomap::point3d& directionP, octomap::point3d& end,
                      double maxRange, std::shared_ptr<octomap::OcTree> octo_map){
+/// modify to check maxrange in 3d space(wokrspace bounds)
+/// Now max range is based on sensor pose.
 
 /// Simple raycast method. TODO: more advanced method aviding voxel leaks.
     bool ignoreUnknown = false;

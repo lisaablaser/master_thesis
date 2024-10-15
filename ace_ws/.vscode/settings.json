@@ -103,7 +103,8 @@
         "cstdbool": "cpp",
         "version": "cpp",
         "core": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "__memory": "cpp"
     },
     "cmake.sourceDirectory": "/home/lisa/master_thesis/ace_ws/src/automatic_cell_explorer"
 }

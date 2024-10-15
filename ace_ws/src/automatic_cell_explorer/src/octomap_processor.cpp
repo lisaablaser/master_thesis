@@ -68,9 +68,9 @@ OctreePtr extractUnknownOctree(const OctreePtr octree) {
     OctreePtr unknownVoxelsTree = std::make_shared<octomap::OcTree>(resolution);
     
 
-    for (double x = bounds.min_x; x <= bounds.max_x + resolution; x += resolution) {
-        for (double y = bounds.min_y; y <= bounds.max_y + resolution; y += resolution) {
-            for (double z = bounds.min_z - resolution + origo.z; z <= bounds.max_z + origo.z + resolution; z += resolution){
+    for (double x = bounds.min_x; x <= bounds.max_x; x += resolution) {
+        for (double y = bounds.min_y; y <= bounds.max_y; y += resolution) {
+            for (double z = bounds.min_z  + origo.z; z <= bounds.max_z + origo.z; z += resolution){
                 octomap::OcTreeKey key = octree->coordToKey(x, y, z);
                 octomap::OcTreeNode* node = octree->search(key);
 
@@ -196,18 +196,29 @@ OctreePtr extractFrontierOctreeInBounds(const OctreePtr octree) {
 }
 
 double calculateOccupiedVolume(const OctreePtr octree) {
-    WorkspaceBounds bounds = WORK_SPACE;
+    octree->expand();
+    double res = octree->getResolution();
+    WorkspaceBounds w = WORK_SPACE;
+    FreespaceBounds f = FREE_SPACE;
+    //double res = RES_LARGE;
+    double free_volume = (f.max_x-f.min_x)*(f.max_y-f.min_y)*(f.max_z-f.min_z);
     
     double volume = 0.0;
     for (octomap::OcTree::leaf_iterator it = octree->begin_leafs(), end=octree->end_leafs(); it != end; ++it) {
         if (octree->isNodeOccupied(*it)) {
-            double nodeVolume = std::pow(it.getSize(), 3); 
+            double nodeVolume = res*res*res;//std::pow(it.getSize(), 3); 
             volume += nodeVolume;
         }
     }
-    double total_volume = (bounds.max_x-bounds.min_x)*(bounds.max_y-bounds.min_y)*(bounds.max_z-bounds.min_z);
+    double worksapce_volume = (w.max_x-w.min_x)*(w.max_y-w.min_y)*(w.max_z-w.min_z);
+    double total_volume =  worksapce_volume - free_volume;
+
+    std::cout << "unknown volume: " << volume << std::endl;
+    std::cout << "workspace volume: " << worksapce_volume << std::endl;
+    std::cout << "free volume: " << free_volume << std::endl;
 
     double percentage_explored = 100 - (volume/total_volume)*100;
+
 
     return percentage_explored;
 }

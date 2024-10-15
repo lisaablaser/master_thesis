@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     RvizToolPtr rviz_tool = getRvizToolPtr(rviz_node, plm_interface);
     
     auto move_robot_service_node = std::make_shared<MoveRobotService>(mvt_interface);
-    auto state_machine_node = std::make_shared<StateMachineNode>(mvt_interface, rviz_tool);
+    auto state_machine_node = std::make_shared<StateMachineNode>(mvt_interface, plm_interface, rviz_tool);
 
     move_robot_service_node->set_parameter(rclcpp::Parameter("use_sim_time", true));
     moveit_node->set_parameter(rclcpp::Parameter("use_sim_time", true));

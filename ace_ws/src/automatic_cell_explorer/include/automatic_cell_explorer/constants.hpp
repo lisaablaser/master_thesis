@@ -1,3 +1,5 @@
+#include <cstddef>
+
 
 // UR5: 0.85 m, Sensor: <box size="0.07271 0.27794 0.073"/>: 
 struct WorkspaceBounds {
