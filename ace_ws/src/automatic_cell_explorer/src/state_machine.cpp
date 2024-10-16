@@ -6,9 +6,9 @@
 #include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/constants.hpp"
-#include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/random_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/random_exploration_planner_v2.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/demo_exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner_v2.hpp"
 
 
 StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_monitor::PlanningSceneMonitorPtr plm_interface, RvizToolPtr rviz_tool) 
@@ -20,7 +20,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
-    exploration_planner_(std::make_shared<RandomExplorationPlanner>(mvt_interface_, octomap_)),
+    exploration_planner_(std::make_shared<RandomExplorationPlannerV2>(mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 
@@ -80,18 +80,13 @@ void StateMachineNode::handle_calculate_nbv(){
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
     Nbv nbv = exploration_planner_->selectNbv();
 
+    // Maybe: Nbv nbv = exploration_planner->calculateNBV(octomap_); Several steps nice for debugging. 
+
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     RCLCPP_INFO(this->get_logger(), "----------------- Calculated NBV in %ld ms", duration.count());
 
-    if (exploration_planner_->terminationCriteria()){
-        std::cout << "Planner reached termination criteria" << std::endl;
-        finished_ = true;
-        current_state_ = State::Finished;
-        return;
-
-    }
     
     // Visualizations
     visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
@@ -196,6 +191,17 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             unknown_voxel_pub->publish(u_msg);
 
             std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
+            
+
+            // Check termination criteria
+            double termination_treshold = 97.0;
+
+            if (unknown_voxel_count > termination_treshold) {
+                std::cout << "Planner reached termination criteria" << std::endl;
+                finished_ = true;
+                current_state_ = State::Finished;
+                return;
+            }
 
 
 

@@ -8,12 +8,13 @@
 #include <moveit/robot_model_loader/robot_model_loader.h>
 
 #include "automatic_cell_explorer/constants.hpp"
-#include "automatic_cell_explorer/exploration_planner/evaluate_nbv.hpp"
-#include "automatic_cell_explorer/exploration_planner/random_exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/nbv.hpp"
+#include "automatic_cell_explorer/exploration_planner/raycast.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner.hpp"
 
 void RandomExplorationPlanner::calculateNbvCandidates() {
     /*
-        Improved random generator Planner. 
+        initial dummy random generator planner 
     */
 
     generateCandidates();
@@ -32,7 +33,6 @@ Nbv RandomExplorationPlanner::selectNbv(){
     }
 
     Nbv highest_cost_nbv = nbv_candidates_.nbv_candidates.at(0);
-    //should be deleted
 
     for (const auto& nbv : nbv_candidates_.nbv_candidates) {
         if (nbv.ray_view.num_unknowns > highest_cost_nbv.ray_view.num_unknowns) {
@@ -45,24 +45,21 @@ Nbv RandomExplorationPlanner::selectNbv(){
     
    
 }
-bool RandomExplorationPlanner::terminationCriteria() const {
-    /*
-        Termination Criteria: When nbv_candidates are empty.
-    */
-   //beter criteria. 
-    return (nbv_candidates_.nbv_candidates.empty());
-}
 
 void RandomExplorationPlanner::evaluateNbvCandidates(){
     /*
         Evaluates the candidates with rycasting. 
     */
 
-    //update ray views should only modify ray_views
-    updateRayViews(nbv_candidates_,octo_map_);
-    //calculate nbv.utility = gain - cost
-    calculateGain();
-    calculateCost();
+    double max_range = 0.93;
+    
+    std::cout << "updating ray view " << std::endl;
+    for(Nbv &nbv: nbv_candidates_.nbv_candidates){
+        Eigen::Isometry3d sensor_pose = nbv.pose;
+        RayView ray_view = calculateRayView(sensor_pose, octo_map_, max_range);
+        nbv.ray_view = ray_view;
+    
+    }
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
     for(Nbv nbv: nbv_candidates_.nbv_candidates){
@@ -70,45 +67,7 @@ void RandomExplorationPlanner::evaluateNbvCandidates(){
     }
 
 }
-void RandomExplorationPlanner::calculateGain(){
-    /*
-        calculate number of unknown voxels that are within workspace bounds. 
 
-    */
-
-
-
-
-}
-void RandomExplorationPlanner::calculateCost(){
-    /*
-        calculate number of unknown voxels that are within workspace bounds. 
-
-    */
-
-
-
-
-}
-void RandomExplorationPlanner::update_trajectories(){
-    //updates trajectories from new state, and removes the onec with no valid trajectory
-
-    for (auto it = nbv_candidates_.nbv_candidates.begin(); it != nbv_candidates_.nbv_candidates.end(); )
-    {
-
-        auto result = plan(it->pose);
-
-        if (result) {
-   
-            Plan valid_plan = *result;
-            it->plan = valid_plan;
-            ++it;  
-        }
-        else {
-            it = nbv_candidates_.nbv_candidates.erase(it);
-        }
-    }
-}
 
 
 void RandomExplorationPlanner::generateCandidates()
@@ -116,8 +75,7 @@ void RandomExplorationPlanner::generateCandidates()
     Random generate candidates. Append if plan exists. 
 */
 {
-    //nbv_candidates_.nbv_candidates.clear();
-    update_trajectories();
+    nbv_candidates_.nbv_candidates.clear();
 
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -135,8 +93,9 @@ void RandomExplorationPlanner::generateCandidates()
     std::uniform_real_distribution<> dis_pitch(pitch_min, pitch_max);
     std::uniform_real_distribution<> dis_yaw(yaw_min, yaw_max);
 
+    int i =0;
     while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
-
+        ++i;
         Nbv nbv;
         
         double x = dis_x(gen);
@@ -168,6 +127,45 @@ void RandomExplorationPlanner::generateCandidates()
         }
         
     }
+    std::cout << " Number of itertions to generate candidates was: " << i << std::endl;
+
+    // while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
+    //     // std::vector<double> random_joint_values;
+    //     auto robot_model = mvt_interface_->getRobotModel();
+    //     auto joint_model_group = robot_model->getJointModelGroup("ur_manipulator");
+    //     auto robot_state = std::make_shared<moveit::core::RobotState>(robot_model);
+
+    //     // robot_state->setToRandomPositions(joint_model_group);
+    //     // robot_state->copyJointGroupPositions(joint_model_group, random_joint_values);
+
+    //     //planning_scene_monitor::LockedPlanningSceneRO ls(plm_interface_);
+    //     //auto pc = ls->getWorld();
+
+    //     Nbv nbv;
+
+    //     //Much slower 
+    //     mvt_interface_->setRandomTarget();
+        
+    //     std::vector<double> target_joint_values;
+    //     mvt_interface_->getJointValueTarget(target_joint_values);
+
+    //     // Set the robot state to these target joint values
+    //     robot_state->setJointGroupPositions(joint_model_group, target_joint_values);
+
+
+
+    //     const Eigen::Isometry3d& target_pose_eigen = robot_state->getGlobalLinkTransform("rgbd_camera");
+    //     Plan plan_p;  
+    //     auto result = mvt_interface_->plan(plan_p);
+
+    //     if (result) {
+    //         nbv.pose = target_pose_eigen;
+    //         nbv.plan = plan_p;
+    //         nbv.cost = 0.0; 
+    //         nbv_candidates_.nbv_candidates.push_back(nbv);
+    //     }
+        
+    // }
     
 }
 

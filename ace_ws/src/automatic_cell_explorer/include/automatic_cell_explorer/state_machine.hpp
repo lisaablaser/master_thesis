@@ -13,7 +13,7 @@
 #include "automatic_cell_explorer/moveit_interface.hpp"
 #include "automatic_cell_explorer/octomap_processor.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/demo_exploration_planner.hpp"
 
 
 

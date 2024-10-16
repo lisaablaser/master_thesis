@@ -6,8 +6,9 @@
 #include <moveit/kinematic_constraints/utils.h>
 #include <moveit/robot_model_loader/robot_model_loader.h>
 
-#include "automatic_cell_explorer/exploration_planner/evaluate_nbv.hpp"
-#include "automatic_cell_explorer/exploration_planner/demo_exploration_planner.hpp"
+
+#include "automatic_cell_explorer/exploration_planner/raycast.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/demo_exploration_planner.hpp"
 
 void DemoExplorationPlanner::calculateNbvCandidates() {
 /*
@@ -41,19 +42,21 @@ Nbv DemoExplorationPlanner::selectNbv(){
     // if no valid nbv exists, return empty
     return Nbv();
 }
-bool DemoExplorationPlanner::terminationCriteria() const {
-    /*
-        Termination Criteria from Demo planner: When nbv_candidates are empty.
-    */
-    bool terminate = nbv_candidates_.nbv_candidates.empty();
-    return false;
-}
 
 void DemoExplorationPlanner::evaluateNbvCandidates(){
     /*
         Just for inspection, evaluation does not affect the Nbv Selection.
     */
-    updateRayViews(nbv_candidates_,octo_map_);
+    double max_range = 0.93;
+
+    
+    std::cout << "updating ray view " << std::endl;
+    for(Nbv &nbv: nbv_candidates_.nbv_candidates){
+        Eigen::Isometry3d sensor_pose = nbv.pose;
+        RayView ray_view = calculateRayView(sensor_pose, octo_map_, max_range);
+        nbv.ray_view = ray_view;
+    
+    }
 }
 
 

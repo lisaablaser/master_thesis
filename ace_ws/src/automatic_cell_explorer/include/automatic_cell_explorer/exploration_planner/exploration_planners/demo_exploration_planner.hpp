@@ -12,7 +12,6 @@ public:
 
   void calculateNbvCandidates() override;
   Nbv selectNbv() override;
-  bool terminationCriteria() const override;
 
 private:
 

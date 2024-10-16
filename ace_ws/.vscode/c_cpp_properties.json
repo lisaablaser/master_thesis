@@ -11,6 +11,7 @@
                 "/usr/local/include",
                 "/usr/include/eigen3",
                 "${workspaceFolder}/src/**",
+                "/home/lisa/master_thesis/ace_ws/src/exploration_planner/**",
                 "/home/lisa/workspaces/**"
             ],
             "defines": [],
