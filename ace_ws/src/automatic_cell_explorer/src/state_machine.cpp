@@ -8,7 +8,8 @@
 #include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/demo_exploration_planner.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner_v2.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v2.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v3.hpp"
 
 
 StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_monitor::PlanningSceneMonitorPtr plm_interface, RvizToolPtr rviz_tool) 
@@ -20,7 +21,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
-    exploration_planner_(std::make_shared<RandomExplorationPlannerV2>(mvt_interface_, octomap_)),
+    exploration_planner_(std::make_shared<ExplorationPlannerV3>(mvt_interface_,plm_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 

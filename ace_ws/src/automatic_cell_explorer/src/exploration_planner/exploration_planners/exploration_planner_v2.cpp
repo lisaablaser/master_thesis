@@ -9,9 +9,9 @@
 
 #include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner_v2.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v2.hpp"
 
-void RandomExplorationPlannerV2::calculateNbvCandidates() {
+void ExplorationPlannerV2::calculateNbvCandidates() {
     /*
         Improved random generator Planner. 
     */
@@ -29,7 +29,7 @@ void RandomExplorationPlannerV2::calculateNbvCandidates() {
 }
 
 
-Nbv RandomExplorationPlannerV2::selectNbv(){
+Nbv ExplorationPlannerV2::selectNbv(){
     /*
         Get the next Nbv candidate, Plans are alraeady calculated.
         Select the one with highes information gain. 
@@ -71,7 +71,7 @@ Nbv RandomExplorationPlannerV2::selectNbv(){
 }
 
 
-void RandomExplorationPlannerV2::evaluateNbvCandidates(){
+void ExplorationPlannerV2::evaluateNbvCandidates(){
     /*
         Evaluates the candidates with rycasting. 
     */
@@ -89,7 +89,7 @@ void RandomExplorationPlannerV2::evaluateNbvCandidates(){
 
 }
 
-void RandomExplorationPlannerV2::calculateCost(){
+void ExplorationPlannerV2::calculateCost(){
     /*
         calculate time of trajectory
 
@@ -110,7 +110,7 @@ void RandomExplorationPlannerV2::calculateCost(){
 
 }
 
-double RandomExplorationPlannerV2::getCost(Nbv & nbv){
+double ExplorationPlannerV2::getCost(Nbv & nbv){
     auto traj = nbv.plan.trajectory.joint_trajectory;
     size_t num_points = traj.points.size();
     std::cout << "Number of points in trajectory: " << num_points << std::endl;
@@ -121,7 +121,7 @@ double RandomExplorationPlannerV2::getCost(Nbv & nbv){
     return total_time;
 }
 
-void RandomExplorationPlannerV2::update_ray_views(){
+void ExplorationPlannerV2::update_ray_views(){
     /*
         updates ray_views from current map. Also updates Gain
     */
@@ -133,7 +133,7 @@ void RandomExplorationPlannerV2::update_ray_views(){
     }
 
 }
-RayView RandomExplorationPlannerV2::getRayView(Nbv & nbv ){
+RayView ExplorationPlannerV2::getRayView(Nbv & nbv ){
 
     double max_range = 0.93;
     Eigen::Isometry3d& sensor_pose = nbv.pose;
@@ -144,7 +144,7 @@ RayView RandomExplorationPlannerV2::getRayView(Nbv & nbv ){
 }
 
 
-void RandomExplorationPlannerV2::update_trajectories(){
+void ExplorationPlannerV2::update_trajectories(){
     /*
         updates trajectories from new state, and removes the onec with no valid trajectory
     */
@@ -166,7 +166,7 @@ void RandomExplorationPlannerV2::update_trajectories(){
 }
 
 
-void RandomExplorationPlannerV2::remove_weak_candidates(){
+void ExplorationPlannerV2::remove_weak_candidates(){
     /// Should update rayviews first maybe. 
     /// And gain_treshold should be dynamic. 
     int gain_trehsold = 1000;
@@ -186,7 +186,7 @@ void RandomExplorationPlannerV2::remove_weak_candidates(){
 }
 
 
-void RandomExplorationPlannerV2::generateCandidates()
+void ExplorationPlannerV2::generateCandidates()
 /*
     Random generate candidates until we have N in total. Append if plan exists. 
 */

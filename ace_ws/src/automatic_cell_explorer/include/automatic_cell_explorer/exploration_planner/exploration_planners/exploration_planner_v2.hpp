@@ -1,13 +1,13 @@
-#ifndef RANDOM_EXPLORATION_PLANNER_V2_HPP
-#define RANDOM_EXPLORATION_PLANNER_V2_HPP
+#ifndef EXPLORATION_PLANNER_V2_HPP
+#define EXPLORATION_PLANNER_V2_HPP
 
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
 
 
-class RandomExplorationPlannerV2: public ExplorationPlanner
+class ExplorationPlannerV2: public ExplorationPlanner
 {
 public:
-  RandomExplorationPlannerV2(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)
+  ExplorationPlannerV2(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)
     : ExplorationPlanner(mvt_interface, octo_map) {}
 
   void calculateNbvCandidates() override;
@@ -29,4 +29,4 @@ private:
   
 };
 
-#endif // RANDOM_EXPLORATION_PLANNER.HPP
+#endif // EXPLORATION_PLANNER.HPP

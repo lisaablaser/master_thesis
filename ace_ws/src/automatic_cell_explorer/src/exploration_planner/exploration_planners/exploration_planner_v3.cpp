@@ -13,7 +13,7 @@
 
 void ExplorationPlannerV3::calculateNbvCandidates() {
     /*
-        initial dummy random generator planner 
+        
     */
 
     generateCandidates();
