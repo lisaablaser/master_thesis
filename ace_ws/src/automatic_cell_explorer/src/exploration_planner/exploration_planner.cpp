@@ -14,9 +14,40 @@ std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
   req.workspace_parameters.max_corner.z = 5.0;
 
   mvt_interface_->setPoseTarget(pose);
-
   /// TODO: configure this somewhere else?
   mvt_interface_->setPlanningTime(0.1); 
+
+  auto const [success, plan] = [&mvt_interface = mvt_interface_]{
+    Plan p;
+    auto const ok = static_cast<bool>(mvt_interface->plan(p));
+    return std::make_pair(ok, p);
+  }();
+
+  if(success) {
+
+    return plan;
+
+  } else {
+
+    return std::nullopt; 
+
+  }
+
+  return plan;
+}
+std::optional<Plan> ExplorationPlanner::plan(const std::vector<double> & joint_values){
+  /// TODO: include checks to terminate planner faster. 
+
+  planning_interface::MotionPlanRequest req;
+
+  req.group_name = "ur_manipulator";
+
+  req.workspace_parameters.min_corner.x = req.workspace_parameters.min_corner.y =
+  req.workspace_parameters.min_corner.z = -5.0;
+  req.workspace_parameters.max_corner.x = req.workspace_parameters.max_corner.y =
+  req.workspace_parameters.max_corner.z = 5.0;
+
+  mvt_interface_->setJointValueTarget(joint_values);
 
   auto const [success, plan] = [&mvt_interface = mvt_interface_]{
     Plan p;
