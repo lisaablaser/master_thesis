@@ -17,4 +17,8 @@ struct NbvCandidates{
   std::vector<Nbv> nbv_candidates;
 };
 
+bool is_deafault(Nbv& nbv){
+  return nbv.pose.isApprox(Eigen::Isometry3d::Identity());
+}
+
 #endif // NBV_HPP

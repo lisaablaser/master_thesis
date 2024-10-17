@@ -6,6 +6,7 @@
 #include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/constants.hpp"
+#include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 
 
 
@@ -81,7 +82,6 @@ void StateMachineNode::handle_calculate_nbv(){
     Nbv nbv = exploration_planner_->selectNbv();
 
 
-
     /** \brief Specify whether the robot is allowed to look around
      before moving if it determines it should (default is false) */
     //void allowLooking(bool flag);
@@ -109,6 +109,15 @@ void StateMachineNode::handle_calculate_nbv(){
     nbv_time_pub->publish(nbv_time_msg);
 
     //rviz_tool_->prompt("Press next");
+
+    // If no valid nbv was found, skip. 
+    if(is_deafault(nbv)){
+        std::cout << "Nbv was default, switching to capture to try again " << std::endl;
+
+        current_state_ = State::Capture;
+        return;
+    }
+
     ExecuteReq req;
     req.start_state = nbv.plan.start_state;
     req.trajectory = nbv.plan.trajectory;
