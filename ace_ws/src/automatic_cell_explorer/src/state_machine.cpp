@@ -21,7 +21,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     current_state_(State::Initialise), 
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
-    exploration_planner_(std::make_shared<ExplorationPlannerV3>(mvt_interface_,plm_interface_, octomap_)),
+    exploration_planner_(std::make_shared<ExplorationPlannerV3>(mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 
@@ -80,6 +80,11 @@ void StateMachineNode::handle_calculate_nbv(){
     exploration_planner_->calculateNbvCandidates();
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
     Nbv nbv = exploration_planner_->selectNbv();
+
+      /** \brief Specify whether the robot is allowed to look around
+      before moving if it determines it should (default is false) */
+      //void allowLooking(bool flag);
+      //mvt_interface_->allowLooking(true);
 
     // Maybe: Nbv nbv = exploration_planner->calculateNBV(octomap_); Several steps nice for debugging. 
 

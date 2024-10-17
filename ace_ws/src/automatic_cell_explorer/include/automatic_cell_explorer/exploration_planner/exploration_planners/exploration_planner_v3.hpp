@@ -5,21 +5,22 @@
 
 
 class ExplorationPlannerV3: public ExplorationPlanner
+/*
+    This is a Local Planner, efficeintly sweeping a local area. 
+*/
 {
 public:
-  ExplorationPlannerV3(MoveGrpPtr mvt_interface, planning_scene_monitor::PlanningSceneMonitorPtr plm_interface, std::shared_ptr<octomap::OcTree> octo_map)
-    : ExplorationPlanner(mvt_interface, octo_map),
-      plm_interface_(plm_interface)
-     {}
+  ExplorationPlannerV3(MoveGrpPtr mvt_interface,std::shared_ptr<octomap::OcTree> octo_map)
+    : ExplorationPlanner(mvt_interface, octo_map)
+    {}
 
   void calculateNbvCandidates() override;
   Nbv selectNbv() override;
 
 private:
-  planning_scene_monitor::PlanningSceneMonitorPtr plm_interface_;
   void evaluateNbvCandidates();
   void generateCandidates();
-  
+  RayView getRayView(Nbv & nbv ); //move to ep?
   
 };
 
