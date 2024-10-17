@@ -48,7 +48,6 @@ add_library(my_cpp_library
   src/octomap_processor.cpp
   src/move_robot_service.cpp
   src/exploration_planner/raycast.cpp
-  src/exploration_planner/sample_nbv.cpp
   src/exploration_planner/exploration_planner.cpp
   src/exploration_planner/exploration_planners/demo_exploration_planner.cpp
   src/exploration_planner/exploration_planners/random_exploration_planner.cpp

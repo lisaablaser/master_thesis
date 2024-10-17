@@ -96,6 +96,7 @@ void RandomExplorationPlanner::generateCandidates()
     int i =0;
     while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
         ++i;
+        std::cout << " Attempt number: " << i << std::endl;
         Nbv nbv;
         
         double x = dis_x(gen);
@@ -129,44 +130,6 @@ void RandomExplorationPlanner::generateCandidates()
     }
     std::cout << " Number of itertions to generate candidates was: " << i << std::endl;
 
-    // while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
-    //     // std::vector<double> random_joint_values;
-    //     auto robot_model = mvt_interface_->getRobotModel();
-    //     auto joint_model_group = robot_model->getJointModelGroup("ur_manipulator");
-    //     auto robot_state = std::make_shared<moveit::core::RobotState>(robot_model);
-
-    //     // robot_state->setToRandomPositions(joint_model_group);
-    //     // robot_state->copyJointGroupPositions(joint_model_group, random_joint_values);
-
-    //     //planning_scene_monitor::LockedPlanningSceneRO ls(plm_interface_);
-    //     //auto pc = ls->getWorld();
-
-    //     Nbv nbv;
-
-    //     //Much slower 
-    //     mvt_interface_->setRandomTarget();
-        
-    //     std::vector<double> target_joint_values;
-    //     mvt_interface_->getJointValueTarget(target_joint_values);
-
-    //     // Set the robot state to these target joint values
-    //     robot_state->setJointGroupPositions(joint_model_group, target_joint_values);
-
-
-
-    //     const Eigen::Isometry3d& target_pose_eigen = robot_state->getGlobalLinkTransform("rgbd_camera");
-    //     Plan plan_p;  
-    //     auto result = mvt_interface_->plan(plan_p);
-
-    //     if (result) {
-    //         nbv.pose = target_pose_eigen;
-    //         nbv.plan = plan_p;
-    //         nbv.cost = 0.0; 
-    //         nbv_candidates_.nbv_candidates.push_back(nbv);
-    //     }
-        
-    // }
-    
 }
 
 

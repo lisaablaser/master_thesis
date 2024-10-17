@@ -49,6 +49,9 @@ private:
         exploration_planner_ = createPlanner(type, mvt_interface_, octomap_);
     }
 
+    bool is_deafault(Nbv& nbv){
+        return nbv.pose.isApprox(Eigen::Isometry3d::Identity());
+        }
     
     void handle_initialise();
     void handle_capture();

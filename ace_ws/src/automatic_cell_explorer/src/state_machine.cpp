@@ -110,10 +110,22 @@ void StateMachineNode::handle_calculate_nbv(){
 
     //rviz_tool_->prompt("Press next");
 
-    // If no valid nbv was found, skip. 
+    // If no valid nbv was found, skip. N
+    /// TODO: dont really need to capture, but should switch to global planner
     if(is_deafault(nbv)){
         std::cout << "Nbv was default, switching to capture to try again " << std::endl;
 
+        current_state_ = State::Capture;
+        return;
+    }
+    if(nbv_candidates.nbv_candidates.empty()){
+        std::cout << "No Nbv candidates where calculate" << std::endl;
+
+        current_state_ = State::Capture;
+        return;
+    }
+    if(nbv.ray_view.num_unknowns == 0){
+        std::cout << "No gain, skip this pose " << std::endl;
         current_state_ = State::Capture;
         return;
     }
@@ -229,7 +241,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             
 
             // Check termination criteria
-            double termination_treshold = 97.0;
+            double termination_treshold = 95.0;
 
             if (unknown_voxel_count > termination_treshold) {
                 std::cout << "Planner reached termination criteria" << std::endl;
