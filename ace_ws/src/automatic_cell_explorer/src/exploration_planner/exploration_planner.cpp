@@ -68,6 +68,25 @@ std::optional<Plan> ExplorationPlanner::plan(const std::vector<double> & joint_v
   return plan;
 }
 
+Eigen::Isometry3d ExplorationPlanner::forward_kinematics(std::vector<double> joint_values){
+
+  auto robot_model = mvt_interface_->getRobotModel();
+  auto joint_model_group = robot_model->getJointModelGroup("ur_manipulator");
+  
+  moveit::core::RobotState robot_state(robot_model);
+  robot_state.setToDefaultValues();
+
+  robot_state.setJointGroupPositions(joint_model_group, joint_values);
+  robot_state.update();
+
+  //Compute the forward kinematics
+  Eigen::Isometry3d pose = robot_state.getGlobalLinkTransform("rgbd_camera"); 
+
+  return pose;
+}
+
+
+
 double ExplorationPlanner::calculate_occupied_volume() const
 {
   double volume = 0.0;

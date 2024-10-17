@@ -40,6 +40,7 @@ protected:
 
     std::optional<Plan> plan(const Eigen::Isometry3d& pose);
     std::optional<Plan> plan(const std::vector<double> & joint_values);
+    Eigen::Isometry3d forward_kinematics(std::vector<double> joint_values);
     double calculate_occupied_volume() const;
     double compute_node_volume(double resolution) const;
 
