@@ -43,168 +43,154 @@ RayView calculateRayView(
             );
 
             Eigen::Vector3d ray_direction_world = sensor_state.rotation() * ray_direction_camera;
-            Eigen::Vector3d ray_end;
-    
-            NodeState node_state = NodeState::Occupied;
-            octomap::point3d hit_point;
 
-            if (octo_map->castRay(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()),
-                               octomap::point3d(ray_direction_world.x(), ray_direction_world.y(), ray_direction_world.z()),
-                               hit_point, false, max_range)) 
-            {
-                // Hit occupied point
-                ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
-                node_state = NodeState::Occupied;
-                
+            RayInfo ray_info = castRay(octo_map, sensor_origin, ray_direction_world);
+            if(ray_info.node_state == NodeState::Unknown){
+                ray_view.num_unknowns++;
             }
-            else {
-                // Hit nothing, search if it us unknown or free
-                octomap::OcTreeNode* node = octo_map->search(hit_point.x(), hit_point.y(), hit_point.z());
-                if (node == nullptr) {
-                    node_state = NodeState::Unknown;
-
-                    ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
-                    ray_view.num_unknowns++;
-                } else if (!octo_map->isNodeOccupied(node)) {
-                    // whole ray is free
-                    ray_end = Eigen::Vector3d(hit_point.x(), hit_point.y(), hit_point.z());
-                    node_state = NodeState::Free;
-                }
+            if(ray_info.node_state == NodeState::Error){
+                std::cout << " ----- Error in raycast accoured -------------" << std::endl;
             }
 
-            ray_view.rays.push_back({sensor_origin, ray_end, node_state});
+            ray_view.rays.push_back(ray_info);
         }
     }
 
     return ray_view;
 }
 
+RayInfo castRay(std::shared_ptr<octomap::OcTree> & octo_map, const Eigen::Vector3d & sensor_origin, const Eigen::Vector3d & ray_direction_world){
 
-
-NodeState castRay(const octomap::point3d& origin, const octomap::point3d& directionP, octomap::point3d& end,
-                     double maxRange, std::shared_ptr<octomap::OcTree> octo_map){
-/// modify to check maxrange in 3d space(wokrspace bounds)
-/// Now max range is based on sensor pose.
-
-/// Simple raycast method. TODO: more advanced method aviding voxel leaks.
-    bool ignoreUnknown = false;
+    WorkspaceBounds bounds = WORK_SPACE;
+    OrigoOffset origo = ORIGO;
+    octomap::point3d end;
+    Eigen::Vector3d ray_end;
+    NodeState node_state = NodeState::Occupied;
+    octomap::point3d hit_point;
 
     // Initialization phase -------------------------------------------------------
+
     octomap::OcTreeKey current_key;
-    if ( !octo_map->coordToKeyChecked(origin, current_key) ) {
-        OCTOMAP_WARNING_STR("Coordinates out of bounds during ray casting");
-        return NodeState::Error;
+    if ( !octo_map->coordToKeyChecked(octomap::point3d(sensor_origin.x(), sensor_origin.y(), sensor_origin.z()), current_key) ) {
+      OCTOMAP_WARNING_STR("Coordinates out of bounds during ray casting");
+
+      return RayInfo({sensor_origin, ray_end, NodeState::Error});
     }
 
     octomap::OcTreeNode* startingNode = octo_map->search(current_key);
     if (startingNode){
-        if (octo_map->isNodeOccupied(startingNode)){
-            // Occupied node found at origin. Should not happen if poses are sampled from free space
-            // (need to convert from key, since origin does not need to be a voxel center)
-            end = octo_map->keyToCoord(current_key);
-            return NodeState::Occupied;
-        }
-    } 
-    //If starting node is unknown. Should not happen for valid sampling
-    else if(!ignoreUnknown){
-    end = octo_map->keyToCoord(current_key);
-    return NodeState::Unknown;
+      if (octo_map->isNodeOccupied(startingNode)){
+        // Occupied node found at origin
+        // (need to convert from key, since origin does not need to be a voxel center)
+        end = octo_map->keyToCoord(current_key);
+        ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
+
+        return RayInfo({sensor_origin, ray_end, NodeState::Occupied});
+      }
+    } else {
+      end = octo_map->keyToCoord(current_key);
+      ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
+      return RayInfo({sensor_origin, ray_end, NodeState::Unknown});
     }
 
-    octomap::point3d direction = directionP.normalized();
-    bool max_range_set = (maxRange > 0.0);
-
+    octomap::point3d direction = octomap::point3d(ray_direction_world.x(), ray_direction_world.y(), ray_direction_world.z()).normalized();
+   
     int step[3];
     double tMax[3];
     double tDelta[3];
 
     for(unsigned int i=0; i < 3; ++i) {
-    // compute step direction
-    if (direction(i) > 0.0) step[i] =  1;
-    else if (direction(i) < 0.0)   step[i] = -1;
-    else step[i] = 0;
+      // compute step direction
+      if (direction(i) > 0.0) step[i] =  1;
+      else if (direction(i) < 0.0)   step[i] = -1;
+      else step[i] = 0;
 
-    // compute tMax, tDelta
-    if (step[i] != 0) {
+      // compute tMax, tDelta
+      if (step[i] != 0) {
         // corner point of voxel (in direction of ray)
         double voxelBorder = octo_map->keyToCoord(current_key[i]);
         voxelBorder += double(step[i] * octo_map->getResolution() * 0.5);
 
-        tMax[i] = ( voxelBorder - origin(i) ) / direction(i);
+        tMax[i] = ( voxelBorder - sensor_origin(i) ) / direction(i);
         tDelta[i] = octo_map->getResolution() / fabs( direction(i) );
-    }
-    else {
+      }
+      else {
         tMax[i] =  std::numeric_limits<double>::max();
         tDelta[i] = std::numeric_limits<double>::max();
-    }
+      }
     }
 
     if (step[0] == 0 && step[1] == 0 && step[2] == 0){
-        OCTOMAP_ERROR("Raycasting in direction (0,0,0) is not possible!");
-        return NodeState::Occupied;
+    	OCTOMAP_ERROR("Raycasting in direction (0,0,0) is not possible!");
+    	return RayInfo({sensor_origin, ray_end, NodeState::Error});
     }
-
-    // for speedup:
-    double maxrange_sq = maxRange *maxRange;
 
     // Incremental phase  ---------------------------------------------------------
 
     bool done = false;
 
     while (!done) {
-    unsigned int dim;
+      unsigned int dim;
 
-    // find minimum tMax:
-    if (tMax[0] < tMax[1]){
+      // find minimum tMax:
+      if (tMax[0] < tMax[1]){
         if (tMax[0] < tMax[2]) dim = 0;
         else                   dim = 2;
-    }
-    else {
+      }
+      else {
         if (tMax[1] < tMax[2]) dim = 1;
         else                   dim = 2;
-    }
+      }
 
-    // check for overflow:
-    if ((step[dim] < 0 && current_key[dim] == 0)
-            || (step[dim] > 0 && current_key[dim] == 2* octo_map->getTreeDepth()-1)) //->tree_max_val, not sure what this max value means.
-    {
+      // check for overflow:
+      if ((step[dim] < 0 && current_key[dim] == 0)
+    		  || (step[dim] > 0 && current_key[dim] == (1 << octo_map->getTreeDepth()) - 1))
+      {
         OCTOMAP_WARNING("Coordinate hit bounds in dim %d, aborting raycast\n", dim);
         // return border point nevertheless:
         end = octo_map->keyToCoord(current_key);
-        return NodeState::Occupied;
-    }
+        ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
+        return RayInfo({sensor_origin, ray_end, NodeState::Error});
+      }
 
-    // advance in direction "dim"
-    current_key[dim] += step[dim];
-    tMax[dim] += tDelta[dim];
+      // advance in direction "dim"
+      current_key[dim] += step[dim];
+      tMax[dim] += tDelta[dim];
 
-    end = octo_map->keyToCoord(current_key);
 
-    // check for maxrange:
-    if (max_range_set){
-        double dist_from_origin_sq(0.0);
-        for (unsigned int j = 0; j < 3; j++) {
-        dist_from_origin_sq += ((end(j) - origin(j)) * (end(j) - origin(j)));
-        }
-        if (dist_from_origin_sq > maxrange_sq){
-            std::cout << "maxe range met" << std::endl;
-            return NodeState::Occupied;
-        }
+      // generate world coords from key
+      end = octo_map->keyToCoord(current_key);
+
+      // check for maxrange:
+      if (end(0) <= bounds.min_x || end(0) >= bounds.max_x ||
+        end(1) <= bounds.min_y || end(1) >= bounds.max_y ||
+        end(2) <= (origo.z+bounds.min_z) || end(2) >= (origo.z+bounds.max_z)) {
         
-    }
+        ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
+        return RayInfo({sensor_origin, ray_end, NodeState::Free});
+        
+            
+        }
+            
 
-    octomap::OcTreeNode* currentNode = octo_map->search(current_key);
-    if (currentNode){
+      octomap::OcTreeNode* currentNode = octo_map->search(current_key);
+      if (currentNode){
         if (octo_map->isNodeOccupied(currentNode)) {
-        done = true;
-        break;
+            ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
+            return RayInfo({sensor_origin, ray_end, NodeState::Free});
+          //done = true;
+          //break;
         }
         // otherwise: node is free and valid, raycasting continues
-    } else{ // no node found, this usually means we are in "unknown" areas
-        
-        return NodeState::Unknown;
-    }
+      } else { // no node found, this usually means we are in "unknown" areas
+        ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
+        return RayInfo({sensor_origin, ray_end, NodeState::Unknown});
+      }
     } // end while
 
-    return NodeState::Occupied;
-}
+    ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
+    return RayInfo({sensor_origin, ray_end, NodeState::Occupied});
+
+  }
+
+
