@@ -1,3 +1,4 @@
+#include <filesystem>
 #include "automatic_cell_explorer/moveit_interface.hpp"
 
 MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
@@ -5,6 +6,16 @@ MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
     MoveGrpPtr interface = std::make_shared<MoveGrp>(node,"ur_manipulator");
     interface->startStateMonitor();
     interface->setStartStateToCurrentState();
+
+    /// TODO: configure planning stuff here.  
+    interface->setPlanningPipelineId("ompl");
+    interface->setPlannerId("RRTConnect");
+
+    interface->setPlanningTime(0.1); 
+
+    
+
+
 
     return interface;
 }

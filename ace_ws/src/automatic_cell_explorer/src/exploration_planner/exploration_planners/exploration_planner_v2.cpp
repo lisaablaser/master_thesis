@@ -66,6 +66,14 @@ Nbv ExplorationPlannerV2::selectNbv(){
     std::cout << "Utility of Nbv is: " << highest_utility << std::endl;
     nbv_candidates_.nbv_candidates.erase(nbv);
 
+    std::cout << "Nbv was removed from list, length is now: " << nbv_candidates_.nbv_candidates.size() << std::endl; 
+
+    // could attemt to fint a shorter path:
+        //maybe try to shorten the chosen NBV path 
+        /** \brief Set the number of times the motion plan is to be computed from scratch before the shortest solution is
+    * returned. The default value is 1.*/
+    //void setNumPlanningAttempts(unsigned int num_planning_attempts);
+
     return *nbv;
    
 }
