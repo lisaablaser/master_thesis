@@ -12,9 +12,7 @@
 #include "automatic_cell_explorer/move_robot_service.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
 #include "automatic_cell_explorer/octomap_processor.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/demo_exploration_planner.hpp"
-
+#include "automatic_cell_explorer/ep_factory.hpp"
 
 
 enum class State {Initialise, Capture, Calculate_NBV, Move_robot, Finished, WaitingForOctomap, Error};
@@ -34,6 +32,7 @@ private:
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface_;
     RvizToolPtr rviz_tool_;
     State current_state_;
+    PlannerType current_type_;
     std::atomic<bool> finished_;
     OctreePtr octomap_;
     ExplorationPlannerPtr exploration_planner_;
@@ -44,6 +43,11 @@ private:
     rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_subscriber_;
     rclcpp::Publisher<moveit_msgs::msg::PlanningSceneWorld>::SharedPtr world_publisher_;
     rclcpp::Client<Execute>::SharedPtr move_client_;
+    double prev_progress_;
+
+    void updatePlanner(PlannerType type) {
+        exploration_planner_ = createPlanner(type, mvt_interface_, octomap_);
+    }
 
     
     void handle_initialise();

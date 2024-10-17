@@ -41,11 +41,12 @@ include_directories(
 
 ## Declare a C++ library, the .cpp files are compiled into a library
 add_library(my_cpp_library
-  src/state_machine.cpp
   src/visualize.cpp
-  src/move_robot_service.cpp
+  src/ep_factory.cpp
+  src/state_machine.cpp
   src/moveit_interface.cpp
   src/octomap_processor.cpp
+  src/move_robot_service.cpp
   src/exploration_planner/raycast.cpp
   src/exploration_planner/sample_nbv.cpp
   src/exploration_planner/exploration_planner.cpp

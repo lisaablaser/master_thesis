@@ -6,10 +6,7 @@
 #include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/constants.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/demo_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v2.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v3.hpp"
+
 
 
 StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_monitor::PlanningSceneMonitorPtr plm_interface, RvizToolPtr rviz_tool) 
@@ -19,9 +16,10 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     plm_interface_(plm_interface),
     rviz_tool_(rviz_tool),
     current_state_(State::Initialise), 
+    current_type_(PlannerType::Local),
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
-    exploration_planner_(std::make_shared<ExplorationPlannerV3>(mvt_interface_, octomap_)),
+    exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
     current_req_(ExecuteReq())
 {
     camera_trigger_ = 
@@ -40,6 +38,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
         RCLCPP_INFO(this->get_logger(), "Waiting for the move_robot service to be available...");
     }
 
+    prev_progress_ = 0;
 
 
     std::cout << "Initializing state machine with node name: " << this->get_name() << std::endl;
@@ -81,10 +80,12 @@ void StateMachineNode::handle_calculate_nbv(){
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
     Nbv nbv = exploration_planner_->selectNbv();
 
-      /** \brief Specify whether the robot is allowed to look around
-      before moving if it determines it should (default is false) */
-      //void allowLooking(bool flag);
-      //mvt_interface_->allowLooking(true);
+
+
+    /** \brief Specify whether the robot is allowed to look around
+     before moving if it determines it should (default is false) */
+    //void allowLooking(bool flag);
+    //mvt_interface_->allowLooking(true);
 
     // Maybe: Nbv nbv = exploration_planner->calculateNBV(octomap_); Several steps nice for debugging. 
 
@@ -197,6 +198,25 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             unknown_voxel_pub->publish(u_msg);
 
             std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
+
+            // Check if we whuld switch planners:
+            if(current_type_ == PlannerType::Local){
+                double progress_tresh = 0.01;
+                if(abs(prev_progress_-unknown_voxel_count) < progress_tresh){
+                    std::cout << "--Switching to Global Planner--" << std::endl;
+                    current_type_ = PlannerType::Global;
+                    updatePlanner(current_type_);
+                }   
+            }
+            else if(current_type_ == PlannerType::Global){
+                //switch at once. 
+                std::cout << "--Switching to Local Planner--" << std::endl;
+                current_type_ = PlannerType::Local;
+                updatePlanner(current_type_);
+                
+            
+            }
+            prev_progress_ = unknown_voxel_count;
             
 
             // Check termination criteria
