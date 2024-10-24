@@ -13,8 +13,6 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 
-
-
 def launch_setup(context, *args, **kwargs):
 
     ur_type = LaunchConfiguration("ur_type")
@@ -56,18 +54,18 @@ def launch_setup(context, *args, **kwargs):
     )
 
     parameters = [
-        {
-            "sensors": ["rgbd_camera"],
-            "rgbd_camera.filtered_cloud_topic": "/filtered_cloud",
-            "rgbd_camera.max_range": 5.0,
-            "rgbd_camera.max_update_rate": 1.0,
-            "rgbd_camera.padding_offset": 0.1,
-            "rgbd_camera.padding_scale": 1.0,
-            "rgbd_camera.point_cloud_topic": "/rgbd_camera/points",
-            "rgbd_camera.point_subsample": 1,
-            "rgbd_camera.sensor_plugin": "occupancy_map_monitor/PointCloudOctomapUpdater",
-            # specify frame_id???
-        }
+        # {
+        #     "sensors": ["rgbd_camera"],
+        #     "rgbd_camera.filtered_cloud_topic": "/filtered_cloud",
+        #     "rgbd_camera.max_range": 5.0,
+        #     "rgbd_camera.max_update_rate": 1.0,
+        #     "rgbd_camera.padding_offset": 0.1,
+        #     "rgbd_camera.padding_scale": 1.0,
+        #     "rgbd_camera.point_cloud_topic": "/rgbd_camera/points",
+        #     "rgbd_camera.point_subsample": 1,
+        #     "rgbd_camera.sensor_plugin": "occupancy_map_monitor/PointCloudOctomapUpdater",
+        #     # specify frame_id???
+        # }
     ]
 
     ace_node = TimerAction(

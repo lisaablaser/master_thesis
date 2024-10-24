@@ -81,15 +81,6 @@ void StateMachineNode::handle_calculate_nbv(){
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
     Nbv nbv = exploration_planner_->selectNbv();
 
-
-    /** \brief Specify whether the robot is allowed to look around
-     before moving if it determines it should (default is false) */
-    //void allowLooking(bool flag);
-    //mvt_interface_->allowLooking(true);
-
-    // Maybe: Nbv nbv = exploration_planner->calculateNBV(octomap_); Several steps nice for debugging. 
-
-
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     RCLCPP_INFO(this->get_logger(), "----------------- Calculated NBV in %ld ms", duration.count());
@@ -108,7 +99,7 @@ void StateMachineNode::handle_calculate_nbv(){
     nbv_time_msg.data = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(); //To seconds
     nbv_time_pub->publish(nbv_time_msg);
 
-    //rviz_tool_->prompt("Press next");
+    rviz_tool_->prompt("Press next");
 
     // If no valid nbv was found, skip. N
     /// TODO: dont really need to capture, but should switch to global planner
@@ -168,19 +159,27 @@ void StateMachineNode::handle_move_robot(){
 void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::SharedPtr msg)
 {
     RCLCPP_INFO(this->get_logger(), "New octompa recieved, updating planning scene.");
-    auto unknown_space_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("unknown_space", 10);
-    auto free_space_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("free_space", 10);
-    auto frontiers_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("frontiers", 10);
+    auto unknown_space_pub = this->create_publisher<octomap_msgs::msg::Octomap>("unknown_space", 10);
+    auto free_space_pub = this->create_publisher<octomap_msgs::msg::Octomap>("free_space", 10);
+    auto frontiers_pub = this->create_publisher<octomap_msgs::msg::Octomap>("frontiers", 10);
+    auto map_pub = this->create_publisher<octomap_msgs::msg::Octomap>("map", 10);
+    auto c_center_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("centers",10);
+    auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
 
     octomap::AbstractOcTree* abstract_tree = octomap_msgs::msgToMap(*msg);
+    
+
+    // sett/delete all nodes outisde to be free. 
 
     // If this is too slow, waitForCallback timer is activsated, and new trigger is sent...
     if (abstract_tree) {
         octomap::OcTree* received_tree = dynamic_cast<octomap::OcTree*>(abstract_tree);
+        
 
         if (received_tree) {
 
             auto start_time = std::chrono::high_resolution_clock::now();
+
             
             // Update internal octomap
             createInitialSafeSpace(received_tree);
@@ -195,6 +194,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             }
             world_publisher_->publish(msg_out);
 
+
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
             RCLCPP_INFO(this->get_logger(), "--------------- Octomap processed in %ld ms", duration.count());
@@ -204,12 +204,37 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             OctreePtr unknown_tree = extractUnknownOctree(octomap_);
             OctreePtr free_tree = extractFreeOctree(octomap_);
             OctreePtr frontier_tree = extractFrontierOctreeInBounds(octomap_);
-            sensor_msgs::msg::PointCloud2 unknown_pc = convertOctomapToPointCloud2(unknown_tree);
-            sensor_msgs::msg::PointCloud2 free_pc = convertOctomapToPointCloud2(free_tree);
-            sensor_msgs::msg::PointCloud2 frontiers_pc = convertOctomapToPointCloud2(frontier_tree);
-            unknown_space_pub->publish(unknown_pc);
-            free_space_pub->publish(free_pc);
-            frontiers_pub->publish(frontiers_pc);
+
+            std::vector<Cluster> clusters = computeClusters(octomap_);
+            //std::vector<Cluster> clusters = findUnknownVoxelClusters(octomap_);
+
+            visualizeClusters(clusters, cluster_pub);
+
+
+            octomap_msgs::msg::Octomap unknown_msg;
+            unknown_msg.header.frame_id = "world";  
+            unknown_msg.header.stamp = this->get_clock()->now(); 
+            octomap_msgs::fullMapToMsg(*unknown_tree, unknown_msg);
+            unknown_space_pub->publish(unknown_msg);
+
+            octomap_msgs::msg::Octomap free_msg;
+            free_msg.header.frame_id = "world";  
+            free_msg.header.stamp = this->get_clock()->now(); 
+            octomap_msgs::fullMapToMsg(*free_tree, free_msg);
+            free_space_pub->publish(free_msg);
+
+            octomap_msgs::msg::Octomap frontiers_msg;
+            frontiers_msg.header.frame_id = "world";  
+            frontiers_msg.header.stamp = this->get_clock()->now(); 
+            octomap_msgs::fullMapToMsg(*frontier_tree, frontiers_msg);
+            frontiers_pub->publish(frontiers_msg);
+
+            octomap_msgs::msg::Octomap map_msg;
+            map_msg.header.frame_id = "world";  
+            map_msg.header.stamp = this->get_clock()->now(); 
+            octomap_msgs::fullMapToMsg(*octomap_, map_msg);
+            map_pub->publish(map_msg);
+
 
             // Publish progress
             auto unknown_voxel_pub = this->create_publisher<std_msgs::msg::Float64>("/voxel_count", rclcpp::QoS(10).reliable());
@@ -220,7 +245,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
 
-            // Check if we whuld switch planners:
+            // Check if we should switch planners:
             if(current_type_ == PlannerType::Local){
                 double progress_tresh = 0.01;
                 if(abs(prev_progress_-unknown_voxel_count) < progress_tresh){

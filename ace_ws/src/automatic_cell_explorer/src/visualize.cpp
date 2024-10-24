@@ -314,6 +314,122 @@ sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<
     return cloud_msg;
 }
 
+void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher marker_pub) {
+    visualization_msgs::msg::MarkerArray marker_array;
+    int id = 0;
+
+    // Predefined color list for clusters
+    std::vector<std::tuple<float, float, float>> color_list = {
+        {1.0f, 0.0f, 0.0f},  // Red
+        {0.0f, 1.0f, 0.0f},  // Green
+        {0.0f, 0.0f, 1.0f},  // Blue
+        {1.0f, 1.0f, 0.0f},  // Yellow
+        {1.0f, 0.0f, 1.0f},  // Magenta
+        {0.0f, 1.0f, 1.0f},  // Cyan
+        {0.5f, 0.0f, 0.5f},  // Purple
+        {0.5f, 0.5f, 0.5f}   // Gray
+    };
+
+    size_t num_colors = color_list.size();
+    
+    for (size_t cluster_idx = 0; cluster_idx < clusters.size(); ++cluster_idx) {
+        const auto& cluster = clusters[cluster_idx];
+
+        // Select a color for this cluster from the list
+        auto [r, g, b] = color_list[cluster_idx % num_colors];
+
+        // Visualize cluster points as cubes (voxel size 0.1)
+        visualization_msgs::msg::Marker cube_marker;
+        cube_marker.header.frame_id = "world";
+        cube_marker.header.stamp = rclcpp::Clock().now();
+        cube_marker.ns = "clusters";
+        cube_marker.id = id++;
+        cube_marker.type = visualization_msgs::msg::Marker::CUBE_LIST;
+        cube_marker.action = visualization_msgs::msg::Marker::ADD;
+        cube_marker.scale.x = 0.1;  // Cube size (voxel size)
+        cube_marker.scale.y = 0.1;
+        cube_marker.scale.z = 0.1;
+
+        // Set the color for this cluster
+        cube_marker.color.r = r;
+        cube_marker.color.g = g;
+        cube_marker.color.b = b;
+        cube_marker.color.a = 1.0;
+
+        for (const auto& point : cluster.points) {
+            geometry_msgs::msg::Point p;
+            p.x = point.x();
+            p.y = point.y();
+            p.z = point.z();
+            cube_marker.points.push_back(p);
+        }
+
+        marker_array.markers.push_back(cube_marker);
+
+        // Visualize frontiers as dots (smaller spheres)
+        visualization_msgs::msg::Marker frontier_marker;
+        frontier_marker.header.frame_id = "world";
+        frontier_marker.header.stamp = rclcpp::Clock().now();
+        frontier_marker.ns = "frontiers";
+        frontier_marker.id = id++;
+        frontier_marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
+        frontier_marker.action = visualization_msgs::msg::Marker::ADD;
+        frontier_marker.scale.x = 0.05;  // Dot size for frontiers
+        frontier_marker.scale.y = 0.05;
+        frontier_marker.scale.z = 0.05;
+
+        // Use the same color for the frontiers as the cluster
+        frontier_marker.color.r = r;
+        frontier_marker.color.g = g;
+        frontier_marker.color.b = b;
+        frontier_marker.color.a = 1.0;
+
+        for (const auto& frontier : cluster.frontiers) {
+            geometry_msgs::msg::Point f;
+            f.x = frontier.x();
+            f.y = frontier.y();
+            f.z = frontier.z();
+            frontier_marker.points.push_back(f);
+        }
+
+        marker_array.markers.push_back(frontier_marker);
+
+        // Optionally: Visualize normals as arrows (same as before)
+        visualization_msgs::msg::Marker normal_marker;
+        normal_marker.header.frame_id = "world";
+        normal_marker.header.stamp = rclcpp::Clock().now();
+        normal_marker.ns = "normals";
+        normal_marker.id = id++;
+        normal_marker.type = visualization_msgs::msg::Marker::ARROW;
+        normal_marker.action = visualization_msgs::msg::Marker::ADD;
+        normal_marker.scale.x = 0.02;  // Arrow shaft diameter
+        normal_marker.scale.y = 0.04;  // Arrow head diameter
+        normal_marker.scale.z = 0.1;   // Arrow length
+
+        // Use the same color for normals as the points
+        normal_marker.color.r = r;
+        normal_marker.color.g = g;
+        normal_marker.color.b = b;
+        normal_marker.color.a = 1.0;
+
+        geometry_msgs::msg::Point start;
+        start.x = cluster.center.x();
+        start.y = cluster.center.y();
+        start.z = cluster.center.z();
+        geometry_msgs::msg::Point end;
+        end.x = cluster.center.x() + cluster.normal(0) * 0.2;  // Scale the normal vector for visualization
+        end.y = cluster.center.y() + cluster.normal(1) * 0.2;
+        end.z = cluster.center.z() + cluster.normal(2) * 0.2;
+        normal_marker.points.push_back(start);
+        normal_marker.points.push_back(end);
+
+        marker_array.markers.push_back(normal_marker);
+    }
+
+    marker_pub->publish(marker_array);
+}
+
+
 void printTransform(const Eigen::Isometry3d& transform) {
     Eigen::Vector3d translation = transform.translation();
     std::cout << "Translation (x, y, z): " 
