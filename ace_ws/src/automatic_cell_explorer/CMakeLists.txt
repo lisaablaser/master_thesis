@@ -53,7 +53,9 @@ add_library(my_cpp_library
   src/exploration_planner/exploration_planners/random_exploration_planner.cpp
   src/exploration_planner/exploration_planners/exploration_planner_v2.cpp
   src/exploration_planner/exploration_planners/exploration_planner_v3.cpp
+  src/exploration_planner/exploration_planners/exploration_planner_v4.cpp
 )
+
 
 # Link libraries to the library
 target_link_libraries(my_cpp_library
@@ -62,8 +64,8 @@ target_link_libraries(my_cpp_library
   ${PCL_LIBRARIES}
   ${rclcpp_LIBRARIES} 
   Eigen3::Eigen
-
 )
+
 ament_target_dependencies(my_cpp_library
   rclcpp
   sensor_msgs

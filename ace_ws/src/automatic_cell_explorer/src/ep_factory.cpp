@@ -8,7 +8,7 @@ std::shared_ptr<ExplorationPlanner> createPlanner(PlannerType type, MoveGrpPtr m
             
         case PlannerType::Global:
 
-            return std::make_shared<RandomExplorationPlanner>(mvt_interface, octo_map);
+            return std::make_shared<ExplorationPlannerV4>(mvt_interface, octo_map);
 
         default:
            

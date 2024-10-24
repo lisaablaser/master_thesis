@@ -167,7 +167,7 @@ def generate_launch_description():
                 "publish_robot_decription": publish_robot_description,
             },
         ],
-        arguments=['--ros-args', '--log-level', 'FATAL']
+        arguments=["--ros-args", "--log-level", "FATAL"],
     )
 
     # sensors_node = Node(

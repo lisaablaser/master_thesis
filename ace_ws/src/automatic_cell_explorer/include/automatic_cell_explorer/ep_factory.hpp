@@ -6,6 +6,7 @@
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v2.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v3.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v4.hpp"
 
 enum class PlannerType {
     Local,

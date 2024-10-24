@@ -105,7 +105,11 @@
         "core": "cpp",
         "*.inc": "cpp",
         "__memory": "cpp",
-        "__nullptr": "cpp"
+        "__nullptr": "cpp",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__string": "cpp",
+        "__tree": "cpp"
     },
     "cmake.sourceDirectory": "/home/lisa/master_thesis/ace_ws/src/automatic_cell_explorer"
 }

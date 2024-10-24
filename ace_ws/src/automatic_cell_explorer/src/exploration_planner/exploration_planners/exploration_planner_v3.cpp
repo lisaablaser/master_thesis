@@ -46,7 +46,7 @@ Nbv ExplorationPlannerV3::selectNbv(){
         }
     }
 
-    std::cout << "Utility of Nbv is: " << highest_utility << std::endl;
+    std::cout << "Utility of Nbv in Local planner (V3) is: " << highest_utility << std::endl;
 
     return *nbv;
     
@@ -81,6 +81,7 @@ void ExplorationPlannerV3::generateCandidates()
 
     Generatees candidates on a -+45 deg spherical cap around the current position on the wrist joint. 
 */
+/// Bug: this can be empty, and leads to a bug.
 {
     nbv_candidates_.nbv_candidates.clear();
         

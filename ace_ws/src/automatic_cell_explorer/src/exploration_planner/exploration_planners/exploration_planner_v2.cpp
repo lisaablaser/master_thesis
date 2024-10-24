@@ -50,7 +50,7 @@ Nbv ExplorationPlannerV2::selectNbv(){
         float gain = it->ray_view.num_unknowns;
         // Define som waights
 
-        float utility = -cost; //only care about traj length.
+        float utility = gain;
 
         if (utility > highest_utility) {
 
@@ -199,6 +199,7 @@ void ExplorationPlannerV2::generateCandidates()
     Random generate candidates until we have N in total. Append if plan exists. 
 */
 {   
+    /// TODO: if max atempts are used, recover to home pose or somthing. 
 
 
     WorkspaceBounds bounds = WORK_SPACE;
