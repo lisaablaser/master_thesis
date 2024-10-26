@@ -113,11 +113,11 @@ void ExplorationPlannerV3::generateCandidates()
                     nbv.plan = *result;
                     nbv.pose = forward_kinematics(candidate_joint_values);
                     nbv.ray_view = getRayView(nbv);
-                    double time = nbv.plan.trajectory.joint_trajectory.points.back().time_from_start.sec; //obs the casting can lead to errors?
-                    nbv.cost = time;
+
 
                     nbv_candidates_.nbv_candidates.push_back(nbv);
                 }
+                std::cout << " Plans in local planner" << std::endl;
             }
         }
     }
