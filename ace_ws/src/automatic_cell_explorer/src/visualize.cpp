@@ -7,6 +7,7 @@
 #include "automatic_cell_explorer/visualize.hpp" 
 
 
+
 void visualizeRayDots(const Nbv & nbv,
                  MarkerAPublisher publisher) 
 {

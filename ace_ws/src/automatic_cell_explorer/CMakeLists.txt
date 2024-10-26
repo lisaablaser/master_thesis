@@ -47,6 +47,7 @@ add_library(my_cpp_library
   src/moveit_interface.cpp
   src/octomap_processor.cpp
   src/move_robot_service.cpp
+  src/clustering.cpp
   src/exploration_planner/raycast.cpp
   src/exploration_planner/exploration_planner.cpp
   src/exploration_planner/exploration_planners/demo_exploration_planner.cpp

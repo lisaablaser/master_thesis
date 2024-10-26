@@ -1,7 +1,7 @@
 #ifndef EXPLORATION_PLANNER_V4_HPP
 #define EXPLORATION_PLANNER_V4_HPP
 
-#include "automatic_cell_explorer/octomap_processor.hpp"
+
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
 
 

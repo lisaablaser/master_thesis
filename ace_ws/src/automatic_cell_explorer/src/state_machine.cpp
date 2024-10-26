@@ -7,6 +7,7 @@
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/constants.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
+#include "automatic_cell_explorer/clustering.hpp"
 
 
 
@@ -68,7 +69,7 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
 
-    bool visualize = false;
+    bool visualize = true;
     
 
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -207,7 +208,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             OctreePtr unknown_tree = extractUnknownOctree(octomap_);
 
-            bool visualize_map = false;
+            bool visualize_map = true;
             // Visualize
             if(visualize_map){
                 

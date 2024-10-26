@@ -8,7 +8,8 @@
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include "automatic_cell_explorer/octomap_processor.hpp"
+//#include "automatic_cell_explorer/octomap_processor.hpp"
+#include "automatic_cell_explorer/clustering.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp" //restructure targetPatches. 

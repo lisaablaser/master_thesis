@@ -8,6 +8,7 @@
 #include <moveit/robot_model_loader/robot_model_loader.h>
 
 #include "automatic_cell_explorer/constants.hpp"
+#include "automatic_cell_explorer/clustering.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v4.hpp"
@@ -90,9 +91,11 @@ void ExplorationPlannerV4::findTargets(){
 }
 
 
+
+
 void ExplorationPlannerV4::generateCandidates()
 /*
-    Random generate candidates, aim at a cluster center. Append if plan exists. 
+    Noraml distribution random generate candidates, aim at a cluster center. Append if plan exists. 
 */
 {
     targets_.clear();
@@ -105,11 +108,24 @@ void ExplorationPlannerV4::generateCandidates()
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
 
+    /// TODO: create a GMM
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis_x(bounds.min_x, bounds.max_x);
-    std::uniform_real_distribution<> dis_y(bounds.min_y, bounds.max_y);
-    std::uniform_real_distribution<> dis_z(bounds.min_z+ origo.z, bounds.max_z+origo.z);
+
+    // Define the mean (center) and standard deviation for the Gaussian distribution
+    double mean_x = (bounds.min_x + bounds.max_x) / 2; // center in the middle of the x-bound
+    double stddev_x = (bounds.max_x - bounds.min_x) / 6; // controls spread; adjust as needed
+
+    double mean_y = (bounds.min_y + bounds.max_y) / 2; // center in the middle of the y-bound
+    double stddev_y = (bounds.max_y - bounds.min_y) / 6; // controls spread; adjust as needed
+
+    double mean_z = (origo.z + bounds.max_z + origo.z) / 2; // center in the middle of the z-bound and a bit up
+    double stddev_z = (bounds.max_z - bounds.min_z) / 6; // controls spread; adjust as needed
+
+    // Normal distributions for each axis
+    std::normal_distribution<> dis_x(mean_x, stddev_x);
+    std::normal_distribution<> dis_y(mean_y, stddev_y);
+    std::normal_distribution<> dis_z(mean_z, stddev_z);
 
 
     int i = 0;
