@@ -69,41 +69,17 @@ void ExplorationPlannerV4::evaluateNbvCandidates(){
 }
 
 
-void ExplorationPlannerV4::findTargets(){
-    /*
-        Targets are cluster centers for now.
-        target_normals: center to robot pose. Not used.  
-    */
-    
-    std::vector<Cluster> clusters = computeClusters(octo_map_);
-
-    //auto current_pose = mvt_interface_->getCurrentPose();
-    //Eigen::Vector3d end_effector_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
-
-
-    for(Cluster & cluster: clusters){
-        TargetPatch new_target;
-        new_target.target = cluster.center;
-        new_target.target_normal = Eigen::Vector3d(0,0,1);//end_effector_position - Eigen::Vector3d(new_target.target.x(), new_target.target.y(), new_target.target.z());
-        targets_.push_back(new_target);
-    }
-
-}
-
-
-
 
 void ExplorationPlannerV4::generateCandidates()
 /*
     Noraml distribution random generate candidates, aim at a cluster center. Append if plan exists. 
 */
 {
-    targets_.clear();
-    findTargets();
-
+    clusters_.clear();
     nbv_candidates_.nbv_candidates.clear();
-    
-    // use target pathces to guide sampling
+
+    clusters_ = computeClusters(octo_map_);
+
 
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -150,10 +126,10 @@ void ExplorationPlannerV4::generateCandidates()
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
         
        
-        for(TargetPatch & target : targets_){
+        for(Cluster & cluster : clusters_){
             // Calculate the direction vector towards the target
             Eigen::Vector3d position(x, y, z);
-            Eigen::Vector3d target_pos(target.target.x(), target.target.y(), target.target.z());
+            Eigen::Vector3d target_pos(cluster.target.x(), cluster.target.y(), cluster.target.z());
 
             // 1. Calculate the x-axis direction pointing toward the target
             Eigen::Vector3d direction_to_target = (target_pos - position).normalized();

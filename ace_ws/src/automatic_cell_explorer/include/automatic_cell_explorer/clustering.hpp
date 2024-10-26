@@ -16,12 +16,13 @@ struct Cluster {
     std::vector<octomap::point3d> points;  
     std::vector<octomap::point3d> frontiers;
     octomap::point3d center;
-    octomap::point3d target; 
-    Eigen::Vector3d target_normal;
+    octomap::point3d target; //frontier center
+    Eigen::Vector3d target_normal; // mean frontier normal
 };
 
 std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree>  octree);
 
+void computeTarget(Cluster& cluster);
 octomap::point3d computeClusterCenter(const Cluster& cluster);
 bool isWithinDistance(const octomap::point3d& p1, const octomap::point3d& p2);
 std::vector<octomap::point3d> extractOccupiedNodes(std::shared_ptr<octomap::OcTree> octree);

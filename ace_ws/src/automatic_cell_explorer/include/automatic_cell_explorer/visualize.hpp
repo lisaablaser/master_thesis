@@ -25,7 +25,6 @@ void visualizeNbvFov(const Nbv & nbv, MarkerPublisher publisher);
 void visualizeNbvCandidatesPose( const NbvCandidates& nbv_candidates, MarkerAPublisher marker_pub);
 void visualizeNbvRayView( const Nbv& nbv, MarkerAPublisher marker_pub);
 void visualizeNbvCandidatesFOV( const NbvCandidates& nbv_candidates, MarkerAPublisher marker_pub);
-void publishTargetPatches(const std::vector<TargetPatch>& patches, MarkerAPublisher marker_pub);
 void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher marker_pub);
 
 sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<octomap::OcTree>& octree); 

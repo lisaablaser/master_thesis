@@ -22,7 +22,6 @@ private:
   void evaluateNbvCandidates();
   void generateCandidates();
 
-  void findTargets();
 
   
   

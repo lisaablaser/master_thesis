@@ -98,7 +98,7 @@ void StateMachineNode::handle_calculate_nbv(){
         auto nbv_ray_pub = node_->create_publisher<MarkerArray>("nbv_ray", 10);
         auto nbv_candidates_pose_pub = node_->create_publisher<MarkerArray>("nbv_candidates", 10);
         auto nbv_candidates_fov_pub = node_->create_publisher<MarkerArray>("nbv_candidates_fov", 10);
-        auto targets_pub = node_->create_publisher<MarkerArray>("targets", 10);
+        
 
         visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
         visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
@@ -222,10 +222,13 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
                 auto map_pub = this->create_publisher<octomap_msgs::msg::Octomap>("map", 10);
                 auto c_center_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("centers",10);
                 auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+                auto targets_pub = node_->create_publisher<MarkerArray>("targets", 10);
 
                 // only for visualizations. 
-                std::vector<Cluster> clusters = computeClusters(octomap_);
+                std::vector<Cluster> clusters = computeClusters(octomap_); //could use getClusters, but only for Gloabal planner
                 visualizeClusters(clusters, cluster_pub);
+
+    
 
 
                 octomap_msgs::msg::Octomap unknown_msg;

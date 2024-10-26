@@ -78,6 +78,7 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
         }
 
         computeTargetNormal(new_cluster);
+        computeTarget(new_cluster);
 
         clusters.push_back(new_cluster);
     }
@@ -119,8 +120,22 @@ void computeTargetNormal(Cluster& cluster) {
         cluster.target_normal = accumulated_direction.normalized();
     } else {
         // If no frontiers are available or they are at the center
-        cluster.target_normal = Eigen::Vector3d(0.0, 0.0, 0.0);
+        cluster.target_normal = Eigen::Vector3d(0.0, 0.0, -1.0);
     }
+}
+void computeTarget(Cluster& cluster) {
+    /*
+        Computes target normals using the frontiers and cluster center. 
+        Only works well if cluster is convex. Or if frontiers are not distributed evenly aroun the whole cluster.. 
+    */
+    double x = 0.0, y = 0.0, z = 0.0;
+    for (const auto& point : cluster.frontiers) {
+        x += point.x();
+        y += point.y();
+        z += point.z();
+    }
+    size_t num_points = cluster.frontiers.size();
+    cluster.target =  octomap::point3d(x / num_points, y / num_points, z / num_points);
 }
 
 

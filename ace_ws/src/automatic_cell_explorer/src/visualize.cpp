@@ -315,50 +315,6 @@ sensor_msgs::msg::PointCloud2 convertOctomapToPointCloud2(const std::shared_ptr<
     return cloud_msg;
 }
 
-void publishTargetPatches(const std::vector<TargetPatch>& patches, MarkerAPublisher marker_pub)
-    {
-        visualization_msgs::msg::MarkerArray marker_array;
-
-        for (size_t i = 0; i < patches.size(); ++i) {
-            const auto& patch = patches[i];
-
-            // Create a marker for the target position
-            visualization_msgs::msg::Marker marker;
-            marker.header.frame_id = "world"; // Set this to your fixed frame
-            marker.ns = "target_patches";
-            marker.id = i;
-            marker.type = visualization_msgs::msg::Marker::ARROW;
-            marker.action = visualization_msgs::msg::Marker::ADD;
-
-            // Set start point (target position) and end point (target position + target_normal)
-            geometry_msgs::msg::Point start, end;
-            start.x = patch.target.x();
-            start.y = patch.target.y();
-            start.z = patch.target.z();
-            
-            end.x = start.x + patch.target_normal.x();
-            end.y = start.y + patch.target_normal.y();
-            end.z = start.z + patch.target_normal.z();
-
-            marker.points.push_back(start);
-            marker.points.push_back(end);
-
-            // Set the arrow color and scale
-            marker.scale.x = 0.02;  // Shaft diameter
-            marker.scale.y = 0.05;  // Head diameter
-            marker.scale.z = 0.1;   // Head length
-            marker.color.r = 1.0;
-            marker.color.g = 0.0;
-            marker.color.b = 0.0;
-            marker.color.a = 1.0;
-
-            // Add marker to marker array
-            marker_array.markers.push_back(marker);
-        }
-
-        // Publish the marker array
-        marker_pub->publish(marker_array);
-    }
 
 void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher marker_pub) {
     visualization_msgs::msg::MarkerArray marker_array;
@@ -459,13 +415,13 @@ void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher ma
         normal_marker.color.a = 1.0;
 
         geometry_msgs::msg::Point start;
-        start.x = cluster.center.x();
-        start.y = cluster.center.y();
-        start.z = cluster.center.z();
+        start.x = cluster.target.x();
+        start.y = cluster.target.y();
+        start.z = cluster.target.z();
         geometry_msgs::msg::Point end;
-        end.x = cluster.center.x() + cluster.target_normal(0) * 0.2;  // Scale the normal vector for visualization
-        end.y = cluster.center.y() + cluster.target_normal(1) * 0.2;
-        end.z = cluster.center.z() + cluster.target_normal(2) * 0.2;
+        end.x = cluster.target.x() + cluster.target_normal(0) * 0.2;  // Scale the normal vector for visualization
+        end.y = cluster.target.y() + cluster.target_normal(1) * 0.2;
+        end.z = cluster.target.z() + cluster.target_normal(2) * 0.2;
         normal_marker.points.push_back(start);
         normal_marker.points.push_back(end);
 

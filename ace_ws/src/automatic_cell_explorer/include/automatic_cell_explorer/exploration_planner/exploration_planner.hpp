@@ -10,17 +10,15 @@
 #include <moveit/planning_interface/planning_interface.h> 
 
 #include "automatic_cell_explorer/moveit_types.hpp"
+#include "automatic_cell_explorer/clustering.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 
-struct TargetPatch{
-  octomap::point3d target; 
-  Eigen::Vector3d target_normal;
-};
+
 
 class ExplorationPlanner {
 public:
     ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)
-        : mvt_interface_(mvt_interface), octo_map_(octo_map), targets_() {}
+        : mvt_interface_(mvt_interface), octo_map_(octo_map), clusters_() {}
 
     virtual ~ExplorationPlanner() = default;
 
@@ -36,12 +34,12 @@ public:
     NbvCandidates getNbvCandidates() const {
         return nbv_candidates_;
     }
-    std::vector<TargetPatch> getTargets() const {return targets_;}
+    std::vector<Cluster> getClusters() const {return clusters_;}
 
 protected:
     MoveGrpPtr mvt_interface_;
     std::shared_ptr<octomap::OcTree> octo_map_; 
-    std::vector<TargetPatch> targets_;
+    std::vector<Cluster> clusters_;
     NbvCandidates nbv_candidates_; 
     
 
