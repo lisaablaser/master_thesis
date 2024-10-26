@@ -67,19 +67,23 @@ void StateMachineNode::handle_capture(){
 
 void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
+
+    bool visualize = false;
     
-    auto nbv_ray_dots_pub = node_->create_publisher<MarkerArray>("nbv_ray_dots", 10);
-    auto nbv_fov_pub = node_->create_publisher<Marker>("nbv_fov", 10);
-    auto nbv_ray_pub = node_->create_publisher<MarkerArray>("nbv_ray", 10);
-    auto nbv_candidates_pose_pub = node_->create_publisher<MarkerArray>("nbv_candidates", 10);
-    auto nbv_candidates_fov_pub = node_->create_publisher<MarkerArray>("nbv_candidates_fov", 10);
-  
+
     auto start_time = std::chrono::high_resolution_clock::now();
 
     exploration_planner_->updateOctomap(octomap_);
+
     exploration_planner_->calculateNbvCandidates();
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
     Nbv nbv = exploration_planner_->selectNbv();
+
+    // if(current_type_ == PlannerType::Global){
+    //     //rviz_tool_->prompt("Press next");
+    //     std::vector<TargetPatch> targets = exploration_planner_->getTargets();
+    //     publishTargetPatches(targets,targets_pub);
+    // }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -87,11 +91,20 @@ void StateMachineNode::handle_calculate_nbv(){
 
     
     // Visualizations
-    visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
-    visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
-    visualizeNbvRayView(nbv, nbv_ray_pub);
-    visualizeNbvFov(nbv, nbv_fov_pub);
-    visualizeRayDots(nbv, nbv_ray_dots_pub);
+    if(visualize){
+        auto nbv_ray_dots_pub = node_->create_publisher<MarkerArray>("nbv_ray_dots", 10);
+        auto nbv_fov_pub = node_->create_publisher<Marker>("nbv_fov", 10);
+        auto nbv_ray_pub = node_->create_publisher<MarkerArray>("nbv_ray", 10);
+        auto nbv_candidates_pose_pub = node_->create_publisher<MarkerArray>("nbv_candidates", 10);
+        auto nbv_candidates_fov_pub = node_->create_publisher<MarkerArray>("nbv_candidates_fov", 10);
+        auto targets_pub = node_->create_publisher<MarkerArray>("targets", 10);
+
+        visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
+        visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
+        visualizeNbvRayView(nbv, nbv_ray_pub);
+        visualizeNbvFov(nbv, nbv_fov_pub);
+        visualizeRayDots(nbv, nbv_ray_dots_pub);  
+    }
 
     // Send Stats
     auto nbv_time_pub = this->create_publisher<std_msgs::msg::Float64>("/nbv_time", rclcpp::QoS(10).reliable());
@@ -99,7 +112,7 @@ void StateMachineNode::handle_calculate_nbv(){
     nbv_time_msg.data = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(); //To seconds
     nbv_time_pub->publish(nbv_time_msg);
 
-    rviz_tool_->prompt("Press next");
+    //rviz_tool_->prompt("Press next");
 
     // If no valid nbv was found, skip. N
     /// TODO: dont really need to capture, but should switch to global planner
@@ -134,7 +147,8 @@ void StateMachineNode::handle_move_robot(){
     auto request_ptr = std::make_shared<ExecuteReq>(current_req_);
     auto result = move_client_->async_send_request(request_ptr);
 
-    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) ==
+    auto timeout = std::chrono::seconds(10);
+    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result, timeout) ==
         rclcpp::FutureReturnCode::SUCCESS)
     {
         auto response = result.get();
@@ -146,7 +160,8 @@ void StateMachineNode::handle_move_robot(){
     } 
     else 
     {
-        RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service.");
+        RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service. Will just move on to campture for now");
+    
     }
     RCLCPP_INFO(this->get_logger(), "Should capture again now");
 
@@ -159,17 +174,10 @@ void StateMachineNode::handle_move_robot(){
 void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::SharedPtr msg)
 {
     RCLCPP_INFO(this->get_logger(), "New octompa recieved, updating planning scene.");
-    auto unknown_space_pub = this->create_publisher<octomap_msgs::msg::Octomap>("unknown_space", 10);
-    auto free_space_pub = this->create_publisher<octomap_msgs::msg::Octomap>("free_space", 10);
-    auto frontiers_pub = this->create_publisher<octomap_msgs::msg::Octomap>("frontiers", 10);
-    auto map_pub = this->create_publisher<octomap_msgs::msg::Octomap>("map", 10);
-    auto c_center_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("centers",10);
-    auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+
 
     octomap::AbstractOcTree* abstract_tree = octomap_msgs::msgToMap(*msg);
     
-
-    // sett/delete all nodes outisde to be free. 
 
     // If this is too slow, waitForCallback timer is activsated, and new trigger is sent...
     if (abstract_tree) {
@@ -180,7 +188,6 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             auto start_time = std::chrono::high_resolution_clock::now();
 
-            
             // Update internal octomap
             createInitialSafeSpace(received_tree);
             octomap_ = std::make_shared<octomap::OcTree>(*received_tree);
@@ -194,47 +201,57 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             }
             world_publisher_->publish(msg_out);
 
-
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
             RCLCPP_INFO(this->get_logger(), "--------------- Octomap processed in %ld ms", duration.count());
 
-
-            // Visualize
             OctreePtr unknown_tree = extractUnknownOctree(octomap_);
-            OctreePtr free_tree = extractFreeOctree(octomap_);
-            OctreePtr frontier_tree = extractFrontierOctreeInBounds(octomap_);
 
-            std::vector<Cluster> clusters = computeClusters(octomap_);
-            //std::vector<Cluster> clusters = findUnknownVoxelClusters(octomap_);
+            bool visualize_map = false;
+            // Visualize
+            if(visualize_map){
+                
+                OctreePtr free_tree = extractFreeOctree(octomap_);
+                OctreePtr frontier_tree = extractFrontierOctreeInBounds(octomap_);
 
-            visualizeClusters(clusters, cluster_pub);
+
+                auto unknown_space_pub = this->create_publisher<octomap_msgs::msg::Octomap>("unknown_space", 10);
+                auto free_space_pub = this->create_publisher<octomap_msgs::msg::Octomap>("free_space", 10);
+                auto frontiers_pub = this->create_publisher<octomap_msgs::msg::Octomap>("frontiers", 10);
+                auto map_pub = this->create_publisher<octomap_msgs::msg::Octomap>("map", 10);
+                auto c_center_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("centers",10);
+                auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+
+                // only for visualizations. 
+                std::vector<Cluster> clusters = computeClusters(octomap_);
+                visualizeClusters(clusters, cluster_pub);
 
 
-            octomap_msgs::msg::Octomap unknown_msg;
-            unknown_msg.header.frame_id = "world";  
-            unknown_msg.header.stamp = this->get_clock()->now(); 
-            octomap_msgs::fullMapToMsg(*unknown_tree, unknown_msg);
-            unknown_space_pub->publish(unknown_msg);
+                octomap_msgs::msg::Octomap unknown_msg;
+                unknown_msg.header.frame_id = "world";  
+                unknown_msg.header.stamp = this->get_clock()->now(); 
+                octomap_msgs::fullMapToMsg(*unknown_tree, unknown_msg);
+                unknown_space_pub->publish(unknown_msg);
 
-            octomap_msgs::msg::Octomap free_msg;
-            free_msg.header.frame_id = "world";  
-            free_msg.header.stamp = this->get_clock()->now(); 
-            octomap_msgs::fullMapToMsg(*free_tree, free_msg);
-            free_space_pub->publish(free_msg);
+                octomap_msgs::msg::Octomap free_msg;
+                free_msg.header.frame_id = "world";  
+                free_msg.header.stamp = this->get_clock()->now(); 
+                octomap_msgs::fullMapToMsg(*free_tree, free_msg);
+                free_space_pub->publish(free_msg);
 
-            octomap_msgs::msg::Octomap frontiers_msg;
-            frontiers_msg.header.frame_id = "world";  
-            frontiers_msg.header.stamp = this->get_clock()->now(); 
-            octomap_msgs::fullMapToMsg(*frontier_tree, frontiers_msg);
-            frontiers_pub->publish(frontiers_msg);
+                octomap_msgs::msg::Octomap frontiers_msg;
+                frontiers_msg.header.frame_id = "world";  
+                frontiers_msg.header.stamp = this->get_clock()->now(); 
+                octomap_msgs::fullMapToMsg(*frontier_tree, frontiers_msg);
+                frontiers_pub->publish(frontiers_msg);
 
-            octomap_msgs::msg::Octomap map_msg;
-            map_msg.header.frame_id = "world";  
-            map_msg.header.stamp = this->get_clock()->now(); 
-            octomap_msgs::fullMapToMsg(*octomap_, map_msg);
-            map_pub->publish(map_msg);
+                octomap_msgs::msg::Octomap map_msg;
+                map_msg.header.frame_id = "world";  
+                map_msg.header.stamp = this->get_clock()->now(); 
+                octomap_msgs::fullMapToMsg(*octomap_, map_msg);
+                map_pub->publish(map_msg);
 
+            }
 
             // Publish progress
             auto unknown_voxel_pub = this->create_publisher<std_msgs::msg::Float64>("/voxel_count", rclcpp::QoS(10).reliable());
