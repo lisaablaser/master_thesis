@@ -18,7 +18,8 @@ struct Cluster {
     std::vector<octomap::point3d> points;  
     std::vector<octomap::point3d> frontiers;
     octomap::point3d center;
-    Eigen::Vector3d normal;
+    octomap::point3d target; 
+    Eigen::Vector3d target_normal;
 };
 
 

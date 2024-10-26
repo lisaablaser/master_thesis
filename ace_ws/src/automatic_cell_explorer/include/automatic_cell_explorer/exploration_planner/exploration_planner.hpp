@@ -12,11 +12,15 @@
 #include "automatic_cell_explorer/moveit_types.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 
+struct TargetPatch{
+  octomap::point3d target; 
+  Eigen::Vector3d target_normal;
+};
 
 class ExplorationPlanner {
 public:
     ExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)
-        : mvt_interface_(mvt_interface), octo_map_(octo_map) {}
+        : mvt_interface_(mvt_interface), octo_map_(octo_map), targets_() {}
 
     virtual ~ExplorationPlanner() = default;
 
@@ -32,11 +36,14 @@ public:
     NbvCandidates getNbvCandidates() const {
         return nbv_candidates_;
     }
+    std::vector<TargetPatch> getTargets() const {return targets_;}
 
 protected:
     MoveGrpPtr mvt_interface_;
     std::shared_ptr<octomap::OcTree> octo_map_; 
+    std::vector<TargetPatch> targets_;
     NbvCandidates nbv_candidates_; 
+    
 
     std::optional<Plan> plan(const Eigen::Isometry3d& pose);
     std::optional<Plan> plan(const std::vector<double> & joint_values);

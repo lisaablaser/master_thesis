@@ -5,6 +5,7 @@
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
 
 
+
 class ExplorationPlannerV4: public ExplorationPlanner
 {
 public:
@@ -14,10 +15,14 @@ public:
 
   void calculateNbvCandidates() override;
   Nbv selectNbv() override;
+  
 
 private:
+  
   void evaluateNbvCandidates();
   void generateCandidates();
+
+  void findTargets();
 
   
   

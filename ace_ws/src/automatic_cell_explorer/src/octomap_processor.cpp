@@ -3,7 +3,7 @@
 
 #include <queue>
 
-void computeCenterAndNormal(Cluster &cluster);
+void computeCenter(Cluster &cluster);
 bool isWithinDistance(const octomap::point3d& p1, const octomap::point3d& p2);
 std::vector<octomap::point3d> extractOccupiedNodes(std::shared_ptr<octomap::OcTree> octree);
 void findFrontiers(Cluster &cluste);
@@ -42,7 +42,7 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree>  octree) {
             /// BUG: floor frontiers are either not being removed (2*res), or dont exist. Maybe due to differences in res. 
             for (float i = current_point.x() - res; i <= current_point.x() + res; i += res) {
                 for (float j = current_point.y() - res; j <= current_point.y() + res; j += res) {
-                    for (float k = current_point.z() - res; k <= current_point.z() + 2*res; k += res) { //Temporary bug "fix"
+                    for (float k = current_point.z() - res; k <= current_point.z() + res; k += res) { //Temporary bug "fix"
                         if (i == current_point.x() && j == current_point.y() && k == current_point.z()) continue; 
                         octomap::OcTreeKey neighbor_key;;
                         octree->coordToKeyChecked(octomap::point3d(i, j, k), neighbor_key);
@@ -72,7 +72,7 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree>  octree) {
 
 
         // Calculate center and normal
-        computeCenterAndNormal(new_cluster);
+        computeCenter(new_cluster);
 
         clusters.push_back(new_cluster);  
     }
@@ -85,30 +85,38 @@ void findFrontiers(Cluster &cluste){
 
 }
 
-void computeCenterAndNormal(Cluster &cluster) {
-    // Compute center
+void computeCenter(Cluster &cluster) {
     Eigen::Vector3d center(0, 0, 0);
     for (const auto& point : cluster.points) {
         center += Eigen::Vector3d(point.x(), point.y(), point.z());
     }
     center /= cluster.points.size();
     cluster.center = octomap::point3d(center.x(), center.y(), center.z());
+}
+
+
+
+void computeNormal(Cluster &cluster) {
+    /*
+        Given a pose ( ), find closest frontier
+    */
+
 
     if (cluster.points.size() < 3) {
         // If there are less than 3 points, assign a default normal (e.g., pointing up in z-direction)
-        cluster.normal = Eigen::Vector3d(0, 0, 1);  // Default normal
+        cluster.target_normal = Eigen::Vector3d(0, 0, 1);  // Default normal
         return;
     }
 
     // Compute normal (PCA)
     Eigen::MatrixXd points_matrix(cluster.points.size(), 3);
     for (size_t i = 0; i < cluster.points.size(); ++i) {
-        points_matrix(i, 0) = cluster.points[i].x() - center.x();
-        points_matrix(i, 1) = cluster.points[i].y() - center.y();
-        points_matrix(i, 2) = cluster.points[i].z() - center.z();
+        points_matrix(i, 0) = cluster.points[i].x() - cluster.center.x();
+        points_matrix(i, 1) = cluster.points[i].y() - cluster.center.y();
+        points_matrix(i, 2) = cluster.points[i].z() - cluster.center.z();
     }
     Eigen::JacobiSVD<Eigen::MatrixXd> svd(points_matrix, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    cluster.normal = svd.matrixV().col(2);  // The last column corresponds to the smallest singular value (normal to the plane)
+    cluster.target_normal = svd.matrixV().col(2);  // The last column corresponds to the smallest singular value (normal to the plane)
 }
 
 std::vector<octomap::point3d> extractOccupiedNodes(std::shared_ptr<octomap::OcTree> octree) {

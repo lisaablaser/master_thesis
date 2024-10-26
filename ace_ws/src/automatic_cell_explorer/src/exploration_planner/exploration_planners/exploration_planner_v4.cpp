@@ -68,40 +68,52 @@ void ExplorationPlannerV4::evaluateNbvCandidates(){
 }
 
 
+void ExplorationPlannerV4::findTargets(){
+    /*
+        Targets are cluster centers for now.
+        target_normals: center to robot pose. Not used.  
+    */
+    
+    std::vector<Cluster> clusters = computeClusters(octo_map_);
+
+    //auto current_pose = mvt_interface_->getCurrentPose();
+    //Eigen::Vector3d end_effector_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
+
+
+    for(Cluster & cluster: clusters){
+        TargetPatch new_target;
+        new_target.target = cluster.center;
+        new_target.target_normal = Eigen::Vector3d(0,0,1);//end_effector_position - Eigen::Vector3d(new_target.target.x(), new_target.target.y(), new_target.target.z());
+        targets_.push_back(new_target);
+    }
+
+}
+
 
 void ExplorationPlannerV4::generateCandidates()
 /*
-    Random generate candidates. Append if plan exists. 
+    Random generate candidates, aim at a cluster center. Append if plan exists. 
 */
 {
-
-    // Extract frontiers - create workcell sized frontier octomap
-    OctreePtr frontier_tree = extractFrontierOctreeInBounds(octo_map_);
-    // Cluster frontiers, return the frontier centers 
-    // generate candidates with orientation_ z up, x = robot origo - cluster center
-
-    // cluster center with noraml?, k-means cluster orientatin (pos of free and unknown) and point. 
+    targets_.clear();
+    findTargets();
 
     nbv_candidates_.nbv_candidates.clear();
+    
+    // use target pathces to guide sampling
 
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
-
-    double roll_min = -M_PI, roll_max = M_PI;
-    double pitch_min = -M_PI, pitch_max = M_PI;
-    double yaw_min = -M_PI, yaw_max = M_PI;
 
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis_x(bounds.min_x, bounds.max_x);
     std::uniform_real_distribution<> dis_y(bounds.min_y, bounds.max_y);
     std::uniform_real_distribution<> dis_z(bounds.min_z+ origo.z, bounds.max_z+origo.z);
-    std::uniform_real_distribution<> dis_roll(roll_min, roll_max);
-    std::uniform_real_distribution<> dis_pitch(pitch_min, pitch_max);
-    std::uniform_real_distribution<> dis_yaw(yaw_min, yaw_max);
+
 
     int i = 0;
-    while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
+    while(nbv_candidates_.nbv_candidates.size() <= 3){
         ++i;
         std::cout << " Attempt number: " << i << std::endl;
         Nbv nbv;
@@ -116,22 +128,48 @@ void ExplorationPlannerV4::generateCandidates()
         if (!node || octo_map_->isNodeOccupied(node)) {
             continue;
         }
-        
-        Eigen::Quaternion q_r = Eigen::Quaterniond::UnitRandom();
-        
 
+        // Position at sampled position
         nbv.pose = Eigen::Isometry3d::Identity();
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
-        nbv.pose.rotate(q_r);
+        
+       
+        for(TargetPatch & target : targets_){
+            // Calculate the direction vector towards the target
+            Eigen::Vector3d position(x, y, z);
+            Eigen::Vector3d target_pos(target.target.x(), target.target.y(), target.target.z());
 
+            // 1. Calculate the x-axis direction pointing toward the target
+            Eigen::Vector3d direction_to_target = (target_pos - position).normalized();
+            Eigen::Vector3d x_axis = direction_to_target;
 
-        auto result = plan(nbv.pose);
-        if (result) {
-            Plan valid_plan = *result;  
-            nbv.plan = valid_plan;
+            // 2. Define the global up vector as the approximate z-axis
+            Eigen::Vector3d global_up(0, 0, 1);
 
-            nbv.cost = 0.0; 
-            nbv_candidates_.nbv_candidates.push_back(nbv);
+            // 3. Compute the z-axis by projecting global up onto the plane orthogonal to x_axis
+            Eigen::Vector3d z_axis = (global_up - global_up.dot(x_axis) * x_axis).normalized();
+
+            // 4. Compute the y-axis as the cross product of z_axis and x_axis
+            Eigen::Vector3d y_axis = z_axis.cross(x_axis);
+
+            // 5. Construct the rotation matrix from x, y, and z axes
+            Eigen::Matrix3d rotation_matrix;
+            rotation_matrix.col(0) = x_axis;  // x-axis points to the target
+            rotation_matrix.col(1) = y_axis;  // y-axis is perpendicular to both x and z
+            rotation_matrix.col(2) = z_axis;  // z-axis points approximately upward
+
+            // 6. Apply the rotation matrix to the pose
+            nbv.pose.linear() = rotation_matrix;
+
+            auto result = plan(nbv.pose);
+            if (result) {
+                Plan valid_plan = *result;  
+                nbv.plan = valid_plan;
+
+                nbv.cost = 0.0; 
+                nbv_candidates_.nbv_candidates.push_back(nbv);
+            }
+            
         }
         
     }
