@@ -51,12 +51,11 @@ void ExplorationPlannerV4::evaluateNbvCandidates(){
         Evaluates the candidates with rycasting. 
     */
 
-    double max_range = 0.93;
     
     std::cout << "updating ray view " << std::endl;
     for(Nbv &nbv: nbv_candidates_.nbv_candidates){
         Eigen::Isometry3d sensor_pose = nbv.pose;
-        RayView ray_view = calculateRayView(sensor_pose, octo_map_, max_range);
+        RayView ray_view = calculateRayView(sensor_pose, octo_map_);
         nbv.ray_view = ray_view;
     
     }

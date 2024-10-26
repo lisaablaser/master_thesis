@@ -128,9 +128,8 @@ void ExplorationPlannerV3::generateCandidates()
 
 RayView ExplorationPlannerV3::getRayView(Nbv & nbv ){
 
-    double max_range = 0.93;
     Eigen::Isometry3d& sensor_pose = nbv.pose;
-    RayView ray_view = calculateRayView(sensor_pose, octo_map_, max_range);
+    RayView ray_view = calculateRayView(sensor_pose, octo_map_);
     
     return ray_view;
 

@@ -9,8 +9,7 @@
 
 RayView calculateRayView(
     const Eigen::Isometry3d& sensor_state, 
-    std::shared_ptr<octomap::OcTree> octo_map, 
-    double max_range) 
+    std::shared_ptr<octomap::OcTree> octo_map) 
 {
     RayView ray_view;
     ray_view.pose = sensor_state;

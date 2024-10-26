@@ -26,8 +26,7 @@ struct RayViews{
 
 RayView calculateRayView(
     const Eigen::Isometry3d& sensor_state, 
-    std::shared_ptr<octomap::OcTree> octo_map, 
-    double max_range= 100.0);
+    std::shared_ptr<octomap::OcTree> octo_map);
 RayInfo castRay(std::shared_ptr<octomap::OcTree> & octo_map, const Eigen::Vector3d & sensor_origin, const Eigen::Vector3d & ray_direction_world);
 
 
