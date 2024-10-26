@@ -4,31 +4,13 @@
 
 #include <queue>
 
-/// TODO: move relevant code to exploration planner
-void computeCenter(Cluster &cluster);
-bool isWithinDistance(const octomap::point3d& p1, const octomap::point3d& p2);
-std::vector<octomap::point3d> extractOccupiedNodes(std::shared_ptr<octomap::OcTree> octree);
-void computeTargetNormal(Cluster& cluster);
 
-double calculateDistance(const octomap::point3d& p1, const octomap::point3d& p2) {
-    return (p1 - p2).norm();
-}
 
-octomap::point3d computeClusterCenter(const Cluster& cluster) {
-    double x = 0.0, y = 0.0, z = 0.0;
-    for (const auto& point : cluster.points) {
-        x += point.x();
-        y += point.y();
-        z += point.z();
-    }
-    size_t num_points = cluster.points.size();
-    return octomap::point3d(x / num_points, y / num_points, z / num_points);
-}
 
 std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
     /*
-        Computes clusters of connected unknown space, in a BFS manner, restricted with a max_radious
-        Also caculates frontiers, cluster centers and normals. 
+        Computes clusters of connected unknown space, in a BFS manner, restricted with a max_radius
+        Also calculates frontiers, cluster centers and normals. 
 
     */
     double max_radius = 0.5;
@@ -61,9 +43,10 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
             // Check neighbors (in original map) for frontiers
             // Obs size is not taken into account. Maybe interate +- resolution and search 3d point instead of key
             /// BUG: floor frontiers are either not being removed (2*res), or dont exist. Maybe due to differences in res. 
+            // In general inconsitencies in frontier extraction is observed.. 
             for (float i = current_point.x() - res; i <= current_point.x() + res; i += res) {
                 for (float j = current_point.y() - res; j <= current_point.y() + res; j += res) {
-                    for (float k = current_point.z() - res; k <= current_point.z() + res; k += res) { //Temporary bug "fix"
+                    for (float k = current_point.z() - res; k <= current_point.z() + res; k += res) { 
                         if (i == current_point.x() && j == current_point.y() && k == current_point.z()) continue; 
                         octomap::OcTreeKey neighbor_key;;
                         octree->coordToKeyChecked(octomap::point3d(i, j, k), neighbor_key);
@@ -81,12 +64,10 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
 
             new_cluster.center = computeClusterCenter(new_cluster);
 
-            // Check neighboring points within the cluster distance
-             for (size_t j = 0; j < unknown_nodes.size(); ++j) {
+            for (size_t j = 0; j < unknown_nodes.size(); ++j) {
                 if (!visited[j]) {
-                    double distance_to_center = calculateDistance(new_cluster.center, unknown_nodes[j]);
+                    double distance_to_center = (new_cluster.center - unknown_nodes[j]).norm();
 
-                    // Only add the point if it is within the maximum radius
                     if (distance_to_center <= max_radius) {
                         to_explore.push(j);
                         visited[j] = true;
@@ -96,8 +77,6 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
             }
         }
 
-        // Calculate center and normal for the new cluster
-        computeCenter(new_cluster);
         computeTargetNormal(new_cluster);
 
         clusters.push_back(new_cluster);
@@ -106,88 +85,18 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
     return clusters;
 }
 
-std::vector<Cluster> computeClusters2(std::shared_ptr<octomap::OcTree>  octree) {
-    double res = RES_LARGE;
-    OctreePtr unknown_tree = extractUnknownOctree(octree); 
-    unknown_tree->expand();
-    std::vector<octomap::point3d> unknown_nodes = extractOccupiedNodes(unknown_tree); 
 
-    std::vector<Cluster> clusters;
-    std::vector<bool> visited(unknown_nodes.size(), false);  
-
-    std::cout << "Computing clusters " << std::endl;
-    // Perform clustering using a BFS-like approach
-    for (size_t i = 0; i < unknown_nodes.size(); ++i) {
-        if (visited[i]) continue;  
-
-        Cluster new_cluster;
-        std::queue<size_t> to_explore;
-        to_explore.push(i);
-        visited[i] = true;
-
-
-        while (!to_explore.empty()) {
-            size_t current = to_explore.front();
-            to_explore.pop();
-
-            new_cluster.points.push_back(unknown_nodes[current]);
-
-
-            auto current_point = unknown_nodes[current];
- 
-            // Check neighbors (in original map) for frontiers
-            // Obs size is not taken into account. Maybe interate +- resolution and search 3d point instead of key
-            /// BUG: floor frontiers are either not being removed (2*res), or dont exist. Maybe due to differences in res. 
-            for (float i = current_point.x() - res; i <= current_point.x() + res; i += res) {
-                for (float j = current_point.y() - res; j <= current_point.y() + res; j += res) {
-                    for (float k = current_point.z() - res; k <= current_point.z() + res; k += res) { //Temporary bug "fix"
-                        if (i == current_point.x() && j == current_point.y() && k == current_point.z()) continue; 
-                        octomap::OcTreeKey neighbor_key;;
-                        octree->coordToKeyChecked(octomap::point3d(i, j, k), neighbor_key);
-
-                        auto node = octree->search(neighbor_key);
-                        
-                        if (node != nullptr && !octree->isNodeOccupied(node)) {
-                            
-                            new_cluster.frontiers.push_back(octree->keyToCoord(neighbor_key)); /// TODO: remove duplicates
-                        }
-                    }
-                }
-            }
-
-
-            // Find neighboring points within the cluster distance
-            /// TODO: account for voxel size.  
-            for (size_t j = 0; j < unknown_nodes.size(); ++j) {
-                if (!visited[j] && isWithinDistance(unknown_nodes[current], unknown_nodes[j])) {
-                    to_explore.push(j);
-                    visited[j] = true;
-                }
-            }
-        }
-        
-        std::cout << "Number of frontiers attached to cluster is: " << new_cluster.frontiers.size() << std::endl;
-
-
-        // Calculate center and normal
-        computeCenter(new_cluster);
-        computeTargetNormal(new_cluster);
-
-        clusters.push_back(new_cluster);  
-    }
-
-    return clusters;
-}
-
-
-void computeCenter(Cluster &cluster) {
-    Eigen::Vector3d center(0, 0, 0);
+octomap::point3d computeClusterCenter(const Cluster& cluster) {
+    double x = 0.0, y = 0.0, z = 0.0;
     for (const auto& point : cluster.points) {
-        center += Eigen::Vector3d(point.x(), point.y(), point.z());
+        x += point.x();
+        y += point.y();
+        z += point.z();
     }
-    center /= cluster.points.size();
-    cluster.center = octomap::point3d(center.x(), center.y(), center.z());
+    size_t num_points = cluster.points.size();
+    return octomap::point3d(x / num_points, y / num_points, z / num_points);
 }
+
 
 void computeTargetNormal(Cluster& cluster) {
     /*
@@ -237,7 +146,6 @@ bool isWithinDistance(const octomap::point3d& p1, const octomap::point3d& p2) {
 
 bool isWithinBounds(octomap::point3d point){
 
-    double resolution = RES_LARGE; 
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
 
@@ -256,6 +164,9 @@ bool isNodeUnknown(octomap::OcTreeNode* node){
     return false;
 }
 
+
+/// ##### Trash code #####
+
 #include <set>
 namespace octomap {
     // Define operator< inside the octomap namespace
@@ -270,13 +181,11 @@ namespace octomap {
 
 std::vector<Cluster> findUnknownVoxelClusters(std::shared_ptr<octomap::OcTree>  octree) {
     /*
-    Alternative appraoch for better efficency. 
+    Alternative appraoch for better efficency exploiting octomap. 
     Not working yet. 
     
     */
     double resolution = RES_LARGE; 
-    WorkspaceBounds bounds = WORK_SPACE;
-    OrigoOffset origo = ORIGO;
     
     std::vector<Cluster> clusters;
     
@@ -341,5 +250,81 @@ std::vector<Cluster> findUnknownVoxelClusters(std::shared_ptr<octomap::OcTree>  
         }
     }
     
+    return clusters;
+}
+
+std::vector<Cluster> computeClusters2(std::shared_ptr<octomap::OcTree>  octree) {
+    /*
+        Computes large non-convex clusters. All unknown voxels connected are clustered toghether. 
+    */
+    double res = RES_LARGE;
+    OctreePtr unknown_tree = extractUnknownOctree(octree); 
+    unknown_tree->expand();
+    std::vector<octomap::point3d> unknown_nodes = extractOccupiedNodes(unknown_tree); 
+
+    std::vector<Cluster> clusters;
+    std::vector<bool> visited(unknown_nodes.size(), false);  
+
+    std::cout << "Computing clusters " << std::endl;
+    // Perform clustering using a BFS-like approach
+    for (size_t i = 0; i < unknown_nodes.size(); ++i) {
+        if (visited[i]) continue;  
+
+        Cluster new_cluster;
+        std::queue<size_t> to_explore;
+        to_explore.push(i);
+        visited[i] = true;
+
+
+        while (!to_explore.empty()) {
+            size_t current = to_explore.front();
+            to_explore.pop();
+
+            new_cluster.points.push_back(unknown_nodes[current]);
+
+
+            auto current_point = unknown_nodes[current];
+ 
+            // Check neighbors (in original map) for frontiers
+            // Obs size is not taken into account. Maybe interate +- resolution and search 3d point instead of key
+            /// BUG: floor frontiers are either not being removed (2*res), or dont exist. Maybe due to differences in res. 
+            for (float i = current_point.x() - res; i <= current_point.x() + res; i += res) {
+                for (float j = current_point.y() - res; j <= current_point.y() + res; j += res) {
+                    for (float k = current_point.z() - res; k <= current_point.z() + res; k += res) { //Temporary bug "fix"
+                        if (i == current_point.x() && j == current_point.y() && k == current_point.z()) continue; 
+                        octomap::OcTreeKey neighbor_key;;
+                        octree->coordToKeyChecked(octomap::point3d(i, j, k), neighbor_key);
+
+                        auto node = octree->search(neighbor_key);
+                        
+                        if (node != nullptr && !octree->isNodeOccupied(node)) {
+                            
+                            new_cluster.frontiers.push_back(octree->keyToCoord(neighbor_key)); /// TODO: remove duplicates
+                        }
+                    }
+                }
+            }
+
+
+            // Find neighboring points within the cluster distance
+            /// TODO: account for voxel size.  
+            for (size_t j = 0; j < unknown_nodes.size(); ++j) {
+                if (!visited[j] && isWithinDistance(unknown_nodes[current], unknown_nodes[j])) {
+                    to_explore.push(j);
+                    visited[j] = true;
+                }
+            }
+        }
+        
+        std::cout << "Number of frontiers attached to cluster is: " << new_cluster.frontiers.size() << std::endl;
+
+
+        // Calculate center and normal
+        new_cluster.center = computeClusterCenter(new_cluster);
+        computeTargetNormal(new_cluster);
+
+        clusters.push_back(new_cluster);  
+    }
+
     return clusters;
 }

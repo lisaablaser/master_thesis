@@ -21,7 +21,12 @@ struct Cluster {
 };
 
 std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree>  octree);
-std::vector<Cluster> findUnknownVoxelClusters(std::shared_ptr<octomap::OcTree>  octree);
+
+octomap::point3d computeClusterCenter(const Cluster& cluster);
+bool isWithinDistance(const octomap::point3d& p1, const octomap::point3d& p2);
+std::vector<octomap::point3d> extractOccupiedNodes(std::shared_ptr<octomap::OcTree> octree);
+void computeTargetNormal(Cluster& cluster);
+
 
 
 
