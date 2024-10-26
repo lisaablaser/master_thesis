@@ -5,19 +5,19 @@
 struct WorkspaceBounds {
     double min_x = -(0.85 + 0.08);
     double min_y = -(0.85 + 0.08);
-    double min_z = 0.0;
+    double min_z = -0.5;
     double max_x = (0.85 + 0.08);
     double max_y = (0.85 + 0.08);
-    double max_z = (1 + 0.08);
+    double max_z = (1.3 + 0.08);
 };
 
 struct FreespaceBounds {
-    double min_x = -1.5/2;
+    double min_x = -1.0/2;
     double min_y = -0.8/2;
     double min_z = 0.045;
     double max_x = 1.5/2;
     double max_y = 0.8/2;
-    double max_z = 1+ 0.08;
+    double max_z = 1.2 + 0.08;
 };
 
 
