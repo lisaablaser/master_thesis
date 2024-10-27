@@ -9,10 +9,14 @@
 #include <moveit_msgs/msg/planning_scene_world.hpp>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
+
+#include "logger.hpp"
 #include "automatic_cell_explorer/move_robot_service.hpp"
 #include "automatic_cell_explorer/moveit_interface.hpp"
 #include "automatic_cell_explorer/octomap_processor.hpp"
 #include "automatic_cell_explorer/ep_factory.hpp"
+
+
 
 
 enum class State {Initialise, Capture, Calculate_NBV, Move_robot, Finished, WaitingForOctomap, Error};
@@ -26,6 +30,8 @@ public:
     void execute_state_machine();
     bool is_finished() const { return finished_; }
 
+
+
 private:
     std::shared_ptr<rclcpp::Node> node_;
     MoveGrpPtr mvt_interface_;
@@ -37,7 +43,9 @@ private:
     OctreePtr octomap_;
     ExplorationPlannerPtr exploration_planner_;
     ExecuteReq current_req_;
-    
+    int iteration_;
+    Logger logger_;
+    SmLog log_;
 
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
     rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_subscriber_;
@@ -62,6 +70,16 @@ private:
     // Callback
     void update_planning_scene(const octomap_msgs::msg::Octomap::SharedPtr msg);
 
+
+    void logIteration() {
+        LogEntry entry;
+        entry.sm_log = log_;
+
+        if (exploration_planner_) {
+            entry.ep_log = exploration_planner_->getLog(); 
+        }
+        logger_.logData(entry);
+    }
 };
 
 #endif // STATE_MACHINE_HPP

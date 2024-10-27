@@ -9,6 +9,7 @@
 #include <moveit/robot_trajectory/robot_trajectory.h>
 #include <moveit/planning_interface/planning_interface.h> 
 
+#include "logger.hpp"
 #include "automatic_cell_explorer/moveit_types.hpp"
 #include "automatic_cell_explorer/clustering.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
@@ -35,12 +36,15 @@ public:
         return nbv_candidates_;
     }
     std::vector<Cluster> getClusters() const {return clusters_;}
+    EpLog getLog() const {return log_;}
+
 
 protected:
     MoveGrpPtr mvt_interface_;
     std::shared_ptr<octomap::OcTree> octo_map_; 
     std::vector<Cluster> clusters_;
     NbvCandidates nbv_candidates_; 
+    EpLog log_;
     
 
     std::optional<Plan> plan(const Eigen::Isometry3d& pose);

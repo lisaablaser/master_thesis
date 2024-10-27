@@ -3,6 +3,8 @@
 #include <octomap_msgs/conversions.h>
 #include "std_msgs/msg/float64.hpp"
 
+#include "logger.hpp"
+
 #include "automatic_cell_explorer/visualize.hpp"
 #include "automatic_cell_explorer/state_machine.hpp"
 #include "automatic_cell_explorer/constants.hpp"
@@ -22,7 +24,9 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
     exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
-    current_req_(ExecuteReq())
+    current_req_(ExecuteReq()),
+    iteration_(0),
+    logger_("runs/hybrid2.csv")
 {
     camera_trigger_ = 
         this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
@@ -64,31 +68,30 @@ void StateMachineNode::handle_capture(){
     RCLCPP_INFO(this->get_logger(), "Trigger sent.");
 
     current_state_ = State::WaitingForOctomap;
+    
 }
 
 void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
 
     bool visualize = true;
-    
+    updatePlanner(current_type_);
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
     exploration_planner_->updateOctomap(octomap_);
-
     exploration_planner_->calculateNbvCandidates();
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
     Nbv nbv = exploration_planner_->selectNbv();
 
-    // if(current_type_ == PlannerType::Global){
-    //     //rviz_tool_->prompt("Press next");
-    //     std::vector<TargetPatch> targets = exploration_planner_->getTargets();
-    //     publishTargetPatches(targets,targets_pub);
-    // }
-
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
     RCLCPP_INFO(this->get_logger(), "----------------- Calculated NBV in %ld ms", duration.count());
+
+    /// LOG:  
+    log_.nbv_calculation_t = duration.count();
+    log_.planner = static_cast<int>(current_type_);
+    //EpLog ep_log = exploration_planner_->getLog();
 
     
     // Visualizations
@@ -146,6 +149,8 @@ void StateMachineNode::handle_move_robot(){
     std::cout << "--State MoveRobot--" << std::endl;
 
     auto request_ptr = std::make_shared<ExecuteReq>(current_req_);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
     auto result = move_client_->async_send_request(request_ptr);
 
     auto timeout = std::chrono::seconds(10);
@@ -154,6 +159,7 @@ void StateMachineNode::handle_move_robot(){
     {
         auto response = result.get();
         if (response->success) {
+
             RCLCPP_INFO(this->get_logger(), "Service call succeeded. Robot moved successfully.");
         } else {
             RCLCPP_ERROR(this->get_logger(), "Service call failed. Execution was unsuccessful.");
@@ -161,14 +167,18 @@ void StateMachineNode::handle_move_robot(){
     } 
     else 
     {
+        /// TODO: Error handle if execution fails.
         RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service. Will just move on to campture for now");
-    
+        
     }
-    RCLCPP_INFO(this->get_logger(), "Should capture again now");
 
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+    /// LOG: 
+    log_.move_t = static_cast<double>(duration);
     
     current_state_ = State::Capture;
-    /// TODO: Error handle if execution fails.
 }
 
 
@@ -205,6 +215,8 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             auto end_time = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
             RCLCPP_INFO(this->get_logger(), "--------------- Octomap processed in %ld ms", duration.count());
+            
+            log_.map_update_t = duration.count();
 
             OctreePtr unknown_tree = extractUnknownOctree(octomap_);
 
@@ -257,6 +269,9 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             }
 
+          
+           
+
             // Publish progress
             auto unknown_voxel_pub = this->create_publisher<std_msgs::msg::Float64>("/voxel_count", rclcpp::QoS(10).reliable());
             auto u_msg = std_msgs::msg::Float64();
@@ -266,25 +281,23 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
 
+            log_.progress = unknown_voxel_count;
+            prev_progress_ = unknown_voxel_count;
+
             // Check if we should switch planners:
             if(current_type_ == PlannerType::Local){
                 double progress_tresh = 0.01;
                 if(abs(prev_progress_-unknown_voxel_count) < progress_tresh){
                     std::cout << "--Switching to Global Planner--" << std::endl;
                     current_type_ = PlannerType::Global;
-                    updatePlanner(current_type_);
                 }   
             }
             else if(current_type_ == PlannerType::Global){
                 //switch at once. 
                 std::cout << "--Switching to Local Planner--" << std::endl;
                 current_type_ = PlannerType::Local;
-                updatePlanner(current_type_);
-                
-            
             }
-            prev_progress_ = unknown_voxel_count;
-            
+
 
             // Check termination criteria
             double termination_treshold = 95.0;
@@ -325,6 +338,11 @@ void StateMachineNode::execute_state_machine()
                 break;
 
             case State::Capture:
+                logIteration();
+                log_ = SmLog{};
+                iteration_ += 1;
+                log_.iteration = iteration_;
+
                 handle_capture();
                 break;
                 
