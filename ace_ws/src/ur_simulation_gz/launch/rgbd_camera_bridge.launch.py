@@ -41,6 +41,7 @@ def generate_launch_description():
             "/rgbd_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image",
             "/rgbd_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked",
             "/trigger@std_msgs/msg/Bool@gz.msgs.Boolean",
+            # "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
         ],
         output="screen",
         remappings=remappings,

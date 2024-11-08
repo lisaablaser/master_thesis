@@ -2,6 +2,7 @@
 #include "automatic_cell_explorer/moveit_interface.hpp"
 
 MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
+    node->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
     MoveGrpPtr interface = std::make_shared<MoveGrp>(node,"ur_manipulator");
     interface->startStateMonitor();
@@ -29,6 +30,7 @@ PlnScnPtr getPlanningSceenePtr(){
 
 
 PlnScnMonPtr getPlanningSceeneMonitiorPtr(rclcpp::Node::SharedPtr node){
+    node->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
     auto psm = std::make_shared<PlnScnMon>(node,"robot_description");
     psm->startSceneMonitor();

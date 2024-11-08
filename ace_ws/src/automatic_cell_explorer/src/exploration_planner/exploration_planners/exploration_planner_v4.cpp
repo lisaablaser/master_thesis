@@ -154,9 +154,11 @@ void ExplorationPlannerV4::generateCandidates()
 
 
     int i = 0;
-    while(nbv_candidates_.nbv_candidates.size() <= 3){
-        ++i;
+    int max_attempts = 1000;
+    while(nbv_candidates_.nbv_candidates.size() <= 3 && i < max_attempts){
+        
         std::cout << " Attempt number: " << i << std::endl;
+        std::cout << " Candidates size: " << nbv_candidates_.nbv_candidates.size() << std::endl;
         Nbv nbv;
         
         double x = dis_x(gen);
@@ -176,6 +178,7 @@ void ExplorationPlannerV4::generateCandidates()
         
        
         for(Cluster & cluster : clusters_){
+            ++i;
             // Calculate the direction vector towards the target
             Eigen::Vector3d position(x, y, z);
             Eigen::Vector3d target_pos(cluster.target.x(), cluster.target.y(), cluster.target.z());
@@ -214,6 +217,7 @@ void ExplorationPlannerV4::generateCandidates()
         }
         
     }
+    /// TODO: handle if no candidates can be generated.. Save last trajectory or somthing. 
     
     log_.attempts = i;
     std::cout << " Number of itertions to generate candidates was: " << i << std::endl;

@@ -54,6 +54,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     parameters = [
+        {"use_sim_time": True}
         # {
         #     "sensors": ["rgbd_camera"],
         #     "rgbd_camera.filtered_cloud_topic": "/filtered_cloud",

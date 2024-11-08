@@ -56,7 +56,6 @@ void StateMachineNode::handle_initialise(){
 
     node_ = shared_from_this();
 
-    current_state_ = State::Capture;
 }
 
 void StateMachineNode::handle_capture(){
@@ -67,7 +66,6 @@ void StateMachineNode::handle_capture(){
     camera_trigger_->publish(trigger);
     RCLCPP_INFO(this->get_logger(), "Trigger sent.");
 
-    current_state_ = State::WaitingForOctomap;
     
 }
 
@@ -110,33 +108,25 @@ void StateMachineNode::handle_calculate_nbv(){
         visualizeRayDots(nbv, nbv_ray_dots_pub);  
     }
 
-    // Send Stats
-    auto nbv_time_pub = this->create_publisher<std_msgs::msg::Float64>("/nbv_time", rclcpp::QoS(10).reliable());
-    auto nbv_time_msg = std_msgs::msg::Float64();
-    nbv_time_msg.data = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count(); //To seconds
-    nbv_time_pub->publish(nbv_time_msg);
 
     //rviz_tool_->prompt("Press next");
 
-    // If no valid nbv was found, skip. N
-    /// TODO: dont really need to capture, but should switch to global planner
-    if(is_deafault(nbv)){
-        std::cout << "Nbv was default, switching to capture to try again " << std::endl;
 
-        current_state_ = State::Capture;
+    // Maybe check progress if raycast is wrong. (looking agains ceiling)
+    if(is_deafault(nbv) || nbv_candidates.nbv_candidates.empty() || nbv.ray_view.num_unknowns == 0){
+        std::cout << "Nbv was invalid, trying again " << std::endl;
+        if(current_type_ == PlannerType::Local){
+            std::cout << "--Switching to Global Planner-- " << std::endl;
+            current_type_ = PlannerType::Global;
+        }   
+        handle_calculate_nbv();
         return;
     }
-    if(nbv_candidates.nbv_candidates.empty()){
-        std::cout << "No Nbv candidates where calculate" << std::endl;
+    else if(current_type_ == PlannerType::Global){
+        std::cout << "--Switching back to Local planner --- " << std::endl;
+        current_type_ = PlannerType::Local;
+    }
 
-        current_state_ = State::Capture;
-        return;
-    }
-    if(nbv.ray_view.num_unknowns == 0){
-        std::cout << "No gain, skip this pose " << std::endl;
-        current_state_ = State::Capture;
-        return;
-    }
 
     ExecuteReq req;
     req.start_state = nbv.plan.start_state;
@@ -149,10 +139,9 @@ void StateMachineNode::handle_move_robot(){
     std::cout << "--State MoveRobot--" << std::endl;
 
     auto request_ptr = std::make_shared<ExecuteReq>(current_req_);
-
-    auto start_time = std::chrono::high_resolution_clock::now();
     auto result = move_client_->async_send_request(request_ptr);
-
+    
+    auto start_time = std::chrono::high_resolution_clock::now();
     auto timeout = std::chrono::seconds(10);
     if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result, timeout) ==
         rclcpp::FutureReturnCode::SUCCESS)
@@ -163,19 +152,23 @@ void StateMachineNode::handle_move_robot(){
             RCLCPP_INFO(this->get_logger(), "Service call succeeded. Robot moved successfully.");
         } else {
             RCLCPP_ERROR(this->get_logger(), "Service call failed. Execution was unsuccessful.");
+            log_.move_t = -1.0;
+            current_state_ = State::Calculate_NBV;
+            return;
         }
     } 
     else 
     {
         /// TODO: Error handle if execution fails.
         RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service. Will just move on to campture for now");
-        
+        log_.move_t = -1.0;
+        current_state_ = State::Calculate_NBV;
+        return;
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
-    /// LOG: 
     log_.move_t = static_cast<double>(duration);
     
     current_state_ = State::Capture;
@@ -272,43 +265,32 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
           
            
 
-            // Publish progress
-            auto unknown_voxel_pub = this->create_publisher<std_msgs::msg::Float64>("/voxel_count", rclcpp::QoS(10).reliable());
-            auto u_msg = std_msgs::msg::Float64();
+            // LOG
             double unknown_voxel_count = calculateOccupiedVolume(unknown_tree);
-            u_msg.data = unknown_voxel_count;
-            unknown_voxel_pub->publish(u_msg);
-
             std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
-
             log_.progress = unknown_voxel_count;
-            prev_progress_ = unknown_voxel_count;
+            
 
-            // Check if we should switch planners:
+            // Keep until utility measue is reliable
+            // If no actual progress is made, we should witch to global planner. 
             if(current_type_ == PlannerType::Local){
                 double progress_tresh = 0.01;
                 if(abs(prev_progress_-unknown_voxel_count) < progress_tresh){
-                    std::cout << "--Switching to Global Planner--" << std::endl;
+                    std::cout << "--Switching to Global Planner-- progess was: " << prev_progress_-unknown_voxel_count  << std::endl;
                     current_type_ = PlannerType::Global;
                 }   
             }
-            else if(current_type_ == PlannerType::Global){
-                //switch at once. 
-                std::cout << "--Switching to Local Planner--" << std::endl;
-                current_type_ = PlannerType::Local;
-            }
-
+        
+            prev_progress_ = unknown_voxel_count;
 
             // Check termination criteria
             double termination_treshold = 95.0;
-
             if (unknown_voxel_count > termination_treshold) {
                 std::cout << "Planner reached termination criteria" << std::endl;
                 finished_ = true;
                 current_state_ = State::Finished;
                 return;
             }
-
 
 
             RCLCPP_INFO(this->get_logger(), "Setting next state to CalculateNBV.");
@@ -335,6 +317,7 @@ void StateMachineNode::execute_state_machine()
 
             case State::Initialise:
                 handle_initialise();
+                current_state_ = State::Capture;
                 break;
 
             case State::Capture:
@@ -342,8 +325,9 @@ void StateMachineNode::execute_state_machine()
                 log_ = SmLog{};
                 iteration_ += 1;
                 log_.iteration = iteration_;
-
+                log_.time = std::chrono::system_clock::now();
                 handle_capture();
+                current_state_ = State::WaitingForOctomap;
                 break;
                 
             case State::WaitingForOctomap:
