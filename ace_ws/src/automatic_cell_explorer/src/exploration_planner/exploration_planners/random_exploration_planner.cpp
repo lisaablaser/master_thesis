@@ -17,8 +17,19 @@ void RandomExplorationPlanner::calculateNbvCandidates() {
         initial dummy random generator planner 
     */
 
+    log_ = EpLog{};
+
+    auto s_gen = std::chrono::high_resolution_clock::now();
     generateCandidates();
+    auto e_gen = std::chrono::high_resolution_clock::now();
+    auto d_gen = std::chrono::duration_cast<std::chrono::milliseconds>(e_gen - s_gen).count();
+    log_.generate_t = d_gen; 
+
+    auto s_eval = std::chrono::high_resolution_clock::now();
     evaluateNbvCandidates();
+    auto e_eval = std::chrono::high_resolution_clock::now();
+    auto d_eval = std::chrono::duration_cast<std::chrono::milliseconds>(e_eval - s_eval).count();
+    log_.evaluate_t = d_eval; 
 
 }
 
@@ -32,6 +43,8 @@ Nbv RandomExplorationPlanner::selectNbv(){
         throw std::runtime_error("The nbv_candidates vector is empty");
     }
 
+    auto s = std::chrono::high_resolution_clock::now();
+
     Nbv highest_cost_nbv = nbv_candidates_.nbv_candidates.at(0);
 
     for (const auto& nbv : nbv_candidates_.nbv_candidates) {
@@ -40,6 +53,13 @@ Nbv RandomExplorationPlanner::selectNbv(){
         }
     }
     std::cout << "Cost of Nbv is: " << highest_cost_nbv.ray_view.num_unknowns << std::endl;
+
+    auto e = std::chrono::high_resolution_clock::now();
+    auto d = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
+    
+    log_.select_t = d;
+    log_.est_gain = static_cast<double>(highest_cost_nbv.ray_view.num_unknowns);
+    log_.utility_score = highest_cost_nbv.ray_view.num_unknowns;
 
     return highest_cost_nbv;
     
@@ -53,12 +73,28 @@ void RandomExplorationPlanner::evaluateNbvCandidates(){
 
     
     std::cout << "updating ray view " << std::endl;
+
+    double total_time = 0.0;
+
     for(Nbv &nbv: nbv_candidates_.nbv_candidates){
         Eigen::Isometry3d sensor_pose = nbv.pose;
+
+        auto start_time = std::chrono::high_resolution_clock::now();
+
         RayView ray_view = calculateRayView(sensor_pose, octo_map_);
         nbv.ray_view = ray_view;
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+        total_time += duration;
     
     }
+
+    int n_candidates = nbv_candidates_.nbv_candidates.size();
+    double average_time = (n_candidates > 0) ? (total_time / n_candidates) : 0.0;
+    log_.n_candidates = n_candidates;
+    log_.evaluate_av_t = average_time;
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
     for(Nbv nbv: nbv_candidates_.nbv_candidates){
@@ -127,6 +163,7 @@ void RandomExplorationPlanner::generateCandidates()
         }
         
     }
+    log_.attempts = i;
     std::cout << " Number of itertions to generate candidates was: " << i << std::endl;
 
 }
