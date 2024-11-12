@@ -26,6 +26,7 @@ struct SmLog {
     double traj_lenght = -1;
     double move_t = -1;
     double map_update_t = -1;
+    double gain = -1; //acutal gain of the capture
 };
 
 struct LogEntry {
@@ -50,7 +51,7 @@ public:
             file << "Time,"
                  << "GenerateTime,EvalTime,EvalAvgTime,SelectTime,Attempts,Candidates,"
                  << "EstimatedGain,UtilityScore,NBVTime,Iteration,Progress,Planner,"
-                 << "TrajectoryLength,MoveTime,MapUpdateTime\n";
+                 << "TrajectoryLength,MoveTime,MapUpdateTime,Gain\n";
         }
     }
 
@@ -82,7 +83,8 @@ void logData(LogEntry& entry) {
              << (entry.sm_log.planner >= 0 ? std::to_string(entry.sm_log.planner) : "-1") << ","
              << (entry.sm_log.traj_lenght >= 0 ? std::to_string(entry.sm_log.traj_lenght) : "-1") << ","
              << (entry.sm_log.move_t >= 0 ? std::to_string(entry.sm_log.move_t) : "-1") << ","
-             << (entry.sm_log.map_update_t >= 0 ? std::to_string(entry.sm_log.map_update_t) : "-1") << "\n";
+             << (entry.sm_log.map_update_t >= 0 ? std::to_string(entry.sm_log.map_update_t) : "-1") << ","
+             << (entry.sm_log.gain >= 0 ? std::to_string(entry.sm_log.gain) : "-1") << "\n";
 
         file.flush();
     }

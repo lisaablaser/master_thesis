@@ -26,7 +26,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
     current_req_(ExecuteReq()),
     iteration_(0),
-    logger_("runs/hybrid2.csv")
+    logger_("runs/random_local_1.csv")
 {
     camera_trigger_ = 
         this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
@@ -74,13 +74,19 @@ void StateMachineNode::handle_calculate_nbv(){
 
     bool visualize = true;
     updatePlanner(current_type_);
+    //plm_interface_->updateSceneWithCurrentState();
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
     exploration_planner_->updateOctomap(octomap_);
     exploration_planner_->calculateNbvCandidates();
+    ///TODO: if planner hangs, reset mvt_interface?
     NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
+
+
     Nbv nbv = exploration_planner_->selectNbv();
+ 
+
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -89,6 +95,7 @@ void StateMachineNode::handle_calculate_nbv(){
     /// LOG:  
     log_.nbv_calculation_t = duration.count();
     log_.planner = static_cast<int>(current_type_);
+    log_.traj_lenght = nbv.cost;
     //EpLog ep_log = exploration_planner_->getLog();
 
     
@@ -142,8 +149,8 @@ void StateMachineNode::handle_move_robot(){
     auto result = move_client_->async_send_request(request_ptr);
     
     auto start_time = std::chrono::high_resolution_clock::now();
-    auto timeout = std::chrono::seconds(10);
-    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result, timeout) ==
+    
+    if (rclcpp::spin_until_future_complete(this->get_node_base_interface(), result) ==
         rclcpp::FutureReturnCode::SUCCESS)
     {
         auto response = result.get();
@@ -159,11 +166,11 @@ void StateMachineNode::handle_move_robot(){
     } 
     else 
     {
-        /// TODO: Error handle if execution fails.
+        /// TODO: Some timing issue here, robot seems to move sucessfully, and stil enters this loop somtimes. 
         RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service. Will just move on to campture for now");
-        log_.move_t = -1.0;
-        current_state_ = State::Calculate_NBV;
-        return;
+        //log_.move_t = -1.0;
+        //current_state_ = State::Calculate_NBV;
+        //return;
     }
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -267,16 +274,17 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             // LOG
             double unknown_voxel_count = calculateOccupiedVolume(unknown_tree);
+            double gain = prev_progress_-unknown_voxel_count;
             std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
             log_.progress = unknown_voxel_count;
-            
+            log_.gain = gain;
 
             // Keep until utility measue is reliable
             // If no actual progress is made, we should witch to global planner. 
             if(current_type_ == PlannerType::Local){
                 double progress_tresh = 0.01;
-                if(abs(prev_progress_-unknown_voxel_count) < progress_tresh){
-                    std::cout << "--Switching to Global Planner-- progess was: " << prev_progress_-unknown_voxel_count  << std::endl;
+                if(abs(gain) < progress_tresh){
+                    std::cout << "--Switching to Global Planner-- progess was: " << gain  << std::endl;
                     current_type_ = PlannerType::Global;
                 }   
             }

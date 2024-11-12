@@ -9,9 +9,9 @@ std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
   req.group_name = "ur_manipulator";
 
   req.workspace_parameters.min_corner.x = req.workspace_parameters.min_corner.y =
-  req.workspace_parameters.min_corner.z = -5.0;
+  req.workspace_parameters.min_corner.z = -2.0;
   req.workspace_parameters.max_corner.x = req.workspace_parameters.max_corner.y =
-  req.workspace_parameters.max_corner.z = 5.0;
+  req.workspace_parameters.max_corner.z = 2.0;
 
   mvt_interface_->setPoseTarget(pose);
   /// TODO: configure this somewhere else?
@@ -102,3 +102,22 @@ double ExplorationPlanner::compute_node_volume(double resolution) const
 {
   return resolution * resolution * resolution;
 }
+
+
+
+double ExplorationPlanner::compute_traj_lenght(Plan plan) const{
+  auto robot_model = mvt_interface_->getRobotModel();
+  robot_trajectory::RobotTrajectory trajectory(robot_model, "ur_manipulator");
+  trajectory.setRobotTrajectoryMsg(robot_model, plan.trajectory);
+
+  auto trajectory_length = 0.0;
+  for (std::size_t index = 1; index < trajectory.getWayPointCount(); ++index)
+    {
+      const auto& first = trajectory.getWayPoint(index - 1);
+      const auto& second = trajectory.getWayPoint(index);
+      trajectory_length += first.distance(second);
+    }
+  return trajectory_length;
+
+}
+

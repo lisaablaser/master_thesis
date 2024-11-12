@@ -50,13 +50,13 @@ Nbv ExplorationPlannerV4::selectNbv(){
 
     const Nbv* nbv = &nbv_candidates_.nbv_candidates.at(0);
     double gain = nbv->ray_view.num_unknowns;
-    double cost = 0;
-    double best_utility = gain - cost;
+    double cost = nbv->cost;
+    double best_utility = - cost;
 
     for (const auto& candidate : nbv_candidates_.nbv_candidates) {
         double cand_gain = candidate.ray_view.num_unknowns;
-        double cand_cost = 0;
-        double utility = cand_gain- cand_cost;
+        double cand_cost = candidate.cost;
+        double utility = - cand_cost;
 
         if (utility > best_utility) {
             
@@ -112,7 +112,7 @@ void ExplorationPlannerV4::evaluateNbvCandidates(){
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
     for(Nbv nbv: nbv_candidates_.nbv_candidates){
-        std::cout << nbv.ray_view.num_unknowns << std::endl;
+        std::cout << nbv.cost << std::endl;
     }
 
 }
@@ -129,33 +129,24 @@ void ExplorationPlannerV4::generateCandidates()
 
     clusters_ = computeClusters(octo_map_);
 
-
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
 
-    /// TODO: create a GMM
+    /// TODO: Order clusters after closeness
+    /// TODO: remove clusters with no frontiers
+
+    /// TODO: Create distributions
+
     std::random_device rd;
     std::mt19937 gen(rd());
-
-    // Define the mean (center) and standard deviation for the Gaussian distribution
-    double mean_x = (bounds.min_x + bounds.max_x) / 2; // center in the middle of the x-bound
-    double stddev_x = (bounds.max_x - bounds.min_x) / 6; // controls spread; adjust as needed
-
-    double mean_y = (bounds.min_y + bounds.max_y) / 2; // center in the middle of the y-bound
-    double stddev_y = (bounds.max_y - bounds.min_y) / 6; // controls spread; adjust as needed
-
-    double mean_z = (origo.z + bounds.max_z + origo.z) / 2; // center in the middle of the z-bound and a bit up
-    double stddev_z = (bounds.max_z - bounds.min_z) / 6; // controls spread; adjust as needed
-
-    // Normal distributions for each axis
-    std::normal_distribution<> dis_x(mean_x, stddev_x);
-    std::normal_distribution<> dis_y(mean_y, stddev_y);
-    std::normal_distribution<> dis_z(mean_z, stddev_z);
+    std::uniform_real_distribution<> dis_x(bounds.min_x, bounds.max_x);
+    std::uniform_real_distribution<> dis_y(bounds.min_y, bounds.max_y);
+    std::uniform_real_distribution<> dis_z(bounds.min_z+ origo.z, bounds.max_z+origo.z);
 
 
     int i = 0;
     int max_attempts = 1000;
-    while(nbv_candidates_.nbv_candidates.size() <= 3 && i < max_attempts){
+    while(nbv_candidates_.nbv_candidates.size() < 4 && i < max_attempts){
         
         std::cout << " Attempt number: " << i << std::endl;
         std::cout << " Candidates size: " << nbv_candidates_.nbv_candidates.size() << std::endl;
@@ -167,7 +158,6 @@ void ExplorationPlannerV4::generateCandidates()
 
         octomap::OcTreeNode* node = octo_map_->search(x, y, z); 
 
-        // If the voxel is unknown space or is occupied, skip to the next iteration
         if (!node || octo_map_->isNodeOccupied(node)) {
             continue;
         }
@@ -175,7 +165,6 @@ void ExplorationPlannerV4::generateCandidates()
         // Position at sampled position
         nbv.pose = Eigen::Isometry3d::Identity();
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
-        
        
         for(Cluster & cluster : clusters_){
             ++i;
@@ -205,12 +194,13 @@ void ExplorationPlannerV4::generateCandidates()
             // 6. Apply the rotation matrix to the pose
             nbv.pose.linear() = rotation_matrix;
 
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             auto result = plan(nbv.pose);
             if (result) {
                 Plan valid_plan = *result;  
                 nbv.plan = valid_plan;
 
-                nbv.cost = 0.0; 
+                nbv.cost = compute_traj_lenght(valid_plan);
                 nbv_candidates_.nbv_candidates.push_back(nbv);
             }
             
@@ -218,6 +208,9 @@ void ExplorationPlannerV4::generateCandidates()
         
     }
     /// TODO: handle if no candidates can be generated.. Save last trajectory or somthing. 
+    if(i >= max_attempts){
+        nbv_candidates_.nbv_candidates.push_back(Nbv());
+    }
     
     log_.attempts = i;
     std::cout << " Number of itertions to generate candidates was: " << i << std::endl;
