@@ -52,6 +52,8 @@ protected:
     Eigen::Isometry3d forward_kinematics(std::vector<double> joint_values);
     double calculate_occupied_volume() const;
     double compute_node_volume(double resolution) const;
+    double compute_traj_lenght(Plan plan) const;
+    bool isPoseValid(const Eigen::Isometry3d& pose);
 
 };
 #endif //EXPLORATION_PLANNER_HPP

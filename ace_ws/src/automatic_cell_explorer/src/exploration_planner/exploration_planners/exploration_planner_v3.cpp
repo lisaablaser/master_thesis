@@ -121,7 +121,7 @@ void ExplorationPlannerV3::generateCandidates()
 /// Bug: this can be empty, and leads to a bug.
 {
     nbv_candidates_.nbv_candidates.clear();
-        
+    mvt_interface_->getCurrentState(); //maybe a bug fix: prev joint values where somtimes old 
     std::vector<double> joint_values = mvt_interface_->getCurrentJointValues();
     const std::vector<std::string, std::allocator<std::string>>  joint_names = mvt_interface_->getJointNames();
 
@@ -147,11 +147,13 @@ void ExplorationPlannerV3::generateCandidates()
                 candidate_joint_values[4] = value_j;
                 candidate_joint_values[5] = value_k;
 
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
                 auto result = plan(candidate_joint_values);
                 if (result) {
                     nbv.plan = *result;
                     nbv.pose = forward_kinematics(candidate_joint_values);
-                    nbv.ray_view = getRayView(nbv); //maybe dont needed here, does it already later. 
+                    //nbv.ray_view = getRayView(nbv); //maybe dont needed here, does it already later. 
 
 
                     nbv_candidates_.nbv_candidates.push_back(nbv);

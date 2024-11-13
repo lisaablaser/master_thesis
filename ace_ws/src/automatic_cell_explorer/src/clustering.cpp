@@ -15,8 +15,11 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
     */
     double max_radius = 0.5;
     double res = RES_LARGE;
+    /// TODO: avoid having to expand tree, maybe iterate taking size into account
     OctreePtr unknown_tree = extractUnknownOctree(octree);
     unknown_tree->expand();
+
+
     std::vector<octomap::point3d> unknown_nodes = extractOccupiedNodes(unknown_tree);
 
     std::vector<Cluster> clusters;
@@ -46,7 +49,7 @@ std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree> octree) {
             // In general inconsitencies in frontier extraction is observed.. 
             for (float i = current_point.x() - res; i <= current_point.x() + res; i += res) {
                 for (float j = current_point.y() - res; j <= current_point.y() + res; j += res) {
-                    for (float k = current_point.z() - res; k <= current_point.z() + res; k += res) { 
+                    for (float k = current_point.z() - res; k <= current_point.z() + 2*res; k += res) { 
                         if (i == current_point.x() && j == current_point.y() && k == current_point.z()) continue; 
                         octomap::OcTreeKey neighbor_key;;
                         octree->coordToKeyChecked(octomap::point3d(i, j, k), neighbor_key);

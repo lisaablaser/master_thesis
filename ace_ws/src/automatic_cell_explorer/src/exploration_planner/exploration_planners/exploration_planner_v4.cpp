@@ -51,12 +51,12 @@ Nbv ExplorationPlannerV4::selectNbv(){
     const Nbv* nbv = &nbv_candidates_.nbv_candidates.at(0);
     double gain = nbv->ray_view.num_unknowns;
     double cost = nbv->cost;
-    double best_utility = - cost;
+    double best_utility = gain;
 
     for (const auto& candidate : nbv_candidates_.nbv_candidates) {
         double cand_gain = candidate.ray_view.num_unknowns;
         double cand_cost = candidate.cost;
-        double utility = - cand_cost;
+        double utility = gain;
 
         if (utility > best_utility) {
             
@@ -145,8 +145,8 @@ void ExplorationPlannerV4::generateCandidates()
 
 
     int i = 0;
-    int max_attempts = 1000;
-    while(nbv_candidates_.nbv_candidates.size() < 4 && i < max_attempts){
+    int max_attempts = 10000;
+    while(nbv_candidates_.nbv_candidates.size() < 10 && i < max_attempts){
         
         std::cout << " Attempt number: " << i << std::endl;
         std::cout << " Candidates size: " << nbv_candidates_.nbv_candidates.size() << std::endl;
@@ -167,6 +167,9 @@ void ExplorationPlannerV4::generateCandidates()
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
        
         for(Cluster & cluster : clusters_){
+            if(nbv_candidates_.nbv_candidates.size() >= 10){
+                continue;
+            }
             ++i;
             // Calculate the direction vector towards the target
             Eigen::Vector3d position(x, y, z);

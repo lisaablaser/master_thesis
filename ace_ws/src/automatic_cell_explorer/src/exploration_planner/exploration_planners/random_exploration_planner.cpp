@@ -142,6 +142,7 @@ void RandomExplorationPlanner::generateCandidates()
 
         // If the voxel is unknown space or is occupied, skip to the next iteration
         if (!node || octo_map_->isNodeOccupied(node)) {
+            std::cout << "Node occupied " << std::endl;
             continue;
         }
         
@@ -152,7 +153,7 @@ void RandomExplorationPlanner::generateCandidates()
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
         nbv.pose.rotate(q_r);
 
-
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
         auto result = plan(nbv.pose);
         if (result) {
             Plan valid_plan = *result;  
@@ -161,7 +162,8 @@ void RandomExplorationPlanner::generateCandidates()
             nbv.cost = 0.0; 
             nbv_candidates_.nbv_candidates.push_back(nbv);
         }
-        
+    
+    
     }
     log_.attempts = i;
     std::cout << " Number of itertions to generate candidates was: " << i << std::endl;

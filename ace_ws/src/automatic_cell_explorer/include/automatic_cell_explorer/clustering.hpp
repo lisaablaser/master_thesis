@@ -22,6 +22,9 @@ struct Cluster {
 
 std::vector<Cluster> computeClusters(std::shared_ptr<octomap::OcTree>  octree);
 
+
+
+
 void computeTarget(Cluster& cluster);
 octomap::point3d computeClusterCenter(const Cluster& cluster);
 bool isWithinDistance(const octomap::point3d& p1, const octomap::point3d& p2);

@@ -4,6 +4,7 @@
 std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
   /// TODO: include checks to terminate planner faster. 
 
+
   planning_interface::MotionPlanRequest req;
 
   req.group_name = "ur_manipulator";
@@ -13,6 +14,9 @@ std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
   req.workspace_parameters.max_corner.x = req.workspace_parameters.max_corner.y =
   req.workspace_parameters.max_corner.z = 2.0;
 
+  mvt_interface_->setStartStateToCurrentState();
+  mvt_interface_->clearPathConstraints();
+  mvt_interface_->clearPoseTargets();
   mvt_interface_->setPoseTarget(pose);
   /// TODO: configure this somewhere else?
   mvt_interface_->setPlanningTime(0.1); 
@@ -43,10 +47,14 @@ std::optional<Plan> ExplorationPlanner::plan(const std::vector<double> & joint_v
   req.group_name = "ur_manipulator";
 
   req.workspace_parameters.min_corner.x = req.workspace_parameters.min_corner.y =
-  req.workspace_parameters.min_corner.z = -5.0;
+  req.workspace_parameters.min_corner.z = -2.0;
   req.workspace_parameters.max_corner.x = req.workspace_parameters.max_corner.y =
-  req.workspace_parameters.max_corner.z = 5.0;
+  req.workspace_parameters.max_corner.z = 2.0;
 
+  mvt_interface_->setStartStateToCurrentState();
+  mvt_interface_->clearPathConstraints();
+
+  mvt_interface_->clearPoseTargets();
   mvt_interface_->setJointValueTarget(joint_values);
 
   auto const [success, plan] = [&mvt_interface = mvt_interface_]{
@@ -83,6 +91,17 @@ Eigen::Isometry3d ExplorationPlanner::forward_kinematics(std::vector<double> joi
   Eigen::Isometry3d pose = robot_state.getGlobalLinkTransform("rgbd_camera"); 
 
   return pose;
+}
+
+bool ExplorationPlanner::isPoseValid(const Eigen::Isometry3d& pose) {
+  auto robot_model = mvt_interface_->getRobotModel();
+  auto joint_model_group = robot_model->getJointModelGroup("ur_manipulator");
+  
+  moveit::core::RobotState robot_state(robot_model);
+
+  // Try to compute the inverse kinematics for the pose
+  bool found_ik = robot_state.setFromIK(joint_model_group, pose);
+  return found_ik;
 }
 
 
