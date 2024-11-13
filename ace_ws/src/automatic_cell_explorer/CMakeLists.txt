@@ -17,6 +17,8 @@ find_package(rosidl_default_generators REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(moveit_msgs REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
+find_package(moveit_core REQUIRED)
+find_package(moveit_ros_planning REQUIRED)
 # Generate service
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Execute.srv"
@@ -80,6 +82,8 @@ ament_target_dependencies(my_cpp_library
   moveit_ros_planning_interface
   moveit_msgs
   moveit_visual_tools
+  moveit_ros_planning
+  moveit_core
 )
 
 rosidl_target_interfaces(my_cpp_library

@@ -78,18 +78,11 @@ def generate_launch_description():
 
     moveit_config = (
         MoveItConfigsBuilder(robot_name="ur5e", package_name="ur_moveit_config_local")
-        .robot_description(Path("config") / "ur5e.urdf")
-        .robot_description_semantic(Path("config") / "ur5e.srdf")
+        .robot_description(Path("urdf") / "ur5e.urdf")
+        .robot_description_semantic(Path("srdf") / "ur5e.srdf")
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
-        # .moveit_cpp(
-        #     file_path=os.path.join(
-        #         get_package_share_directory("ur_moveit_config_local"),
-        #         "config",
-        #         "moveit_cpp.yaml",
-        #     )
-        # )
         .sensors_3d(file_path="config/sensors_3d.yaml")
         .robot_description_kinematics()
         .to_moveit_configs()
@@ -108,7 +101,8 @@ def generate_launch_description():
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",
-        # namespace="main",
+        # name="moveit",
+        # namespace="main_group",
         output="screen",
         parameters=[
             moveit_config.to_dict(),
@@ -116,6 +110,10 @@ def generate_launch_description():
                 "use_sim_time": use_sim_time,
                 "publish_robot_description_semantic": "true",
                 "publish_robot_decription": "true",
+                # "publish_planning_scene": "true",
+                # "publish_geometry_updates": "true",
+                # "publish_state_updates": "true",
+                # "publish_transforms_updates": "true",
             },
         ],
         arguments=["--ros-args", "--log-level", "FATAL"],

@@ -75,19 +75,18 @@ def launch_setup(context, *args, **kwargs):
     )
 
     parameters = [
-        {"use_sim_time": True}
-        # {
-        #     "sensors": ["rgbd_camera"],
-        #     "rgbd_camera.filtered_cloud_topic": "/filtered_cloud",
-        #     "rgbd_camera.max_range": 5.0,
-        #     "rgbd_camera.max_update_rate": 1.0,
-        #     "rgbd_camera.padding_offset": 0.1,
-        #     "rgbd_camera.padding_scale": 1.0,
-        #     "rgbd_camera.point_cloud_topic": "/rgbd_camera/points",
-        #     "rgbd_camera.point_subsample": 1,
-        #     "rgbd_camera.sensor_plugin": "occupancy_map_monitor/PointCloudOctomapUpdater",
-        #     # specify frame_id???
-        # }
+        {"use_sim_time": True},
+        # "~/master_thesis/ace_ws/src/ur_moveit_config_local/config/kinematics.yaml",
+        # "sensors": ["rgbd_camera"],
+        # "rgbd_camera.filtered_cloud_topic": "/filtered_cloud",
+        # "rgbd_camera.max_range": 5.0,
+        # "rgbd_camera.max_update_rate": 1.0,
+        # "rgbd_camera.padding_offset": 0.1,
+        # "rgbd_camera.padding_scale": 1.0,
+        # "rgbd_camera.point_cloud_topic": "/rgbd_camera/points",
+        # "rgbd_camera.point_subsample": 1,
+        # "rgbd_camera.sensor_plugin": "occupancy_map_monitor/PointCloudOctomapUpdater",
+        # specify frame_id???
     ]
 
     ace_node = TimerAction(
@@ -98,6 +97,7 @@ def launch_setup(context, *args, **kwargs):
                 executable="ace",
                 output="screen",
                 parameters=parameters,
+                # arguments=["--ros-args", "--params-file", "~/master_thesis/ace_ws/src/ur_moveit_config_local/config/kinematics.yaml"],
             )
         ],
     )
