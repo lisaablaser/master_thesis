@@ -4,7 +4,9 @@
 MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
     node->set_parameter(rclcpp::Parameter("use_sim_time", true));
 
-    MoveGrpPtr interface = std::make_shared<MoveGrp>(node,"ur_manipulator");
+    auto optioins = moveit::planning_interface::MoveGroupInterface::Options("ur_manipulator", "robot_description", "");
+
+    MoveGrpPtr interface = std::make_shared<MoveGrp>(node,optioins);
     interface->startStateMonitor();
     interface->setStartStateToCurrentState();
 
@@ -13,6 +15,10 @@ MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
     interface->setPlannerId("RRTConnect");
 
     interface->setPlanningTime(0.1); 
+
+    auto robot_model = interface->getRobotModel();
+    auto joint_model_group = robot_model->getJointModelGroup("ur_manipulator");
+
 
     
 
