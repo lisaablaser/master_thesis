@@ -9,8 +9,8 @@ int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
     auto moveit_node = std::make_shared<rclcpp::Node>(
-    "moveit",
-    rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
+    "mvt_interface_node",
+    rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true).allow_undeclared_parameters(true)
     );
     auto pc_node = std::make_shared<rclcpp::Node>(
     "pc_node",
@@ -20,6 +20,22 @@ int main(int argc, char **argv)
     "rviz_tools",
     rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true)
     );
+
+    // // Get kinematics parameters
+    auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(moveit_node, "/move_group");
+    while (!parameters_client->wait_for_service()) {
+      if (!rclcpp::ok()) {
+        rclcpp::shutdown();
+      }
+    }
+    rcl_interfaces::msg::ListParametersResult parameter_list = parameters_client->list_parameters({"robot_description_kinematics"},10);
+    auto parameters = parameters_client->get_parameters(parameter_list.names);
+
+    moveit_node->set_parameters(parameters);
+
+
+
+
 
     MoveGrpPtr mvt_interface = getMoveGroupInterface(moveit_node);
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface = getPlanningSceeneMonitiorPtr(pc_node);
