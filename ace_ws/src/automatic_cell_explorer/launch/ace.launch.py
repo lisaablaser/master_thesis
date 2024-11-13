@@ -10,47 +10,68 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
 
 
 def launch_setup(context, *args, **kwargs):
 
-    ur_type = LaunchConfiguration("ur_type")
     world_file = LaunchConfiguration("world_file")
 
-    ur_sim_moveit_launch = IncludeLaunchDescription(
+    robot_gz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
                 [
                     FindPackageShare("ur_simulation_gz"),
                     "launch",
-                    "ur_sim_moveit.launch.py",
+                    "ur5e_gz.launch.py",
                 ]
             )
         ),
         launch_arguments={
-            "ur_type": ur_type,
+            "ur_type": "ur5e",
             "world_file": world_file,
         }.items(),
     )
-    octomap_server_node = TimerAction(
-        period=0.0,
-        actions=[
-            Node(
-                package="octomap_server",
-                executable="octomap_server_node",
-                name="octomap_server",
-                output="screen",
-                parameters=[
-                    {
-                        "use_sim_time": True,
-                        "resolution": 0.1,
-                        "frame_id": "world",  # or "rgbd_camera??"
-                    }
-                ],
-                remappings=[("/cloud_in", "/rgbd_camera/points")],
+
+    ur_moveit_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_moveit_config_local"),
+                    "launch",
+                    "ur5e_moveit.launch.py",
+                ]
             )
+        ),
+        launch_arguments={
+            "use_sim_time": "true",
+        }.items(),
+    )
+
+    sensor_bridge_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("ur_simulation_gz"),
+                    "launch",
+                    "sensor_bridge.launch.py",
+                ]
+            )
+        ),
+    )
+
+    octomap_server_node = Node(
+        package="octomap_server",
+        executable="octomap_server_node",
+        name="octomap_server",
+        output="screen",
+        parameters=[
+            {
+                "use_sim_time": True,
+                "resolution": 0.1,
+                "frame_id": "world",
+            }
         ],
+        remappings=[("/cloud_in", "/rgbd_camera/points")],
     )
 
     parameters = [
@@ -81,18 +102,13 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    moveit_demo_node = TimerAction(
-        period=10.0,
-        actions=[
-            Node(
-                package="automatic_cell_explorer",
-                executable="moveit_demo",
-                output="screen",
-            )
-        ],
-    )
-
-    nodes_to_launch = [ur_sim_moveit_launch, octomap_server_node, ace_node]
+    nodes_to_launch = [
+        robot_gz_launch,
+        ur_moveit_launch,
+        sensor_bridge_launch,
+        octomap_server_node,
+        ace_node,
+    ]
 
     return nodes_to_launch
 
@@ -100,24 +116,6 @@ def launch_setup(context, *args, **kwargs):
 def generate_launch_description():
     declared_arguments = []
 
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "ur_type",
-            description="Type/series of used UR robot.",
-            choices=[
-                "ur3",
-                "ur3e",
-                "ur5",
-                "ur5e",
-                "ur10",
-                "ur10e",
-                "ur16e",
-                "ur20",
-                "ur30",
-            ],
-            default_value="ur5e",
-        )
-    )
     declared_arguments.append(
         DeclareLaunchArgument(
             "world_file",

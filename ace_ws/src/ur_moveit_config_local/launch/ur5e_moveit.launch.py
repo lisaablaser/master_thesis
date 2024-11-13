@@ -65,65 +65,21 @@ def declare_arguments():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                "launch_rviz", default_value="true", description="Launch RViz?"
-            ),
-            DeclareLaunchArgument(
-                "ur_type",
-                description="Typo/series of used UR robot.",
-                choices=[
-                    "ur3",
-                    "ur3e",
-                    "ur5",
-                    "ur5e",
-                    "ur10",
-                    "ur10e",
-                    "ur16e",
-                    "ur20",
-                    "ur30",
-                ],
-            ),
-            DeclareLaunchArgument(
-                "warehouse_sqlite_path",
-                default_value=os.path.expanduser("~/.ros/warehouse_ros.sqlite"),
-                description="Path where the warehouse database should be stored",
-            ),
-            DeclareLaunchArgument(
-                "launch_servo", default_value="false", description="Launch Servo?"
-            ),
-            DeclareLaunchArgument(
                 "use_sim_time",
                 default_value="true",
                 description="Using or not time from simulation",
-            ),
-            DeclareLaunchArgument(
-                "publish_robot_description_semantic",
-                default_value="true",
-                description="MoveGroup publishes robot description semantic",
-            ),
-            DeclareLaunchArgument(
-                "publish_robot_description",
-                default_value="true",
-                description="MoveGroup publishes robot description",
             ),
         ]
     )
 
 
 def generate_launch_description():
-    launch_rviz = LaunchConfiguration("launch_rviz")
-    ur_type = LaunchConfiguration("ur_type")
-
-    warehouse_sqlite_path = LaunchConfiguration("warehouse_sqlite_path")
-    launch_servo = LaunchConfiguration("launch_servo")
     use_sim_time = LaunchConfiguration("use_sim_time")
-    publish_robot_description_semantic = LaunchConfiguration(
-        "publish_robot_description_semantic"
-    )
-    publish_robot_description = LaunchConfiguration("publish_robot_description")
 
     moveit_config = (
-        MoveItConfigsBuilder(robot_name="ur", package_name="ur_moveit_config_local")
-        .robot_description_semantic(Path("srdf") / "ur.srdf.xacro", {"name": ur_type})
+        MoveItConfigsBuilder(robot_name="ur5e", package_name="ur_moveit_config_local")
+        .robot_description(Path("config") / "ur5e.urdf")
+        .robot_description_semantic(Path("config") / "ur5e.srdf")
         .planning_scene_monitor(
             publish_robot_description=True, publish_robot_description_semantic=True
         )
@@ -139,11 +95,6 @@ def generate_launch_description():
         .to_moveit_configs()
     )
 
-    warehouse_ros_config = {
-        "warehouse_plugin": "warehouse_ros_sqlite::DatabaseConnection",
-        "warehouse_host": warehouse_sqlite_path,
-    }
-
     ld = LaunchDescription()
     ld.add_entity(declare_arguments())
 
@@ -157,44 +108,17 @@ def generate_launch_description():
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",
+        # namespace="main",
         output="screen",
         parameters=[
             moveit_config.to_dict(),
-            warehouse_ros_config,
             {
                 "use_sim_time": use_sim_time,
-                "publish_robot_description_semantic": publish_robot_description_semantic,
-                "publish_robot_decription": publish_robot_description,
+                "publish_robot_description_semantic": "true",
+                "publish_robot_decription": "true",
             },
         ],
         arguments=["--ros-args", "--log-level", "FATAL"],
-    )
-
-    # sensors_node = Node(
-    #     package="moveit_ros_perception",
-    #     executable="occupancy_map_monitor",
-    #     output="screen",
-    #     parameters=[
-    #         os.path.join(
-    #             get_package_share_directory("ur_moveit_config_local"),
-    #             "config",
-    #             "sensors_3d.yaml",
-    #         ),
-    #     ],
-    # )
-    # ld.add_action(sensors_node)
-
-    servo_yaml = load_yaml("ur_moveit_config_local", "config/ur_servo.yaml")
-    servo_params = {"moveit_servo": servo_yaml}
-    servo_node = Node(
-        package="moveit_servo",
-        condition=IfCondition(launch_servo),
-        executable="servo_node",
-        parameters=[
-            moveit_config.to_dict(),
-            servo_params,
-        ],
-        output="screen",
     )
 
     rviz_config_file = PathJoinSubstitution(
@@ -202,9 +126,7 @@ def generate_launch_description():
     )
     rviz_node = Node(
         package="rviz2",
-        condition=IfCondition(launch_rviz),
         executable="rviz2",
-        # name="rviz2_moveit",
         output="log",
         arguments=["-d", rviz_config_file],
         parameters=[
@@ -213,7 +135,6 @@ def generate_launch_description():
             moveit_config.robot_description_kinematics,
             moveit_config.planning_pipelines,
             moveit_config.joint_limits,
-            warehouse_ros_config,
         ],
     )
 
@@ -221,7 +142,7 @@ def generate_launch_description():
         RegisterEventHandler(
             OnProcessExit(
                 target_action=wait_robot_description,
-                on_exit=[move_group_node, rviz_node, servo_node],
+                on_exit=[move_group_node, rviz_node],
             )
         ),
     )

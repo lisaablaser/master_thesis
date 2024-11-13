@@ -6,6 +6,6 @@ find_package(ament_cmake REQUIRED)
 ament_package()
 
 install(
-  DIRECTORY config launch srdf
+  DIRECTORY config launch srdf urdf
   DESTINATION share/${PROJECT_NAME}
 )
