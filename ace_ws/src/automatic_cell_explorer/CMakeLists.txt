@@ -52,6 +52,7 @@ add_library(my_cpp_library
   src/clustering.cpp
   src/exploration_planner/raycast.cpp
   src/exploration_planner/exploration_planner.cpp
+  src/exploration_planner/exploration_planners/baseline_planner_local.cpp
   src/exploration_planner/exploration_planners/demo_exploration_planner.cpp
   src/exploration_planner/exploration_planners/random_exploration_planner.cpp
   src/exploration_planner/exploration_planners/exploration_planner_v2.cpp
