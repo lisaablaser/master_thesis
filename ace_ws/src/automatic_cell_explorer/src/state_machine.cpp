@@ -26,7 +26,8 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
     current_req_(ExecuteReq()),
     iteration_(0),
-    logger_("runs/v4_4v_n10.csv")
+    logger_("runs/baseline_3.csv"),
+    nbv_candidates_()
 {
     camera_trigger_ = 
         this->create_publisher<std_msgs::msg::Bool>("/trigger", 10);
@@ -77,14 +78,32 @@ void StateMachineNode::handle_calculate_nbv(){
     //plm_interface_->updateSceneWithCurrentState();
 
     auto start_time = std::chrono::high_resolution_clock::now();
-
     exploration_planner_->updateOctomap(octomap_);
-    exploration_planner_->calculateNbvCandidates();
-    ///TODO: if planner hangs, reset mvt_interface?
-    NbvCandidates nbv_candidates = exploration_planner_->getNbvCandidates();
 
+    NbvCandidates nbv_candidates_visualize;
+    Nbv nbv;
 
-    Nbv nbv = exploration_planner_->selectNbv();
+    //Logic for Basline planner only
+    bool is_baseline_planner = false;
+    if(is_baseline_planner && current_type_== PlannerType::Global){
+        
+        exploration_planner_->calculateNbvCandidates(nbv_candidates_);
+
+        nbv_candidates_visualize = nbv_candidates_;
+
+        nbv = exploration_planner_->selectNbv(nbv_candidates_);
+
+    }
+    else{
+
+        exploration_planner_->calculateNbvCandidates();
+
+        nbv_candidates_visualize = exploration_planner_->getNbvCandidates();
+
+        nbv = exploration_planner_->selectNbv();
+
+    }
+
  
 
 
@@ -96,7 +115,6 @@ void StateMachineNode::handle_calculate_nbv(){
     log_.nbv_calculation_t = duration.count();
     log_.planner = static_cast<int>(current_type_);
     log_.traj_lenght = nbv.cost;
-    //EpLog ep_log = exploration_planner_->getLog();
 
     
     // Visualizations
@@ -108,8 +126,8 @@ void StateMachineNode::handle_calculate_nbv(){
         auto nbv_candidates_fov_pub = node_->create_publisher<MarkerArray>("nbv_candidates_fov", 10);
         
 
-        visualizeNbvCandidatesPose(nbv_candidates, nbv_candidates_pose_pub);
-        visualizeNbvCandidatesFOV(nbv_candidates, nbv_candidates_fov_pub);
+        visualizeNbvCandidatesPose(nbv_candidates_visualize, nbv_candidates_pose_pub);
+        visualizeNbvCandidatesFOV(nbv_candidates_visualize, nbv_candidates_fov_pub);
         visualizeNbvRayView(nbv, nbv_ray_pub);
         visualizeNbvFov(nbv, nbv_fov_pub);
         visualizeRayDots(nbv, nbv_ray_dots_pub);  

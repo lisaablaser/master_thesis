@@ -46,6 +46,7 @@ private:
     int iteration_;
     Logger logger_;
     SmLog log_;
+    NbvCandidates nbv_candidates_;
 
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr camera_trigger_;
     rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_subscriber_;

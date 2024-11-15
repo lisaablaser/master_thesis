@@ -8,6 +8,7 @@
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v3.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v4.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/baseline_planner_local.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/baseline_planner.hpp"
 
 enum class PlannerType {
     Local,

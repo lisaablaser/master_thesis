@@ -24,8 +24,13 @@ public:
     virtual ~ExplorationPlanner() = default;
 
 
-    virtual void calculateNbvCandidates() = 0;  
-    virtual Nbv selectNbv() = 0; 
+    virtual void calculateNbvCandidates() {};  
+    virtual Nbv selectNbv() {return Nbv();}; 
+
+    //Functions used by the basline planner
+    virtual void calculateNbvCandidates(NbvCandidates & nbv_candidates){}
+    virtual Nbv selectNbv(NbvCandidates & nbv_candidates){return Nbv();}
+    
 
     void updateOctomap(std::shared_ptr<octomap::OcTree> octomap){
         octo_map_ = octomap;
@@ -37,6 +42,8 @@ public:
     }
     std::vector<Cluster> getClusters() const {return clusters_;}
     EpLog getLog() const {return log_;}
+
+    
 
 
 protected:

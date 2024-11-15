@@ -40,20 +40,18 @@ Nbv BaselinePlannerLocal::selectNbv(){
         Select the one with highes information gain. 
     */
 
-    if (nbv_candidates_.nbv_candidates.empty()) {
+    if (nbv_candidates_.empty()) {
         return Nbv();
     }
-
-    /// TODO: create cost() and gain() functions, or utility()
-    // AND check if no errors are made here.. 
+    
     auto s = std::chrono::high_resolution_clock::now();
 
-    const Nbv* nbv = &nbv_candidates_.nbv_candidates.at(0);
+    const Nbv* nbv = &nbv_candidates_.at(0);
     double gain = nbv->ray_view.num_unknowns;
     double cost = nbv->cost;
     double best_utility = gain;
 
-    for (const auto& candidate : nbv_candidates_.nbv_candidates) {
+    for (const auto& candidate : nbv_candidates_) {
         double cand_gain = candidate.ray_view.num_unknowns;
         double cand_cost = candidate.cost;
         double utility = gain;
@@ -89,7 +87,7 @@ void BaselinePlannerLocal::evaluateNbvCandidates(){
 
     double total_time = 0.0;
 
-    for (Nbv &nbv : nbv_candidates_.nbv_candidates) {
+    for (Nbv &nbv : nbv_candidates_) {
         Eigen::Isometry3d sensor_pose = nbv.pose;
 
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -104,14 +102,14 @@ void BaselinePlannerLocal::evaluateNbvCandidates(){
   
     }
 
-    int n_candidates = nbv_candidates_.nbv_candidates.size();
+    int n_candidates = nbv_candidates_.size();
     double average_time = (n_candidates > 0) ? (total_time / n_candidates) : 0.0;
     log_.n_candidates = n_candidates;
     log_.evaluate_av_t = average_time;
 
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
-    for(Nbv nbv: nbv_candidates_.nbv_candidates){
+    for(Nbv nbv: nbv_candidates_){
         std::cout << nbv.cost << std::endl;
     }
 
@@ -125,7 +123,7 @@ void BaselinePlannerLocal::generateCandidates()
     Generate candidates +- delta j for all joints, 2*j combinations. 
 */
 {
-    nbv_candidates_.nbv_candidates.clear();
+    nbv_candidates_.clear();
     mvt_interface_->getCurrentState(); //maybe a bug fix: prev joint values where somtimes old 
     std::vector<double> q_curr = mvt_interface_->getCurrentJointValues();
 
@@ -153,7 +151,7 @@ void BaselinePlannerLocal::add_pose_if_valid(std::vector<double> q){
     if (result) {
         nbv.plan = *result;
         nbv.pose = forward_kinematics(q);
-        nbv_candidates_.nbv_candidates.push_back(nbv);
+        nbv_candidates_.push_back(nbv);
     }
 
 }
