@@ -109,7 +109,8 @@
         "__bit_reference": "cpp",
         "__hash_table": "cpp",
         "__string": "cpp",
-        "__tree": "cpp"
+        "__tree": "cpp",
+        "__split_buffer": "cpp"
     },
     "cmake.sourceDirectory": "/home/lisa/master_thesis/ace_ws/src/automatic_cell_explorer"
 }
