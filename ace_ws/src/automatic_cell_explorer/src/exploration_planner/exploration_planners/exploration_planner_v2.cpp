@@ -34,17 +34,17 @@ Nbv ExplorationPlannerV2::selectNbv(){
         Get the next Nbv candidate, Plans are alraeady calculated.
         Select the one with highes information gain. 
     */
-    if (nbv_candidates_.nbv_candidates.empty()) {
+    if (nbv_candidates_.empty()) {
         throw std::runtime_error("The nbv_candidates vector is empty");
     }
 
-    auto nbv = nbv_candidates_.nbv_candidates.begin();
+    auto nbv = nbv_candidates_.begin();
     float highest_cost = nbv->cost;
     float highest_gain = nbv->ray_view.num_unknowns;
     float highest_utility = -INFINITY;
     //should be deleted after selected
 
-    for (auto it = nbv_candidates_.nbv_candidates.begin(); it != nbv_candidates_.nbv_candidates.end(); ++it )
+    for (auto it = nbv_candidates_.begin(); it != nbv_candidates_.end(); ++it )
     {
         float cost = it->cost;
         float gain = it->ray_view.num_unknowns;
@@ -64,9 +64,9 @@ Nbv ExplorationPlannerV2::selectNbv(){
     std::cout << "Cost of Nbv is: " << highest_cost << std::endl;
     std::cout << "Gain of Nbv is: " << highest_gain << std::endl;
     std::cout << "Utility of Nbv is: " << highest_utility << std::endl;
-    nbv_candidates_.nbv_candidates.erase(nbv);
+    nbv_candidates_.erase(nbv);
 
-    std::cout << "Nbv was removed from list, length is now: " << nbv_candidates_.nbv_candidates.size() << std::endl; 
+    std::cout << "Nbv was removed from list, length is now: " << nbv_candidates_.size() << std::endl; 
 
     // could attemt to fint a shorter path:
         //maybe try to shorten the chosen NBV path 
@@ -91,7 +91,7 @@ void ExplorationPlannerV2::evaluateNbvCandidates(){
     
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
-    for(Nbv nbv: nbv_candidates_.nbv_candidates){
+    for(Nbv nbv: nbv_candidates_){
         std::cout << nbv.ray_view.num_unknowns << std::endl;
     }
 
@@ -102,7 +102,7 @@ void ExplorationPlannerV2::calculateCost(){
         calculate time of trajectory
 
     */
-    for (auto it = nbv_candidates_.nbv_candidates.begin(); it != nbv_candidates_.nbv_candidates.end(); ++it )
+    for (auto it = nbv_candidates_.begin(); it != nbv_candidates_.end(); ++it )
     {
         auto traj = it->plan.trajectory.joint_trajectory;
         size_t num_points = traj.points.size();
@@ -135,7 +135,7 @@ void ExplorationPlannerV2::update_ray_views(){
     */
 
     std::cout << "updating ray views " << std::endl;
-    for (auto it = nbv_candidates_.nbv_candidates.begin(); it != nbv_candidates_.nbv_candidates.end(); ++it )
+    for (auto it = nbv_candidates_.begin(); it != nbv_candidates_.end(); ++it )
     {
         it->ray_view = getRayView(*it);
     }
@@ -156,7 +156,7 @@ void ExplorationPlannerV2::update_trajectories(){
         updates trajectories from new state, and removes the onec with no valid trajectory
     */
 
-    for (auto it = nbv_candidates_.nbv_candidates.begin(); it != nbv_candidates_.nbv_candidates.end(); )
+    for (auto it = nbv_candidates_.begin(); it != nbv_candidates_.end(); )
     {
         auto result = plan(it->pose);
 
@@ -167,7 +167,7 @@ void ExplorationPlannerV2::update_trajectories(){
             ++it;  
         }
         else {
-            it = nbv_candidates_.nbv_candidates.erase(it);
+            it = nbv_candidates_.erase(it);
         }
     }
 }
@@ -178,11 +178,11 @@ void ExplorationPlannerV2::remove_weak_candidates(){
     /// And gain_treshold should be dynamic. 
     int gain_trehsold = 1000;
 
-    for (auto it = nbv_candidates_.nbv_candidates.begin(); it != nbv_candidates_.nbv_candidates.end(); )
+    for (auto it = nbv_candidates_.begin(); it != nbv_candidates_.end(); )
     {
         if (it->ray_view.num_unknowns < gain_trehsold) {
    
-            it = nbv_candidates_.nbv_candidates.erase(it);
+            it = nbv_candidates_.erase(it);
             
         }
         else{
@@ -219,7 +219,7 @@ void ExplorationPlannerV2::generateCandidates()
 
     int i = 0;
 
-    while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
+    while(nbv_candidates_.size() != N_SAMPLES){
         ++i;
 
         Nbv nbv;
@@ -249,7 +249,7 @@ void ExplorationPlannerV2::generateCandidates()
             nbv.ray_view = getRayView(nbv);
             nbv.cost = getCost(nbv); 
 
-            nbv_candidates_.nbv_candidates.push_back(nbv);
+            nbv_candidates_.push_back(nbv);
         }
         
     }

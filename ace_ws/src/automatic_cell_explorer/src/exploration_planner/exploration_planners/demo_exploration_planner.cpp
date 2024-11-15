@@ -14,7 +14,7 @@ void DemoExplorationPlanner::calculateNbvCandidates() {
 /*
     Demo Planner
 */
-    if(nbv_candidates_.nbv_candidates.empty()){
+    if(nbv_candidates_.empty()){
         generateCandidates(0.5, 1.5, 10);
         return;
     }
@@ -27,10 +27,10 @@ Nbv DemoExplorationPlanner::selectNbv(){
         Get the next Nbv candidate, calculate a Plan and remove from candidates.
     */
     
-    while(!nbv_candidates_.nbv_candidates.empty()){
+    while(!nbv_candidates_.empty()){
 
-        Nbv nbv = nbv_candidates_.nbv_candidates.front();
-        nbv_candidates_.nbv_candidates.erase(nbv_candidates_.nbv_candidates.begin());
+        Nbv nbv = nbv_candidates_.front();
+        nbv_candidates_.erase(nbv_candidates_.begin());
 
         auto result = plan(nbv.pose);
         if (result) {
@@ -49,7 +49,7 @@ void DemoExplorationPlanner::evaluateNbvCandidates(){
     */
     
     std::cout << "updating ray view " << std::endl;
-    for(Nbv &nbv: nbv_candidates_.nbv_candidates){
+    for(Nbv &nbv: nbv_candidates_){
         Eigen::Isometry3d sensor_pose = nbv.pose;
         RayView ray_view = calculateRayView(sensor_pose, octo_map_);
         nbv.ray_view = ray_view;
@@ -63,7 +63,7 @@ void DemoExplorationPlanner::generateCandidates(double radius, double height, in
     Generates candidates along a circle.    
 */
 {
-    nbv_candidates_.nbv_candidates.clear();
+    nbv_candidates_.clear();
     for (int angle_deg = 0; angle_deg < 360; angle_deg += resolution_degrees)
     {
         Nbv nbv;
@@ -83,7 +83,7 @@ void DemoExplorationPlanner::generateCandidates(double radius, double height, in
         nbv.cost = 0.0; 
         nbv.plan = Plan();
 
-        nbv_candidates_.nbv_candidates.push_back(nbv);
+        nbv_candidates_.push_back(nbv);
     }
 }
 

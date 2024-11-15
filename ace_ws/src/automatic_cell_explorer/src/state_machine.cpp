@@ -120,7 +120,7 @@ void StateMachineNode::handle_calculate_nbv(){
 
 
     // Maybe check progress if raycast is wrong. (looking agains ceiling)
-    if(is_deafault(nbv) || nbv_candidates.nbv_candidates.empty() || nbv.ray_view.num_unknowns == 0){
+    if(is_deafault(nbv) || nbv.ray_view.num_unknowns == 0){
         std::cout << "Nbv was invalid, trying again " << std::endl;
         if(current_type_ == PlannerType::Local){
             std::cout << "--Switching to Global Planner-- " << std::endl;

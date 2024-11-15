@@ -139,7 +139,7 @@ void visualizeNbvCandidatesPose(
     visualization_msgs::msg::MarkerArray marker_array;
 
     int id = 0;
-    for (const auto& nbv : nbv_candidates.nbv_candidates) {
+    for (const auto& nbv : nbv_candidates) {
         visualization_msgs::msg::Marker marker;
 
         marker.header.frame_id = "world";
@@ -222,7 +222,7 @@ void visualizeNbvCandidatesFOV(
     visualization_msgs::msg::MarkerArray marker_array;
     int marker_id = 0;  
 
-    for (const auto& nbv : nbv_candidates.nbv_candidates) {
+    for (const auto& nbv : nbv_candidates) {
         
         visualization_msgs::msg::Marker fov_marker;
         fov_marker.header.frame_id = "world";

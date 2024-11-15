@@ -39,15 +39,15 @@ Nbv RandomExplorationPlanner::selectNbv(){
         Get the next Nbv candidate, Plans are alraeady calculated.
         Select the one with highes information gain. 
     */
-    if (nbv_candidates_.nbv_candidates.empty()) {
+    if (nbv_candidates_.empty()) {
         throw std::runtime_error("The nbv_candidates vector is empty");
     }
 
     auto s = std::chrono::high_resolution_clock::now();
 
-    Nbv highest_cost_nbv = nbv_candidates_.nbv_candidates.at(0);
+    Nbv highest_cost_nbv = nbv_candidates_.at(0);
 
-    for (const auto& nbv : nbv_candidates_.nbv_candidates) {
+    for (const auto& nbv : nbv_candidates_) {
         if (nbv.ray_view.num_unknowns > highest_cost_nbv.ray_view.num_unknowns) {
             highest_cost_nbv = nbv;
         }
@@ -76,7 +76,7 @@ void RandomExplorationPlanner::evaluateNbvCandidates(){
 
     double total_time = 0.0;
 
-    for(Nbv &nbv: nbv_candidates_.nbv_candidates){
+    for(Nbv &nbv: nbv_candidates_){
         Eigen::Isometry3d sensor_pose = nbv.pose;
 
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -91,13 +91,13 @@ void RandomExplorationPlanner::evaluateNbvCandidates(){
     
     }
 
-    int n_candidates = nbv_candidates_.nbv_candidates.size();
+    int n_candidates = nbv_candidates_.size();
     double average_time = (n_candidates > 0) ? (total_time / n_candidates) : 0.0;
     log_.n_candidates = n_candidates;
     log_.evaluate_av_t = average_time;
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
-    for(Nbv nbv: nbv_candidates_.nbv_candidates){
+    for(Nbv nbv: nbv_candidates_){
         std::cout << nbv.ray_view.num_unknowns << std::endl;
     }
 
@@ -110,7 +110,7 @@ void RandomExplorationPlanner::generateCandidates()
     Random generate candidates. Append if plan exists. 
 */
 {
-    nbv_candidates_.nbv_candidates.clear();
+    nbv_candidates_.clear();
 
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -129,7 +129,7 @@ void RandomExplorationPlanner::generateCandidates()
     std::uniform_real_distribution<> dis_yaw(yaw_min, yaw_max);
 
     int i =0;
-    while(nbv_candidates_.nbv_candidates.size() != N_SAMPLES){
+    while(nbv_candidates_.size() != N_SAMPLES){
         ++i;
         std::cout << " Attempt number: " << i << std::endl;
         Nbv nbv;
@@ -160,7 +160,7 @@ void RandomExplorationPlanner::generateCandidates()
             nbv.plan = valid_plan;
 
             nbv.cost = 0.0; 
-            nbv_candidates_.nbv_candidates.push_back(nbv);
+            nbv_candidates_.push_back(nbv);
         }
     
     

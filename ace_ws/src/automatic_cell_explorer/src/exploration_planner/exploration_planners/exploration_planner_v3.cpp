@@ -39,17 +39,17 @@ Nbv ExplorationPlannerV3::selectNbv(){
         Does not care about traj cost, by construction they are short. 
     */
 
-    if (nbv_candidates_.nbv_candidates.empty()) {
+    if (nbv_candidates_.empty()) {
         return Nbv();
         
     }
 
-    const Nbv* nbv = &nbv_candidates_.nbv_candidates.at(0);
+    const Nbv* nbv = &nbv_candidates_.at(0);
     double gain = nbv->ray_view.num_unknowns;
     double cost = 0;
     double best_utility = gain - cost;
 
-    for (const auto& candidate : nbv_candidates_.nbv_candidates) {
+    for (const auto& candidate : nbv_candidates_) {
         double cand_gain = candidate.ray_view.num_unknowns;
         double cand_cost = 0;
         double utility = cand_gain- cand_cost;
@@ -81,7 +81,7 @@ void ExplorationPlannerV3::evaluateNbvCandidates(){
 
     double total_time = 0.0;
 
-    for (Nbv &nbv : nbv_candidates_.nbv_candidates) {
+    for (Nbv &nbv : nbv_candidates_) {
         Eigen::Isometry3d sensor_pose = nbv.pose;
 
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -96,14 +96,14 @@ void ExplorationPlannerV3::evaluateNbvCandidates(){
   
     }
 
-    int n_candidates = nbv_candidates_.nbv_candidates.size();
+    int n_candidates = nbv_candidates_.size();
     double average_time = (n_candidates > 0) ? (total_time / n_candidates) : 0.0;
     log_.n_candidates = n_candidates;
     log_.evaluate_av_t = average_time;
 
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
-    for(Nbv nbv: nbv_candidates_.nbv_candidates){
+    for(Nbv nbv: nbv_candidates_){
         std::cout << nbv.ray_view.num_unknowns << std::endl;
     }
 
@@ -120,7 +120,7 @@ void ExplorationPlannerV3::generateCandidates()
 */
 /// Bug: this can be empty, and leads to a bug.
 {
-    nbv_candidates_.nbv_candidates.clear();
+    nbv_candidates_.clear();
     mvt_interface_->getCurrentState(); //maybe a bug fix: prev joint values where somtimes old 
     std::vector<double> joint_values = mvt_interface_->getCurrentJointValues();
     const std::vector<std::string, std::allocator<std::string>>  joint_names = mvt_interface_->getJointNames();
@@ -156,7 +156,7 @@ void ExplorationPlannerV3::generateCandidates()
                     //nbv.ray_view = getRayView(nbv); //maybe dont needed here, does it already later. 
 
 
-                    nbv_candidates_.nbv_candidates.push_back(nbv);
+                    nbv_candidates_.push_back(nbv);
                 }
                 std::cout << " Plans in local planner" << std::endl;
             }

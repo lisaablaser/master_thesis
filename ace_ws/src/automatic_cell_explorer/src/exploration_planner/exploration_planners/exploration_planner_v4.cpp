@@ -40,7 +40,7 @@ Nbv ExplorationPlannerV4::selectNbv(){
         Select the one with highes information gain. 
     */
 
-    if (nbv_candidates_.nbv_candidates.empty()) {
+    if (nbv_candidates_.empty()) {
         throw std::runtime_error("The nbv_candidates vector is empty");
     }
 
@@ -48,12 +48,12 @@ Nbv ExplorationPlannerV4::selectNbv(){
     // AND check if no errors are made here.. 
     auto s = std::chrono::high_resolution_clock::now();
 
-    const Nbv* nbv = &nbv_candidates_.nbv_candidates.at(0);
+    const Nbv* nbv = &nbv_candidates_.at(0);
     double gain = nbv->ray_view.num_unknowns;
     double cost = nbv->cost;
     double best_utility = gain;
 
-    for (const auto& candidate : nbv_candidates_.nbv_candidates) {
+    for (const auto& candidate : nbv_candidates_) {
         double cand_gain = candidate.ray_view.num_unknowns;
         double cand_cost = candidate.cost;
         double utility = gain;
@@ -89,7 +89,7 @@ void ExplorationPlannerV4::evaluateNbvCandidates(){
 
     double total_time = 0.0;
 
-    for (Nbv &nbv : nbv_candidates_.nbv_candidates) {
+    for (Nbv &nbv : nbv_candidates_) {
         Eigen::Isometry3d sensor_pose = nbv.pose;
 
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -104,14 +104,14 @@ void ExplorationPlannerV4::evaluateNbvCandidates(){
   
     }
 
-    int n_candidates = nbv_candidates_.nbv_candidates.size();
+    int n_candidates = nbv_candidates_.size();
     double average_time = (n_candidates > 0) ? (total_time / n_candidates) : 0.0;
     log_.n_candidates = n_candidates;
     log_.evaluate_av_t = average_time;
 
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
-    for(Nbv nbv: nbv_candidates_.nbv_candidates){
+    for(Nbv nbv: nbv_candidates_){
         std::cout << nbv.cost << std::endl;
     }
 
@@ -125,7 +125,7 @@ void ExplorationPlannerV4::generateCandidates()
 */
 {
     clusters_.clear();
-    nbv_candidates_.nbv_candidates.clear();
+    nbv_candidates_.clear();
 
     clusters_ = computeClusters(octo_map_);
 
@@ -146,10 +146,10 @@ void ExplorationPlannerV4::generateCandidates()
 
     int i = 0;
     int max_attempts = 10000;
-    while(nbv_candidates_.nbv_candidates.size() < 10 && i < max_attempts){
+    while(nbv_candidates_.size() < 10 && i < max_attempts){
         
         std::cout << " Attempt number: " << i << std::endl;
-        std::cout << " Candidates size: " << nbv_candidates_.nbv_candidates.size() << std::endl;
+        std::cout << " Candidates size: " << nbv_candidates_.size() << std::endl;
         Nbv nbv;
         
         double x = dis_x(gen);
@@ -167,7 +167,7 @@ void ExplorationPlannerV4::generateCandidates()
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
        
         for(Cluster & cluster : clusters_){
-            if(nbv_candidates_.nbv_candidates.size() >= 10){
+            if(nbv_candidates_.size() >= 10){
                 continue;
             }
             ++i;
@@ -204,7 +204,7 @@ void ExplorationPlannerV4::generateCandidates()
                 nbv.plan = valid_plan;
 
                 nbv.cost = compute_traj_lenght(valid_plan);
-                nbv_candidates_.nbv_candidates.push_back(nbv);
+                nbv_candidates_.push_back(nbv);
             }
             
         }
@@ -212,7 +212,7 @@ void ExplorationPlannerV4::generateCandidates()
     }
     /// TODO: handle if no candidates can be generated.. Save last trajectory or somthing. 
     if(i >= max_attempts){
-        nbv_candidates_.nbv_candidates.push_back(Nbv());
+        nbv_candidates_.push_back(Nbv());
     }
     
     log_.attempts = i;

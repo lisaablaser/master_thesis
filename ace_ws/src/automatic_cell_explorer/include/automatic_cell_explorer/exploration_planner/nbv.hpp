@@ -10,13 +10,11 @@ struct Nbv{
   Plan plan;
   RayView ray_view;
   double cost;
+  double gain;
 
 };
 
-struct NbvCandidates{
-  std::vector<Nbv> nbv_candidates;
-};
-
+using NbvCandidates = std::vector<Nbv>;
 
 
 #endif // NBV_HPP
