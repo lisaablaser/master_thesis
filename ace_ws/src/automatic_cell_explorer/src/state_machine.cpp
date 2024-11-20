@@ -142,8 +142,8 @@ void StateMachineNode::handle_calculate_nbv(){
 
 
     // Maybe check progress if raycast is wrong. (looking agains ceiling)
-    if(is_deafault(nbv) || nbv.ray_view.num_unknowns == 0){
-        std::cout << "Nbv was invalid, trying again " << std::endl;
+    if(nbv==Nbv() || nbv.gain == 0){
+        std::cout << "Had no gain or was invalid. Trying again " << std::endl;
         if(current_type_ == PlannerType::Local){
             std::cout << "--Switching to Global Planner-- " << std::endl;
             current_type_ = PlannerType::Global;
