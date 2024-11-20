@@ -115,15 +115,20 @@ void RandomExplorationPlanner::generateCandidates()
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
 
-    double roll_min = -M_PI, roll_max = M_PI;
+    double r_min = 0.0, r_max = 0.85; 
+    double phi_min = 0.0, phi_max = 2 * M_PI;
+    double theta_min = 0.0, theta_max = 3*M_PI/4;
+
+    double roll_min = -M_PI/4, roll_max = M_PI/4;
     double pitch_min = -M_PI, pitch_max = M_PI;
     double yaw_min = -M_PI, yaw_max = M_PI;
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis_x(bounds.min_x, bounds.max_x);
-    std::uniform_real_distribution<> dis_y(bounds.min_y, bounds.max_y);
-    std::uniform_real_distribution<> dis_z(bounds.min_z+ origo.z, bounds.max_z+origo.z);
+    std::uniform_real_distribution<> dis_r(r_min, r_max);
+    std::uniform_real_distribution<> dis_phi(phi_min, phi_max);
+    std::uniform_real_distribution<> dis_theta(theta_min, theta_max);
+
     std::uniform_real_distribution<> dis_roll(roll_min, roll_max);
     std::uniform_real_distribution<> dis_pitch(pitch_min, pitch_max);
     std::uniform_real_distribution<> dis_yaw(yaw_min, yaw_max);
@@ -132,11 +137,15 @@ void RandomExplorationPlanner::generateCandidates()
     while(nbv_candidates_.size() != N_SAMPLES){
         ++i;
         std::cout << " Attempt number: " << i << std::endl;
+        std::cout << " Candidates size: " << nbv_candidates_.size() << std::endl;
         Nbv nbv;
         
-        double x = dis_x(gen);
-        double y = dis_y(gen);
-        double z = dis_z(gen);
+        double r = dis_r(gen);
+        double phi = dis_phi(gen);
+        double theta = dis_theta(gen);
+        double x = r * sin(theta) * cos(phi);
+        double y = r * sin(theta) * sin(phi);
+        double z = r * cos(theta) + origo.z;
 
         octomap::OcTreeNode* node = octo_map_->search(x, y, z); 
 
