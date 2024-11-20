@@ -43,6 +43,7 @@ Nbv ExplorationPlannerV3::selectNbv(){
         return Nbv();
         
     }
+    auto s = std::chrono::high_resolution_clock::now();
 
     const Nbv* nbv = &nbv_candidates_.at(0);
     double gain = nbv->ray_view.num_unknowns;
@@ -63,8 +64,11 @@ Nbv ExplorationPlannerV3::selectNbv(){
     }
     
     std::cout << "Cost of Nbv is: " << best_utility << std::endl;
-
-    log_.est_gain = static_cast<double>(nbv->ray_view.num_unknowns);
+    auto e = std::chrono::high_resolution_clock::now();
+    auto d = std::chrono::duration_cast<std::chrono::microseconds>(e - s).count();
+    
+    log_.select_t = d;
+    log_.est_gain = static_cast<double>(nbv->gain);
     log_.utility_score = best_utility;
 
     return *nbv;

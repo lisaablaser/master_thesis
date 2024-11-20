@@ -80,6 +80,11 @@ private:
             entry.ep_log = exploration_planner_->getLog(); 
         }
         logger_.logData(entry);
+
+        log_ = SmLog{};
+        log_.iteration = iteration_;
+        iteration_ += 1;
+        log_.time = std::chrono::system_clock::now();
     }
 };
 

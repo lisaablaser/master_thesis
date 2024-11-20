@@ -108,7 +108,6 @@ void BaselinePlanner::evaluateNbvCandidates(NbvCandidates & nbv_candidates){
         auto start_time = std::chrono::high_resolution_clock::now();
 
         RayView ray_view = calculateRayView(sensor_pose, octo_map_);
-        //nbv.ray_view = ray_view;
         nbv.gain = ray_view.num_unknowns;
 
         auto end_time = std::chrono::high_resolution_clock::now();
@@ -123,7 +122,7 @@ void BaselinePlanner::evaluateNbvCandidates(NbvCandidates & nbv_candidates){
 
     int n_candidates = nbv_candidates.size();
     double average_time = (n_candidates > 0) ? (total_time / n_candidates) : 0.0;
-    log_.n_candidates = n_candidates;
+
     log_.evaluate_av_t = average_time;
 
 
@@ -141,7 +140,8 @@ NbvCandidates BaselinePlanner::findParetoFrontiers(const NbvCandidates & nbv_can
     NbvCandidates sorted_candidates = nbv_candidates;
     filterInvalidPlans(sorted_candidates);
 
-
+    
+    
     std::sort(sorted_candidates.begin(), sorted_candidates.end(),
               [](const Nbv& a, const Nbv& b) {
                   return a.cost < b.cost;
@@ -169,6 +169,7 @@ NbvCandidates BaselinePlanner::findParetoFrontiers(const NbvCandidates & nbv_can
         std::cout  << "Cost: "<< nbv.cost << std::endl;
     }
     
+    log_.n_candidates = sorted_candidates.size(); // Log only the valid views for this round
 
     return paretoFrontiers;
 
@@ -288,6 +289,8 @@ void BaselinePlanner::generateCandidates(NbvCandidates & nbv_candidates)
                             }
                         }
                     }
+                    std::cout << " Iteration nr: " << i << std::endl;
+                    std::cout << " Current candidates: " << nbv_candidates.size() << std::endl;
                 }
             }
         }

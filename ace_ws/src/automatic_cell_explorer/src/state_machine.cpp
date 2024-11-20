@@ -56,11 +56,14 @@ void StateMachineNode::handle_initialise(){
     std::cout << "--State Initialise--" << std::endl;
 
     node_ = shared_from_this();
+    logIteration();
 
 }
 
 void StateMachineNode::handle_capture(){
     std::cout << "--State Capture--" << std::endl;
+
+    
 
     auto trigger = std_msgs::msg::Bool();
     trigger.data = true;
@@ -104,7 +107,7 @@ void StateMachineNode::handle_calculate_nbv(){
 
     }
 
- 
+    
 
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -112,6 +115,7 @@ void StateMachineNode::handle_calculate_nbv(){
     RCLCPP_INFO(this->get_logger(), "----------------- Calculated NBV in %ld ms", duration.count());
 
     /// LOG:  
+    log_.n_nbv_memory = nbv_candidates_.size();
     log_.nbv_calculation_t = duration.count();
     log_.planner = static_cast<int>(current_type_);
     log_.traj_lenght = nbv.cost;
@@ -144,6 +148,10 @@ void StateMachineNode::handle_calculate_nbv(){
             std::cout << "--Switching to Global Planner-- " << std::endl;
             current_type_ = PlannerType::Global;
         }   
+        /// LOG:
+        log_.progress = prev_progress_;
+        log_.gain = 0;        
+        logIteration();
         handle_calculate_nbv();
         return;
     }
@@ -178,6 +186,9 @@ void StateMachineNode::handle_move_robot(){
         } else {
             RCLCPP_ERROR(this->get_logger(), "Service call failed. Execution was unsuccessful.");
             log_.move_t = -1.0;
+            log_.progress = prev_progress_;
+            log_.gain = 0;
+            logIteration();
             current_state_ = State::Calculate_NBV;
             return;
         }
@@ -297,6 +308,10 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             log_.progress = unknown_voxel_count;
             log_.gain = gain;
 
+            std::cout << "Previous Progress: " << prev_progress_ << std::endl;
+            std::cout << "Current Unknown Voxel Count: " << unknown_voxel_count << std::endl;
+            std::cout << "Calculated Gain: " << gain << std::endl;
+
             // Keep until utility measue is reliable
             // If no actual progress is made, we should witch to global planner. 
             if(current_type_ == PlannerType::Local){
@@ -308,6 +323,8 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             }
         
             prev_progress_ = unknown_voxel_count;
+
+            logIteration();
 
             // Check termination criteria
             double termination_treshold = 95.0;
@@ -347,11 +364,6 @@ void StateMachineNode::execute_state_machine()
                 break;
 
             case State::Capture:
-                logIteration();
-                log_ = SmLog{};
-                iteration_ += 1;
-                log_.iteration = iteration_;
-                log_.time = std::chrono::system_clock::now();
                 handle_capture();
                 current_state_ = State::WaitingForOctomap;
                 break;
