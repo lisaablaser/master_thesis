@@ -176,30 +176,6 @@ NbvCandidates BaselinePlanner::findParetoFrontiers(const NbvCandidates & nbv_can
 
 }
 
-bool arePosesEqual(const Eigen::Isometry3d& pose1, const Eigen::Isometry3d& pose2, double tolerance = 1e-6) {
-    /*
-        TODO: overload == operator for nbv instead
-    */
-    if (!pose1.translation().isApprox(pose2.translation(), tolerance)) {
-        return false;
-    }
-    if (!pose1.rotation().isApprox(pose2.rotation(), tolerance)) {
-        return false;
-    }
-
-    return true;
-}
-
-void BaselinePlanner::removeNbvFromCandidates(NbvCandidates& nbv_candidates, const Nbv& nbv_to_remove) {
-    nbv_candidates.erase(
-        std::remove_if(
-            nbv_candidates.begin(),
-            nbv_candidates.end(),
-            [&nbv_to_remove](const Nbv& candidate) {
-                return arePosesEqual(candidate.pose, nbv_to_remove.pose);
-            }),
-        nbv_candidates.end());
-}
 
 NbvCandidates BaselinePlanner::sortCandidates(const NbvCandidates & nbv_candidates){
     /*
@@ -213,37 +189,9 @@ NbvCandidates BaselinePlanner::sortCandidates(const NbvCandidates & nbv_candidat
     return sorted_candidates;
 }
 
-void BaselinePlanner::removeZeroGain(NbvCandidates& nbv_candidates) {
-    /*
-        Remove zero gain candiodates
-    */
-    nbv_candidates.erase(
-        std::remove_if(nbv_candidates.begin(), nbv_candidates.end(),
-                       [](const Nbv& candidate) {
-                           return candidate.gain == 0; // Remove candidates with zero cost
-                       }),
-        nbv_candidates.end()
-    );
-}
 
-void BaselinePlanner::filterInvalidPlans(NbvCandidates& nbv_candidates) {
-    /*
-        Filters and updates the plan
-    */
-    nbv_candidates.erase(
-        std::remove_if(nbv_candidates.begin(), nbv_candidates.end(),
-                       [this](Nbv& candidate) { // Lambda captures `this` to access `plan()`
-                           auto result = plan(candidate.pose); // Attempt to plan
-                           if (result) {
-                               candidate.plan = *result; // Store the plan if valid
-                               candidate.cost = compute_traj_lenght(candidate.plan);
-                               return false; // Keep this candidate
-                           }
-                           return true; // Remove candidates with invalid plans
-                       }),
-        nbv_candidates.end()
-    );
-}
+
+
 
 void BaselinePlanner::generateCandidates(NbvCandidates & nbv_candidates)
 /*

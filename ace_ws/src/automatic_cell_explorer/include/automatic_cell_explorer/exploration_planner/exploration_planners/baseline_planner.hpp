@@ -23,11 +23,6 @@ private:
   void generateCandidates(NbvCandidates & nbv_candidates);
   NbvCandidates findParetoFrontiers(const NbvCandidates & nbv_candidates);
   NbvCandidates sortCandidates(const NbvCandidates & nbv_candidates);
-  void removeZeroGain(NbvCandidates& nbv_candidates);
-  void filterInvalidPlans(NbvCandidates& nbv_candidates);
-  void removeNbvFromCandidates(NbvCandidates& nbv_candidates, const Nbv& nbv_to_remove); 
-
-
 
   
   

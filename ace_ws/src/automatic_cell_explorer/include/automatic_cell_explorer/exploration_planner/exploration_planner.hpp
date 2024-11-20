@@ -62,5 +62,10 @@ protected:
     double compute_traj_lenght(Plan plan) const;
     bool isPoseValid(const Eigen::Isometry3d& pose);
 
+    void removeNbvFromCandidates(NbvCandidates& nbv_candidates, const Nbv& nbv_to_remove); 
+    void filterInvalidPlans(NbvCandidates& nbv_candidates);
+    void removeZeroGain(NbvCandidates& nbv_candidates);
+    Eigen::Isometry3d getFinalPoseFromPlan(const Plan & plan);
+
 };
 #endif //EXPLORATION_PLANNER_HPP

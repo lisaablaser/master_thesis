@@ -141,6 +141,40 @@ void computeTarget(Cluster& cluster) {
     cluster.target =  octomap::point3d(x / num_points, y / num_points, z / num_points);
 }
 
+void removeClustersWhithoutFrontiers(std::vector<Cluster>& clusters){
+    clusters.erase(
+        std::remove_if(
+            clusters.begin(),
+            clusters.end(),
+            [](const Cluster& cluster) {
+                return cluster.frontiers.empty(); 
+            }
+        ),
+        clusters.end()
+    );
+}
+
+void sortClustersByFrontiers(std::vector<Cluster>& clusters) {
+    std::sort(
+        clusters.begin(),
+        clusters.end(),
+        [](const Cluster& a, const Cluster& b) {
+            return a.frontiers.size() > b.frontiers.size(); 
+        }
+    );
+}
+
+void sortClustersByUnknowns(std::vector<Cluster>& clusters) {
+    std::sort(
+        clusters.begin(),
+        clusters.end(),
+        [](const Cluster& a, const Cluster& b) {
+            return a.points.size() > b.points.size(); 
+        }
+    );
+}
+
+
 
 std::vector<octomap::point3d> extractOccupiedNodes(std::shared_ptr<octomap::OcTree> octree) {
     std::vector<octomap::point3d> occupied_nodes;
@@ -181,6 +215,8 @@ bool isNodeUnknown(octomap::OcTreeNode* node){
     }
     return false;
 }
+
+
 
 
 /// ##### Trash code #####

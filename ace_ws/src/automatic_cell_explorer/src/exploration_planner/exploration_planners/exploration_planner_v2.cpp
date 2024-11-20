@@ -13,7 +13,7 @@
 
 void ExplorationPlannerV2::calculateNbvCandidates() {
     /*
-        Improved random generator Planner. 
+        Not used. delete
     */
 
     // Update and remove old poses
