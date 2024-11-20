@@ -13,14 +13,19 @@ public:
     : ExplorationPlanner(mvt_interface, octo_map)
      {}
 
-  void calculateNbvCandidates() override;
-  Nbv selectNbv() override;
+  void calculateNbvCandidates(NbvCandidates & nbv_candidates) override;
+  Nbv selectNbv(NbvCandidates & nbv_candidates) override;
+
+
   
 
 private:
   
-  void evaluateNbvCandidates();
-  void generateCandidates();
+  void evaluateNbvCandidates(NbvCandidates & nbv_candidates);
+  void generateCandidates(NbvCandidates & nbv_candidates);
+
+  
+  NbvCandidates findParetoFrontiers(const NbvCandidates & nbv_candidates);
 
 
   
