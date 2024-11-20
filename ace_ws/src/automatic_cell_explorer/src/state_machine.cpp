@@ -26,7 +26,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
     current_req_(ExecuteReq()),
     iteration_(0),
-    logger_("runs/baseline_3.csv"),
+    logger_("runs/random_local_test.csv"),
     nbv_candidates_()
 {
     camera_trigger_ = 
@@ -86,15 +86,19 @@ void StateMachineNode::handle_calculate_nbv(){
     NbvCandidates nbv_candidates_visualize;
     Nbv nbv;
 
-    //Logic for Basline planner only
-    bool is_baseline_planner = false;
-    if(is_baseline_planner && current_type_== PlannerType::Global){
+    //Logic for keeping nbv candidates in memory
+    bool has_nbv_memory = false;
+    if(has_nbv_memory && current_type_== PlannerType::Global){
         
         exploration_planner_->calculateNbvCandidates(nbv_candidates_);
 
         nbv_candidates_visualize = nbv_candidates_;
 
-        nbv = exploration_planner_->selectNbv(nbv_candidates_);
+        nbv = exploration_planner_->selectNbv(nbv_candidates_); 
+
+        auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+        std::vector<Cluster> clusters = exploration_planner_->getClusters(); 
+        visualizeClusters(clusters, cluster_pub);
 
     }
     else{
@@ -139,6 +143,8 @@ void StateMachineNode::handle_calculate_nbv(){
 
 
     //rviz_tool_->prompt("Press next");
+
+
 
 
     // Maybe check progress if raycast is wrong. (looking agains ceiling)
@@ -262,12 +268,12 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
                 auto frontiers_pub = this->create_publisher<octomap_msgs::msg::Octomap>("frontiers", 10);
                 auto map_pub = this->create_publisher<octomap_msgs::msg::Octomap>("map", 10);
                 auto c_center_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("centers",10);
-                auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+                //auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
                 auto targets_pub = node_->create_publisher<MarkerArray>("targets", 10);
 
                 // only for visualizations. 
-                std::vector<Cluster> clusters = computeClusters(octomap_); //could use getClusters, but only for Gloabal planner
-                visualizeClusters(clusters, cluster_pub);
+                //std::vector<Cluster> clusters = computeClusters(octomap_); //could use getClusters, but only for Gloabal planner
+                //visualizeClusters(clusters, cluster_pub);
 
     
 
@@ -303,8 +309,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             // LOG
             double unknown_voxel_count = calculateOccupiedVolume(unknown_tree);
-            double gain = prev_progress_-unknown_voxel_count;
-            std::cout << "Unknown voxel count: " << unknown_voxel_count << std::endl;
+            double gain = unknown_voxel_count - prev_progress_;
             log_.progress = unknown_voxel_count;
             log_.gain = gain;
 
