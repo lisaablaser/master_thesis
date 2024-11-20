@@ -52,14 +52,14 @@ Nbv RandomExplorationPlanner::selectNbv(){
             highest_cost_nbv = nbv;
         }
     }
-    std::cout << "Cost of Nbv is: " << highest_cost_nbv.ray_view.num_unknowns << std::endl;
+    std::cout << "Cost of Nbv is: " << highest_cost_nbv.gain << std::endl;
 
     auto e = std::chrono::high_resolution_clock::now();
     auto d = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
     
     log_.select_t = d;
-    log_.est_gain = static_cast<double>(highest_cost_nbv.ray_view.num_unknowns);
-    log_.utility_score = highest_cost_nbv.ray_view.num_unknowns;
+    log_.est_gain = static_cast<double>(highest_cost_nbv.gain);
+    log_.utility_score = highest_cost_nbv.gain;
 
     return highest_cost_nbv;
     
@@ -82,7 +82,7 @@ void RandomExplorationPlanner::evaluateNbvCandidates(){
         auto start_time = std::chrono::high_resolution_clock::now();
 
         RayView ray_view = calculateRayView(sensor_pose, octo_map_);
-        nbv.ray_view = ray_view;
+        nbv.gain = ray_view.num_unknowns;
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
@@ -98,7 +98,7 @@ void RandomExplorationPlanner::evaluateNbvCandidates(){
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
     for(Nbv nbv: nbv_candidates_){
-        std::cout << nbv.ray_view.num_unknowns << std::endl;
+        std::cout << nbv.gain << std::endl;
     }
 
 }

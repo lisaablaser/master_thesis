@@ -46,21 +46,17 @@ Nbv BaselinePlannerLocal::selectNbv(){
     
     auto s = std::chrono::high_resolution_clock::now();
 
-    const Nbv* nbv = &nbv_candidates_.at(0);
-    double gain = nbv->ray_view.num_unknowns;
-    double cost = nbv->cost;
-    double best_utility = gain;
+    Nbv nbv = Nbv();
+    double best_utility = -1;
 
     for (const auto& candidate : nbv_candidates_) {
-        double cand_gain = candidate.ray_view.num_unknowns;
-        double cand_cost = candidate.cost;
-        double utility = gain;
+        double utility = candidate.gain;
 
         if (utility > best_utility) {
             
             best_utility = utility;
 
-            nbv = &candidate;
+            nbv = candidate;
         }
     }
 
@@ -69,10 +65,10 @@ Nbv BaselinePlannerLocal::selectNbv(){
     
     std::cout << "Cost of Nbv is: " << best_utility << std::endl;
     log_.select_t = d;
-    log_.est_gain = static_cast<double>(nbv->ray_view.num_unknowns);
+    log_.est_gain = static_cast<double>(nbv.gain);
     log_.utility_score = best_utility;
 
-    return *nbv;
+    return nbv;
     
    
 }
@@ -88,12 +84,11 @@ void BaselinePlannerLocal::evaluateNbvCandidates(){
     double total_time = 0.0;
 
     for (Nbv &nbv : nbv_candidates_) {
-        Eigen::Isometry3d sensor_pose = nbv.pose;
 
         auto start_time = std::chrono::high_resolution_clock::now();
 
-        RayView ray_view = calculateRayView(sensor_pose, octo_map_);
-        nbv.ray_view = ray_view;
+        RayView ray_view = calculateRayView(nbv.pose, octo_map_);
+        nbv.gain = ray_view.num_unknowns;
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
@@ -110,7 +105,7 @@ void BaselinePlannerLocal::evaluateNbvCandidates(){
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
     for(Nbv nbv: nbv_candidates_){
-        std::cout << nbv.cost << std::endl;
+        std::cout << nbv.gain << std::endl;
     }
 
 }

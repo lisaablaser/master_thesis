@@ -46,12 +46,12 @@ Nbv ExplorationPlannerV3::selectNbv(){
     auto s = std::chrono::high_resolution_clock::now();
 
     const Nbv* nbv = &nbv_candidates_.at(0);
-    double gain = nbv->ray_view.num_unknowns;
+    double gain = nbv->gain;
     double cost = 0;
     double best_utility = gain - cost;
 
     for (const auto& candidate : nbv_candidates_) {
-        double cand_gain = candidate.ray_view.num_unknowns;
+        double cand_gain = candidate.gain;
         double cand_cost = 0;
         double utility = cand_gain- cand_cost;
 
@@ -91,7 +91,7 @@ void ExplorationPlannerV3::evaluateNbvCandidates(){
         auto start_time = std::chrono::high_resolution_clock::now();
 
         RayView ray_view = calculateRayView(sensor_pose, octo_map_);
-        nbv.ray_view = ray_view;
+        nbv.gain = ray_view.num_unknowns;
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
@@ -108,7 +108,7 @@ void ExplorationPlannerV3::evaluateNbvCandidates(){
 
     std::cout << "Number of unknowns hit by each view candidate: " << std::endl;
     for(Nbv nbv: nbv_candidates_){
-        std::cout << nbv.ray_view.num_unknowns << std::endl;
+        std::cout << nbv.gain << std::endl;
     }
 
 
