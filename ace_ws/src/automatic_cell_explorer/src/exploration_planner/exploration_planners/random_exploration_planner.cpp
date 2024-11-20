@@ -158,8 +158,8 @@ void RandomExplorationPlanner::generateCandidates()
         if (result) {
             Plan valid_plan = *result;  
             nbv.plan = valid_plan;
-
-            nbv.cost = 0.0; 
+            nbv.pose = getFinalPoseFromPlan(nbv.plan);
+            nbv.cost = compute_traj_lenght(valid_plan); 
             nbv_candidates_.push_back(nbv);
         }
     

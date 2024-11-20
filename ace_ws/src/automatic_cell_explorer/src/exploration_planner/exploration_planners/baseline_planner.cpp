@@ -282,7 +282,7 @@ void BaselinePlanner::generateCandidates(NbvCandidates & nbv_candidates)
                             auto result = plan(q);
                             if (result) {
                                 nbv.plan = *result;
-                                nbv.pose = forward_kinematics(q);
+                                nbv.pose = getFinalPoseFromPlan(nbv.plan);//forward_kinematics(q);
                                 nbv.cost = compute_traj_lenght(nbv.plan);
                                 nbv_candidates.push_back(nbv);
 

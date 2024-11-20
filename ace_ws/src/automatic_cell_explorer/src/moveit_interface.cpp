@@ -15,6 +15,20 @@ MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
     interface->setPlannerId("RRTConnect");
 
     interface->setPlanningTime(0.1); 
+    interface->setGoalTolerance(0.1); //OBS: scary getFinalPoseFromPlan function to achieve accuaracy in raycast. 
+
+    //interface->setNumPlanningAttempts(5); //return shortest of x attempts, not sure if anything changed
+    //interface->setReplanAttempts(10); //10-20, nothing happens?
+    interface->setWorkspace(-1.0,-1.0,-1.0,1.0,1.0,1.0);
+    std::map<std::string, std::string> rrt_connect_params;
+    rrt_connect_params["range"] = "0.2";        // 0.1-0.3
+    rrt_connect_params["goal_bias"] = "0.1";    // 0.05-0.2
+
+    interface->setPlannerParams("RRTConnect", "ur_manipulator", rrt_connect_params, true);
+
+    interface->setMaxVelocityScalingFactor(0.8);  //  OBS: joint tolerances are set to 0.5 from 0.2 in ur_controllers.yaml
+    interface->setMaxAccelerationScalingFactor(0.8);  // 
+
 
     auto robot_model = interface->getRobotModel();
     auto joint_model_group = robot_model->getJointModelGroup("ur_manipulator");

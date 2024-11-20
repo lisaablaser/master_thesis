@@ -2,24 +2,16 @@
 
 
 std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
-  /// TODO: include checks to terminate planner faster. 
-
 
   planning_interface::MotionPlanRequest req;
 
   req.group_name = "ur_manipulator";
 
-  req.workspace_parameters.min_corner.x = req.workspace_parameters.min_corner.y =
-  req.workspace_parameters.min_corner.z = -2.0;
-  req.workspace_parameters.max_corner.x = req.workspace_parameters.max_corner.y =
-  req.workspace_parameters.max_corner.z = 2.0;
 
   mvt_interface_->setStartStateToCurrentState();
   mvt_interface_->clearPathConstraints();
   mvt_interface_->clearPoseTargets();
   mvt_interface_->setPoseTarget(pose);
-  /// TODO: configure this somewhere else?
-  mvt_interface_->setPlanningTime(0.1); 
 
   auto const [success, plan] = [&mvt_interface = mvt_interface_]{
     Plan p;
@@ -40,16 +32,10 @@ std::optional<Plan> ExplorationPlanner::plan(const Eigen::Isometry3d& pose){
   return plan;
 }
 std::optional<Plan> ExplorationPlanner::plan(const std::vector<double> & joint_values){
-  /// TODO: include checks to terminate planner faster. 
 
   planning_interface::MotionPlanRequest req;
 
   req.group_name = "ur_manipulator";
-
-  req.workspace_parameters.min_corner.x = req.workspace_parameters.min_corner.y =
-  req.workspace_parameters.min_corner.z = -2.0;
-  req.workspace_parameters.max_corner.x = req.workspace_parameters.max_corner.y =
-  req.workspace_parameters.max_corner.z = 2.0;
 
   mvt_interface_->setStartStateToCurrentState();
   mvt_interface_->clearPathConstraints();
@@ -140,3 +126,72 @@ double ExplorationPlanner::compute_traj_lenght(Plan plan) const{
 
 }
 
+
+void ExplorationPlanner::removeNbvFromCandidates(NbvCandidates& nbv_candidates, const Nbv& nbv_to_remove) {
+    nbv_candidates.erase(
+        std::remove_if(
+            nbv_candidates.begin(),
+            nbv_candidates.end(),
+            [&nbv_to_remove](const Nbv& candidate) {
+                return (candidate==nbv_to_remove); /// TODO:check if this worked.
+            }),
+        nbv_candidates.end());
+}
+
+void ExplorationPlanner::filterInvalidPlans(NbvCandidates& nbv_candidates) {
+    /*
+        Filters and updates the plan
+    */
+    nbv_candidates.erase(
+        std::remove_if(nbv_candidates.begin(), nbv_candidates.end(),
+                       [this](Nbv& candidate) { // Lambda captures `this` to access `plan()`
+                           auto result = plan(candidate.pose); // Attempt to plan
+                           if (result) {
+                               candidate.plan = *result; // Store the plan if valid
+                               candidate.pose = getFinalPoseFromPlan(candidate.plan); //obs, maybe exhausts mvt_interface??
+                               candidate.cost = compute_traj_lenght(candidate.plan);
+                               return false; // Keep this candidate
+                           }
+                           return true; // Remove candidates with invalid plans
+                       }),
+        nbv_candidates.end()
+    );
+}
+
+void ExplorationPlanner::removeZeroGain(NbvCandidates& nbv_candidates) {
+    /*
+        Remove zero gain candiodates
+    */
+    nbv_candidates.erase(
+        std::remove_if(nbv_candidates.begin(), nbv_candidates.end(),
+                       [](const Nbv& candidate) {
+                           return candidate.gain == 0; // Remove candidates with zero cost
+                       }),
+        nbv_candidates.end()
+    );
+}
+
+Eigen::Isometry3d ExplorationPlanner::getFinalPoseFromPlan(const Plan & plan)
+    {
+    // Extract the final trajectory point
+    const auto& trajectory = plan.trajectory;
+    // Get the last point in the trajectory
+    const auto& last_point = trajectory.joint_trajectory.points.back();
+
+    // Get the current robot model and joint group
+    auto robot_model = mvt_interface_->getRobotModel();
+    auto joint_model_group = robot_model->getJointModelGroup("ur_manipulator");
+
+    // Create a RobotState and update it to the last point in the trajectory
+    moveit::core::RobotState robot_state(robot_model);
+    robot_state.setToDefaultValues();  // Initialize to default
+    robot_state.setJointGroupPositions(joint_model_group, last_point.positions);
+
+    // Get the end-effector link name
+    std::string ee_link = mvt_interface_->getEndEffectorLink();
+
+    // Convert the final joint state to a Cartesian pose
+    Eigen::Isometry3d end_effector_state = robot_state.getGlobalLinkTransform(ee_link);
+
+    return end_effector_state;
+}

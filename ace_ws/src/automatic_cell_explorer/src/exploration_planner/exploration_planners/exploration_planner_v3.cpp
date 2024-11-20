@@ -156,9 +156,8 @@ void ExplorationPlannerV3::generateCandidates()
                 auto result = plan(candidate_joint_values);
                 if (result) {
                     nbv.plan = *result;
-                    nbv.pose = forward_kinematics(candidate_joint_values);
-                    //nbv.ray_view = getRayView(nbv); //maybe dont needed here, does it already later. 
-
+                    nbv.pose = getFinalPoseFromPlan(nbv.plan);//forward_kinematics(candidate_joint_values);
+                    nbv.cost = compute_traj_lenght(nbv.plan);
 
                     nbv_candidates_.push_back(nbv);
                 }

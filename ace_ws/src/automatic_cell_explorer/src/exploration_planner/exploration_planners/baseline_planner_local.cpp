@@ -150,7 +150,8 @@ void BaselinePlannerLocal::add_pose_if_valid(std::vector<double> q){
     auto result = plan(q);
     if (result) {
         nbv.plan = *result;
-        nbv.pose = forward_kinematics(q);
+        nbv.pose = getFinalPoseFromPlan(nbv.plan);//forward_kinematics(q);
+        nbv.cost = compute_traj_lenght(nbv.plan);
         nbv_candidates_.push_back(nbv);
     }
 
