@@ -48,7 +48,7 @@ Nbv RandomExplorationPlanner::selectNbv(){
     Nbv highest_cost_nbv = nbv_candidates_.at(0);
 
     for (const auto& nbv : nbv_candidates_) {
-        if (nbv.ray_view.num_unknowns > highest_cost_nbv.ray_view.num_unknowns) {
+        if (nbv.gain > highest_cost_nbv.gain) {
             highest_cost_nbv = nbv;
         }
     }

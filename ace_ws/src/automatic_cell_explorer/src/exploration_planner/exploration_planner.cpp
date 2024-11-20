@@ -111,17 +111,23 @@ double ExplorationPlanner::compute_node_volume(double resolution) const
 
 
 double ExplorationPlanner::compute_traj_lenght(Plan plan) const{
-  auto robot_model = mvt_interface_->getRobotModel();
-  robot_trajectory::RobotTrajectory trajectory(robot_model, "ur_manipulator");
-  trajectory.setRobotTrajectoryMsg(robot_model, plan.trajectory);
+  const auto& trajectory_points = plan.trajectory.joint_trajectory.points;
+  if (trajectory_points.empty()) {
+        return 0.0; 
+  }
+  double trajectory_length = 0.0;
+  for (std::size_t index = 1; index < trajectory_points.size(); ++index) {
+      const auto& previous_point = trajectory_points[index - 1];
+      const auto& current_point = trajectory_points[index];
 
-  auto trajectory_length = 0.0;
-  for (std::size_t index = 1; index < trajectory.getWayPointCount(); ++index)
-    {
-      const auto& first = trajectory.getWayPoint(index - 1);
-      const auto& second = trajectory.getWayPoint(index);
-      trajectory_length += first.distance(second);
-    }
+      // Compute the L1 norm (sum of absolute differences) in joint space
+      for (std::size_t joint_index = 0; joint_index < previous_point.positions.size(); ++joint_index) {
+          double delta = std::abs(current_point.positions[joint_index] - previous_point.positions[joint_index]);
+          trajectory_length += delta;
+      }
+  }
+
+  
   return trajectory_length;
 
 }
