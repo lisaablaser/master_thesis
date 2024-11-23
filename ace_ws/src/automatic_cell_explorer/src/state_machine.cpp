@@ -26,7 +26,7 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
     current_req_(ExecuteReq()),
     iteration_(0),
-    logger_("runs/random_local_test.csv"),
+    logger_("runs/ace_pro_2.csv"),
     nbv_candidates_()
 {
     camera_trigger_ = 
@@ -87,7 +87,7 @@ void StateMachineNode::handle_calculate_nbv(){
     Nbv nbv;
 
     //Logic for keeping nbv candidates in memory
-    bool has_nbv_memory = false;
+    bool has_nbv_memory = true;
     if(has_nbv_memory && current_type_== PlannerType::Global){
         
         exploration_planner_->calculateNbvCandidates(nbv_candidates_);
@@ -332,7 +332,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             logIteration();
 
             // Check termination criteria
-            double termination_treshold = 95.0;
+            double termination_treshold = 100.0;
             if (unknown_voxel_count > termination_treshold) {
                 std::cout << "Planner reached termination criteria" << std::endl;
                 finished_ = true;

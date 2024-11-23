@@ -59,6 +59,7 @@ add_library(my_cpp_library
   src/exploration_planner/exploration_planners/exploration_planner_v2.cpp
   src/exploration_planner/exploration_planners/exploration_planner_v3.cpp
   src/exploration_planner/exploration_planners/exploration_planner_v4.cpp
+  src/exploration_planner/exploration_planners/exploration_planner_ACE.cpp
 )
 
 

@@ -30,6 +30,7 @@ octomap::point3d computeClusterCenter(const Cluster& cluster);
 bool isWithinDistance(const octomap::point3d& p1, const octomap::point3d& p2);
 std::vector<octomap::point3d> extractOccupiedNodes(std::shared_ptr<octomap::OcTree> octree);
 void computeTargetNormal(Cluster& cluster);
+void removeClustersWhithoutFrontiers(std::vector<Cluster>& clusters);
 
 
 
