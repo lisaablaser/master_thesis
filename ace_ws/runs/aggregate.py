@@ -2,9 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 
+def aggregate_by_iteration(folder_path, output_file):
 
-def aggregate_runs(folder_path, output_file):
-    # Get a list of all .csv files in the folder
     csv_files = [
         os.path.join(folder_path, f)
         for f in os.listdir(folder_path)
@@ -15,22 +14,50 @@ def aggregate_runs(folder_path, output_file):
         print("No CSV files found in the folder.")
         return
 
-    # Read all files and store them in a list
-    dataframes = []
+    dataframes_ffill = []
+    dataframes_original = []
+    max_len = -1
+
     for file in csv_files:
         print(f"Loading {file}...")
         df = pd.read_csv(file)
-        dataframes.append(df)
+        if df["Iteration"].duplicated().any():
+            print(f"Duplicate iterations detected in {file}. Removing duplicates.")
+            df = df.drop_duplicates(subset="Iteration", keep="first")
 
-    # Concatenate all dataframes along the rows (axis=0)
-    combined_data = pd.concat(dataframes, ignore_index=True)
+        dataframes_original.append(df)
+        dataframes_ffill.append(df)
+        l = df.shape[0]
+        max_len = max(max_len, l)
 
-    # Replace invalid values (-1) with NaN
-    combined_data.replace(-1, np.nan, inplace=True)
+    for i, df in enumerate(dataframes_ffill):
+        dataframes_ffill[i] = (
+            df.set_index("Iteration")
+            .reindex(range(max_len))
+            .fillna(method="ffill")
+            .reset_index()
+        )
 
-    # Aggregate the data by 'Iteration' and compute mean and std across runs
-    aggregated_data = (
-        combined_data.groupby("Iteration")
+    combined_data_ffill = pd.concat(dataframes_ffill, ignore_index=True)
+    combined_data_original = pd.concat(dataframes_original, ignore_index=True)
+
+    aggregated_1 = (
+        combined_data_ffill.groupby("Iteration")
+        .agg(
+            {
+                "Progress": ["mean", "std"],
+                "TrajectoryLength": ["mean", "std"],
+            }
+        )
+        .reset_index()
+    )
+    aggregated_1.columns = [
+        "_".join(col).strip() if col[1] else col[0]
+        for col in aggregated_1.columns.values
+    ]
+
+    aggregated_2 = (
+        combined_data_original.groupby("Iteration")
         .agg(
             {
                 "Time": ["mean", "std"],
@@ -43,32 +70,29 @@ def aggregate_runs(folder_path, output_file):
                 "EstimatedGain": ["mean", "std"],
                 "UtilityScore": ["mean", "std"],
                 "NBVTime": ["mean", "std"],
-                "Progress": ["mean", "std"],
                 "Planner": ["mean", "std"],
-                "TrajectoryLength": ["mean", "std"],
                 "MoveTime": ["mean", "std"],
                 "MapUpdateTime": ["mean", "std"],
                 "Gain": ["mean", "std"],
+                "ClusterTime": ["mean", "std"],
+                "NbvMemory": ["mean", "std"],
             }
         )
         .reset_index()
     )
-
-    # Rename the multi-index columns
-    aggregated_data.columns = [
+    aggregated_2.columns = [
         "_".join(col).strip() if col[1] else col[0]
-        for col in aggregated_data.columns.values
+        for col in aggregated_2.columns.values
     ]
 
-    aggregated_data.fillna(0, inplace=True)
+    final_aggregated = pd.merge(aggregated_1, aggregated_2, on="Iteration", how="outer")
+    final_aggregated = final_aggregated.fillna(0)
+    final_aggregated.to_csv(output_file + ".csv", index=False)
+    print(f"Aggregated data saved to {output_file}")
 
-    # Save the aggregated data to a single output file
-    aggregated_data.to_csv(output_file + ".csv", index=False)
-    print(f"Aggregated data across runs saved to {output_file}")
 
 
-def aggregate_progress_vs_time(folder_path, output_file, time_interval=10, decimals=3):
-    # Get a list of all .csv files in the folder
+def aggregate_progress_by_time(folder_path, output_file, time_interval=1, decimals=3):
     csv_files = [
         os.path.join(folder_path, f)
         for f in os.listdir(folder_path)
@@ -79,63 +103,53 @@ def aggregate_progress_vs_time(folder_path, output_file, time_interval=10, decim
         print("No CSV files found in the folder.")
         return
 
-    # Define the common time grid
-    time_range = None
+    overall_min_time = float("inf")
+    overall_max_time = float("-inf")
+
+    for file in csv_files:
+        df = pd.read_csv(file)
+        overall_min_time = min(overall_min_time, df["Time"].min())
+        overall_max_time = max(overall_max_time, df["Time"].max())
+
+    time_range = np.arange(
+        overall_min_time, overall_max_time + time_interval, time_interval
+    )
 
     interpolated_dataframes = []
     for file in csv_files:
         print(f"Loading {file}...")
         df = pd.read_csv(file)
-        df.replace(-1, np.nan, inplace=True)  # Replace invalid values
+        df.replace(-1, np.nan, inplace=True) 
 
-        # Define the time grid based on the first file's range
-        if time_range is None:
-            time_range = np.arange(
-                df["Time"].min(), df["Time"].max() + time_interval, time_interval
-            )
-
-        # Interpolate to the common time grid
         df = (
             df.set_index("Time")
             .reindex(time_range)
-            .interpolate(method="linear")
+            .ffill()
             .reset_index()
         )
         df.rename(columns={"index": "Time"}, inplace=True)
-
         interpolated_dataframes.append(df)
 
-    # Concatenate all dataframes along the rows (axis=0)
     combined_data = pd.concat(interpolated_dataframes, ignore_index=True)
-
-    # Group by Time and calculate mean and std for Progress
     aggregated_data = (
         combined_data.groupby("Time").agg({"Progress": ["mean", "std"]}).reset_index()
     )
-
-    # Rename the multi-index columns
     aggregated_data.columns = [
         "_".join(col).strip() if col[1] else col[0]
         for col in aggregated_data.columns.values
     ]
 
-    # Replace any remaining NaN or empty values with 0
     aggregated_data.fillna(0, inplace=True)
-
-    # Round numerical values to the specified number of decimal places
     aggregated_data = aggregated_data.round(decimals)
-
-    # Save the aggregated data to a single output file
-    aggregated_data.to_csv("aggregates/" + output_file + "_by_time.csv", index=False)
+    aggregated_data.to_csv(output_file + "_by_time.csv", index=False)
     print(f"Aggregated data across runs saved to {output_file}")
 
 
-# Input folder containing the CSV files
-name = "random_local"
-input_folder = name
-output_file = name
+folder = "parameter_test/random/N"
+name = "N10"
+input_folder = folder + "/" + name
+output_file = "final_data/N" + "/" + name
 
-# Process all CSV files in the folder and aggregate them
-aggregate_runs(input_folder, output_file)
+aggregate_by_iteration(input_folder, output_file)
 
-aggregate_progress_vs_time(input_folder, output_file, time_interval=10, decimals=3)
+aggregate_progress_by_time(input_folder, output_file, time_interval=1, decimals=3)
