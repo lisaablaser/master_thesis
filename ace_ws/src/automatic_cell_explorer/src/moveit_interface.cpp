@@ -12,7 +12,7 @@ MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
 
     /// TODO: configure planning stuff here.  
     interface->setPlanningPipelineId("ompl");
-    interface->setPlannerId("RRTConnect");
+    interface->setPlannerId("RRTstar");
 
     interface->setPlanningTime(0.1); 
     interface->setGoalTolerance(0.1); //OBS: scary getFinalPoseFromPlan function to achieve accuaracy in raycast. 
@@ -24,7 +24,9 @@ MoveGrpPtr getMoveGroupInterface(rclcpp::Node::SharedPtr node){
     rrt_connect_params["range"] = "0.2";        // 0.1-0.3
     rrt_connect_params["goal_bias"] = "0.1";    // 0.05-0.2
 
-    interface->setPlannerParams("RRTConnect", "ur_manipulator", rrt_connect_params, true);
+
+    interface->setPlannerParams("RRTstar", "ur_manipulator", rrt_connect_params, true);
+
 
     interface->setMaxVelocityScalingFactor(0.8);  //  OBS: joint tolerances are set to 0.5 from 0.2 in ur_controllers.yaml
     interface->setMaxAccelerationScalingFactor(0.8);  // 

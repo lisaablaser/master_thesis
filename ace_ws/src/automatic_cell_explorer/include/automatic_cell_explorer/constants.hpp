@@ -1,6 +1,9 @@
 #include <cstddef>
 
 
+// Tight: -0.25, -0.13, 0.045, 0.4, 0.4, 1.28
+
+
 // UR5: 0.85 m, Sensor: <box size="0.07271 0.27794 0.073"/>: 
 struct WorkspaceBounds {
     double min_x = -(0.85 + 0.08);
@@ -12,11 +15,11 @@ struct WorkspaceBounds {
 };
 
 struct FreespaceBounds {
-    double min_x = -1.0/2;
-    double min_y = -0.8/2;
+    double min_x = -0.5;
+    double min_y = -0.4; 
     double min_z = 0.045;
-    double max_x = 1.5/2;
-    double max_y = 0.8/2;
+    double max_x =  0.75;
+    double max_y = 0.4;
     double max_z = 1.2 + 0.08;
 };
 

@@ -123,7 +123,7 @@ def generate_launch_description():
                 [
                     FindPackageShare("automatic_cell_explorer"),
                     "worlds",
-                    "square_cell.sdf",
+                    "robot_cell.sdf",
                 ]
             ),
             description="Gazebo world file (absolute path or filename from the gazebosim worlds collection) containing a custom world.",

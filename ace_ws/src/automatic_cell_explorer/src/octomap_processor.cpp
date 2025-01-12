@@ -78,7 +78,7 @@ OctreePtr extractUnknownOctree(const OctreePtr octree) {
 
     for (double x = bounds.min_x; x <= bounds.max_x; x += resolution) {
         for (double y = bounds.min_y; y <= bounds.max_y; y += resolution) {
-            for (double z = bounds.min_z  + origo.z; z <= bounds.max_z + origo.z; z += resolution){
+            for (double z = bounds.min_z  + origo.z + resolution; z <= bounds.max_z + origo.z; z += resolution){
                 octomap::OcTreeKey key = octree->coordToKey(x, y, z);
                 octomap::OcTreeNode* node = octree->search(key);
 
@@ -94,6 +94,7 @@ OctreePtr extractUnknownOctree(const OctreePtr octree) {
 }
 
 OctreePtr extractFreeOctree(const OctreePtr octree) {
+    //temporaru modifed to find occupied map
     double resolution = RES_LARGE;
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -106,7 +107,7 @@ OctreePtr extractFreeOctree(const OctreePtr octree) {
             for (double z = bounds.min_z + origo.z; z <= bounds.max_z + origo.z ; z += resolution){
                 octomap::OcTreeKey key = octree->coordToKey(x, y, z);
                 octomap::OcTreeNode* node = octree->search(key);
-                if (node != nullptr && !octree->isNodeOccupied(node)) {
+                if (node != nullptr && octree->isNodeOccupied(node)) {
                     freeVoxelsTree->updateNode(octomap::point3d(x, y, z), true);
                 }
             }
@@ -169,7 +170,7 @@ OctreePtr extractFrontierOctreeInBounds(const OctreePtr octree) {
 
         if (node_coords.x() < bounds.min_x || node_coords.x() > bounds.max_x ||
             node_coords.y() < bounds.min_y || node_coords.y() > bounds.max_y||
-            node_coords.z() <(bounds.min_z+ origo.z ) || node_coords.z() > (bounds.max_z+origo.z)) {
+            node_coords.z() <(bounds.min_z+ origo.z ) || node_coords.z() > (bounds.max_z+origo.z - resolution)) {
             continue;
         }
 

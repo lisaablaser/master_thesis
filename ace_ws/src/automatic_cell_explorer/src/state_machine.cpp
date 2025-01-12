@@ -20,13 +20,13 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     plm_interface_(plm_interface),
     rviz_tool_(rviz_tool),
     current_state_(State::Initialise), 
-    current_type_(PlannerType::Local),
+    current_type_(PlannerType::Global),
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
     exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
     current_req_(ExecuteReq()),
-    iteration_(0),
-    logger_("runs/ace_pro_2.csv"),
+    iteration_(-1),
+    logger_("runs/parameter_test/random/memory/has/3.csv"),
     nbv_candidates_()
 {
     camera_trigger_ = 
@@ -76,7 +76,7 @@ void StateMachineNode::handle_capture(){
 void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
 
-    bool visualize = true;
+    bool visualize = false;
     updatePlanner(current_type_);
     //plm_interface_->updateSceneWithCurrentState();
 
@@ -96,9 +96,7 @@ void StateMachineNode::handle_calculate_nbv(){
 
         nbv = exploration_planner_->selectNbv(nbv_candidates_); 
 
-        auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
-        std::vector<Cluster> clusters = exploration_planner_->getClusters(); 
-        visualizeClusters(clusters, cluster_pub);
+
 
     }
     else{
@@ -108,10 +106,16 @@ void StateMachineNode::handle_calculate_nbv(){
         nbv_candidates_visualize = exploration_planner_->getNbvCandidates();
 
         nbv = exploration_planner_->selectNbv();
+        // auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+        // std::vector<Cluster> clusters = exploration_planner_->getClusters(); 
+        // visualizeClusters(clusters, cluster_pub);
 
     }
 
+    // auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+    // std::vector<Cluster> clusters = computeClusters(octomap_); 
     
+    // visualizeClusters(clusters, cluster_pub);
 
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -122,7 +126,8 @@ void StateMachineNode::handle_calculate_nbv(){
     log_.n_nbv_memory = nbv_candidates_.size();
     log_.nbv_calculation_t = duration.count();
     log_.planner = static_cast<int>(current_type_);
-    log_.traj_lenght = nbv.cost;
+
+    
 
     
     // Visualizations
@@ -156,16 +161,18 @@ void StateMachineNode::handle_calculate_nbv(){
         }   
         /// LOG:
         log_.progress = prev_progress_;
-        log_.gain = 0;        
+        log_.gain = 0;     
+        log_.traj_lenght = 0;   
         logIteration();
         handle_calculate_nbv();
         return;
     }
-    else if(current_type_ == PlannerType::Global){
-        std::cout << "--Switching back to Local planner --- " << std::endl;
-        current_type_ = PlannerType::Local;
-    }
+    // else if(current_type_ == PlannerType::Global){
+    //     std::cout << "--Switching back to Local planner --- " << std::endl;
+    //     current_type_ = PlannerType::Local;
+    // }
 
+    log_.traj_lenght = nbv.cost;
 
     ExecuteReq req;
     req.start_state = nbv.plan.start_state;

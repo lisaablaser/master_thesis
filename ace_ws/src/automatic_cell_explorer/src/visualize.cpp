@@ -185,8 +185,8 @@ void visualizeNbvRayView(
         marker.scale.x = 0.02; 
       
         if (ray.node_state == NodeState::Unknown) {
-            marker.color.r = 1.0f; 
-            marker.color.g = 0.0f;
+            marker.color.r = 0.0f; 
+            marker.color.g = 1.0f;
             marker.color.b = 0.0f;
         } else {
             marker.color.r = 0.0f;
@@ -396,36 +396,6 @@ void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher ma
 
         marker_array.markers.push_back(frontier_marker);
 
-        // Optionally: Visualize normals as arrows (same as before)
-        visualization_msgs::msg::Marker normal_marker;
-        normal_marker.header.frame_id = "world";
-        normal_marker.header.stamp = rclcpp::Clock().now();
-        normal_marker.ns = "normals";
-        normal_marker.id = id++;
-        normal_marker.type = visualization_msgs::msg::Marker::ARROW;
-        normal_marker.action = visualization_msgs::msg::Marker::ADD;
-        normal_marker.scale.x = 0.02;  // Arrow shaft diameter
-        normal_marker.scale.y = 0.04;  // Arrow head diameter
-        normal_marker.scale.z = 0.1;   // Arrow length
-
-        // Use the same color for normals as the points
-        normal_marker.color.r = r;
-        normal_marker.color.g = g;
-        normal_marker.color.b = b;
-        normal_marker.color.a = 1.0;
-
-        geometry_msgs::msg::Point start;
-        start.x = cluster.target.x();
-        start.y = cluster.target.y();
-        start.z = cluster.target.z();
-        geometry_msgs::msg::Point end;
-        end.x = cluster.target.x() + cluster.target_normal(0) * 0.2;  // Scale the normal vector for visualization
-        end.y = cluster.target.y() + cluster.target_normal(1) * 0.2;
-        end.z = cluster.target.z() + cluster.target_normal(2) * 0.2;
-        normal_marker.points.push_back(start);
-        normal_marker.points.push_back(end);
-
-        marker_array.markers.push_back(normal_marker);
     }
 
     marker_pub->publish(marker_array);
