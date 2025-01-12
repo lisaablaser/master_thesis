@@ -272,9 +272,7 @@ Visualization Manager:
       Enabled: true
       Name: MarkerArray
       Namespaces:
-        clusters: true
-        frontiers: true
-        normals: true
+        {}
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -283,10 +281,10 @@ Visualization Manager:
         Value: /clusters
       Value: true
     - Class: rviz_default_plugins/Marker
-      Enabled: false
+      Enabled: true
       Name: Marker
       Namespaces:
-        {}
+        camera_fov: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
@@ -294,7 +292,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /nbv_fov
-      Value: false
+      Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
       Name: MarkerArray
@@ -354,7 +352,7 @@ Visualization Manager:
       Voxel Coloring: Z-Axis
       Voxel Rendering: Occupied Voxels
     - Class: octomap_rviz_plugins/OccupancyGrid
-      Enabled: false
+      Enabled: true
       Max. Height Display: 3.4028234663852886e+38
       Max. Octree Depth: 16
       Min. Height Display: -3.4028234663852886e+38
@@ -366,7 +364,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /unknown_space
-      Value: false
+      Value: true
       Voxel Alpha: 1
       Voxel Coloring: Cell Color
       Voxel Rendering: Occupied Voxels
@@ -448,10 +446,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.18479758501052856
+      Pitch: 1.2997967004776
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.5785748362541199
+      Yaw: 0.543574869632721
     Saved: ~
 Window Geometry:
   Displays:
@@ -473,5 +471,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1390
-  X: 550
+  X: 530
   Y: 209
