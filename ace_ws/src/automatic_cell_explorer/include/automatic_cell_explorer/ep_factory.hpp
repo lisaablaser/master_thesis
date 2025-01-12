@@ -4,12 +4,10 @@
 #include "automatic_cell_explorer/exploration_planner/exploration_planner.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/demo_exploration_planner.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/random_exploration_planner.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v2.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v3.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_v4.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_ACE.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_ACEP_local.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_ACEP_global.hpp"
 #include "automatic_cell_explorer/exploration_planner/exploration_planners/baseline_planner_local.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/baseline_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/baseline_planner_global.hpp"
 
 enum class PlannerType {
     Local,

@@ -20,7 +20,6 @@ public:
 private:
   void evaluateNbvCandidates();
   void generateCandidates();
-  RayView getRayView(Nbv & nbv ); //move to ep?
   
 };
 

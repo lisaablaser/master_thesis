@@ -7,6 +7,9 @@
 
 
 class BaselinePlannerLocal: public ExplorationPlanner
+/*
+    Exploration planner implementation from: https://ieeexplore.ieee.org/document/6630745
+*/
 {
 public:
   BaselinePlannerLocal(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)

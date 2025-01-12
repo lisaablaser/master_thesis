@@ -3,7 +3,10 @@
 
 
 void createInitialSafeSpace(octomap::OcTree* received_tree) {
-    double resolution = RES_SMALL; // Has to be smaller than incoming tree to avoid gaps. Dont know why, maybe rounding errors. 
+    /*
+        Set a predefined initial safe space around the robot.
+    */
+    double resolution = RES_SMALL; 
     FreespaceBounds bounds = FREE_SPACE;
     OrigoOffset origo = ORIGO;
     
@@ -20,27 +23,9 @@ void createInitialSafeSpace(octomap::OcTree* received_tree) {
 }
 
 
-
-void updatePlanningScene(octomap::OcTree* received_tree, OctreePtr unknownVoxelsTree) {
-    /*
-        Ffaster method to update planning scene if unknown voxel tree is calculated anyways. 
-        TODO: account for voxel size. Or expand unkown voxel input to avoid sparse tree. 
-    */
-    
-    for (auto it = unknownVoxelsTree->begin_leafs(), end = unknownVoxelsTree->end_leafs(); it != end; ++it) {
-        octomap::point3d point = it.getCoordinate();  
-        //get res?
-                    
-        received_tree->updateNode(point, true);
-    }
-    
-    //received_tree->updateInnerOccupancy();
-}
-
-
 void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree) {
     /*
-        very slow...
+        Mark unknown nodes as occupied.
     */
     double resolution = RES_LARGE;
     WorkspaceBounds bounds = WORK_SPACE;
@@ -65,8 +50,7 @@ void markUnknownSpaceAsObstacles(octomap::OcTree* received_tree) {
 
 OctreePtr extractUnknownOctree(const OctreePtr octree) {
     /*
-        Returns an octree of Worksapce size wiht all nodes at resolution RES_LARGE??
-        Allows for effeicent leaf iteration later. 
+        Returns an octree of Worksapce size with all nodes at same resolution
     */
 
     double resolution = RES_LARGE;
@@ -94,7 +78,6 @@ OctreePtr extractUnknownOctree(const OctreePtr octree) {
 }
 
 OctreePtr extractFreeOctree(const OctreePtr octree) {
-    //temporaru modifed to find occupied map
     double resolution = RES_LARGE;
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -157,7 +140,7 @@ OctreePtr extractFrontierOctree(const OctreePtr octree) {
 OctreePtr extractFrontierOctreeInBounds(const OctreePtr octree) {
 
 
-    double resolution = RES_LARGE; // Or small?
+    double resolution = RES_LARGE;
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
   
@@ -208,7 +191,7 @@ double calculateOccupiedVolume(const OctreePtr octree) {
     double res = octree->getResolution();
     WorkspaceBounds w = WORK_SPACE;
     FreespaceBounds f = FREE_SPACE;
-    //double res = RES_LARGE;
+
     double free_volume = (f.max_x-f.min_x)*(f.max_y-f.min_y)*(f.max_z-f.min_z);
     
     double volume = 0.0;

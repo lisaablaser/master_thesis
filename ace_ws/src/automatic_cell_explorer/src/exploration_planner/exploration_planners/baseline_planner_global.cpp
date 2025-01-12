@@ -12,7 +12,7 @@
 #include "automatic_cell_explorer/clustering.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/baseline_planner.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/baseline_planner_global.hpp"
 
 
 void BaselinePlanner::calculateNbvCandidates(NbvCandidates & nbv_candidates){

@@ -337,10 +337,8 @@ void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher ma
     for (size_t cluster_idx = 0; cluster_idx < clusters.size(); ++cluster_idx) {
         const auto& cluster = clusters[cluster_idx];
 
-        // Select a color for this cluster from the list
         auto [r, g, b] = color_list[cluster_idx % num_colors];
 
-        // Visualize cluster points as cubes (voxel size 0.1)
         visualization_msgs::msg::Marker cube_marker;
         cube_marker.header.frame_id = "world";
         cube_marker.header.stamp = rclcpp::Clock().now();
@@ -348,11 +346,10 @@ void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher ma
         cube_marker.id = id++;
         cube_marker.type = visualization_msgs::msg::Marker::CUBE_LIST;
         cube_marker.action = visualization_msgs::msg::Marker::ADD;
-        cube_marker.scale.x = 0.1;  // Cube size (voxel size)
+        cube_marker.scale.x = 0.1;
         cube_marker.scale.y = 0.1;
         cube_marker.scale.z = 0.1;
 
-        // Set the color for this cluster
         cube_marker.color.r = r;
         cube_marker.color.g = g;
         cube_marker.color.b = b;
@@ -368,7 +365,6 @@ void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher ma
 
         marker_array.markers.push_back(cube_marker);
 
-        // Visualize frontiers as dots (smaller spheres)
         visualization_msgs::msg::Marker frontier_marker;
         frontier_marker.header.frame_id = "world";
         frontier_marker.header.stamp = rclcpp::Clock().now();
@@ -376,11 +372,10 @@ void visualizeClusters(const std::vector<Cluster>& clusters, MarkerAPublisher ma
         frontier_marker.id = id++;
         frontier_marker.type = visualization_msgs::msg::Marker::SPHERE_LIST;
         frontier_marker.action = visualization_msgs::msg::Marker::ADD;
-        frontier_marker.scale.x = 0.05;  // Dot size for frontiers
+        frontier_marker.scale.x = 0.05; 
         frontier_marker.scale.y = 0.05;
         frontier_marker.scale.z = 0.05;
 
-        // Use the same color for the frontiers as the cluster
         frontier_marker.color.r = r;
         frontier_marker.color.g = g;
         frontier_marker.color.b = b;

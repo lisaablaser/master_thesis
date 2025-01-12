@@ -6,14 +6,15 @@
 
 enum class NodeState {Free, Unknown, Occupied, Error};
 
-struct RayInfo {
+struct RayInfo { //Ray
     
     Eigen::Vector3d start;  // Ray start (sensor origin)
     Eigen::Vector3d end;    // Ray end (hit point or max range)
     NodeState node_state;       // Whether the ray hit an unknown region
 };
+
 struct RayView{
-    std::vector<RayInfo> rays;
+    std::vector<RayInfo> rays; 
     int num_unknowns;
     Eigen::Isometry3d pose;
 };

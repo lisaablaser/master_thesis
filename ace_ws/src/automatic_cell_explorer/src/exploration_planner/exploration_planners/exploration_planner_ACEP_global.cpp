@@ -12,24 +12,24 @@
 #include "automatic_cell_explorer/clustering.hpp"
 #include "automatic_cell_explorer/exploration_planner/nbv.hpp"
 #include "automatic_cell_explorer/exploration_planner/raycast.hpp"
-#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_ACE.hpp"
+#include "automatic_cell_explorer/exploration_planner/exploration_planners/exploration_planner_ACEP_global.hpp"
 
-void ExplorationPlannerACE::calculateNbvCandidates(NbvCandidates & nbv_candidates) {
+void ExplorationPlannerV4::calculateNbvCandidates(NbvCandidates & memory) {
     /*
-       nbv_candidates serves as the candidates archive, keeping all non zero utility.
-       nbv_candidates_ are the valid trajectory candidates from this pose. 
+       memory: serves as the candidates archive, keeping all candidates with non zero utility.
+       Replans
     */
     log_ = EpLog{};
     nbv_candidates_.clear();
     
     auto s_eval = std::chrono::high_resolution_clock::now();
     // pass over arcive candididates
-    if(!nbv_candidates.empty()){
-        std::cout << " archive candidates has size : " << nbv_candidates.size() << std::endl;
-        evaluateNbvCandidates(nbv_candidates);
-        removeZeroGain(nbv_candidates);
-        std::cout << " After removing zero gain candidates : " << nbv_candidates.size() << std::endl;
-        nbv_candidates_ = nbv_candidates; 
+    if(!memory.empty()){
+        std::cout << " archive candidates has size : " << memory.size() << std::endl;
+        evaluateNbvCandidates(memory);
+        removeZeroGain(memory);
+        std::cout << " After removing zero gain candidates : " << memory.size() << std::endl;
+        nbv_candidates_ = memory; 
 
         if(!nbv_candidates_.empty()){
             std::cout << " candidates has size : " << nbv_candidates_.size() << std::endl;
@@ -38,13 +38,16 @@ void ExplorationPlannerACE::calculateNbvCandidates(NbvCandidates & nbv_candidate
         }
         
     }
+
+
+
     auto e_eval = std::chrono::high_resolution_clock::now();
     
     auto s_gen = std::chrono::high_resolution_clock::now();
-    generateCandidates(nbv_candidates);
+    generateCandidates(memory);
     auto e_gen = std::chrono::high_resolution_clock::now();
 
-    log_.n_candidates = nbv_candidates.size();
+    log_.n_candidates = memory.size();
 
     auto d_eval = std::chrono::duration_cast<std::chrono::milliseconds>(e_eval - s_eval).count();
     auto d_gen = std::chrono::duration_cast<std::chrono::milliseconds>(e_gen - s_gen).count();
@@ -57,35 +60,22 @@ void ExplorationPlannerACE::calculateNbvCandidates(NbvCandidates & nbv_candidate
 }
 
 
-Nbv ExplorationPlannerACE::selectNbv(NbvCandidates & nbv_candidates){
+Nbv ExplorationPlannerV4::selectNbv(NbvCandidates & memory){
     /*
-        Get the next Nbv candidate, Plans are alraeady calculated.
-        Select the one with highes information gain. 
+        Select the next best view, and remove it from the memory candidates. 
     */
 
     if (nbv_candidates_.empty()) {
-        //throw std::runtime_error("The nbv_candidates vector is empty");
+        throw std::runtime_error("The nbv_candidates vector is empty");
         std::cout << " No more candidates, should not happen. Generate new candidates" << std::endl;
-        //generateCandidates(nbv_candidates);
     }
 
     auto s = std::chrono::high_resolution_clock::now();
 
-    NbvCandidates paretoForntiers = findParetoFrontiers(nbv_candidates_);
-
-    
-
-    if (paretoForntiers.empty()) {
-        std::cout << " No pareto frontiers, can this happen??. Generate new candidates" << std::endl;
-        //generateCandidates(nbv_candidates);
-        //paretoForntiers = findParetoFrontiers(nbv_candidates);
-        //throw std::runtime_error("The nbv_candidates vector is empty");
-    }
-
     Nbv nbv = Nbv();
     double best_ratio = -1;
 
-    for (const auto& candidate : paretoForntiers) {
+    for (const auto& candidate : nbv_candidates_) {
         if (candidate.cost == 0) {
             std::cerr << "Should not have zero cost at this point. Candidate with zero cost found. Skipping." << std::endl;
             continue; // Skip this candidate
@@ -94,16 +84,14 @@ Nbv ExplorationPlannerACE::selectNbv(NbvCandidates & nbv_candidates){
         double ratio = candidate.gain/candidate.cost;
 
         if (ratio > best_ratio) {
-            
             best_ratio = ratio;
-
             nbv = candidate;
         }
     }
 
-    /// Delete chosen frontier
-    removeNbvFromCandidates(nbv_candidates, nbv);
-
+    std::cout << "Before removing candidate: : " << memory.size() << std::endl;
+    removeNbvFromCandidates(memory, nbv);
+    std::cout << "After removing candidate: : " << memory.size() << std::endl;
     auto e = std::chrono::high_resolution_clock::now();
     auto d = std::chrono::duration_cast<std::chrono::microseconds>(e - s).count();
     
@@ -117,7 +105,7 @@ Nbv ExplorationPlannerACE::selectNbv(NbvCandidates & nbv_candidates){
    
 }
 
-void ExplorationPlannerACE::evaluateNbvCandidates(NbvCandidates & nbv_candidates){
+void ExplorationPlannerV4::evaluateNbvCandidates(NbvCandidates & nbv_candidates){
     /*
         Evaluates the candidates with rycasting. 
     */
@@ -144,8 +132,6 @@ void ExplorationPlannerACE::evaluateNbvCandidates(NbvCandidates & nbv_candidates
   
     }
 
-    //removeZeroGain(nbv_candidates);
-
     int n_candidates = nbv_candidates.size();
     double average_time = (n_candidates > 0) ? (total_time / n_candidates) : 0.0;
     log_.evaluate_av_t = average_time;
@@ -163,31 +149,15 @@ void ExplorationPlannerACE::evaluateNbvCandidates(NbvCandidates & nbv_candidates
 
 
 
-void ExplorationPlannerACE::generateCandidates(NbvCandidates & nbv_candidates)
+void ExplorationPlannerV4::generateCandidates(NbvCandidates & nbv_candidates)
 /*
     Noraml distribution random generate candidates, aim at a cluster center. Append if plan exists. 
 */
 {
     clusters_.clear();
-    //nbv_candidates.clear();
 
     auto start_time = std::chrono::high_resolution_clock::now();
     clusters_ = computeClusters(octo_map_);
-
-    for(Cluster & cluster : clusters_){
-        std::cout << "points in cluster " << cluster.points.size() << std::endl;
-        std::cout << "Frontiers in cluster " << cluster.frontiers.size() << std::endl;
-    }
-
-
-    std::cout<< "Number of clusters: " << clusters_.size() << std::endl;
-    //removeClustersWhithoutFrontiers(clusters_);
-    std::cout<< "Number of clusters: " << clusters_.size() << std::endl;
-
-    if( clusters_.size() == 0){
-        std::cout << "Terminate, no more clusters that can be seen " << std::endl;
-        return;
-    }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
@@ -200,6 +170,7 @@ void ExplorationPlannerACE::generateCandidates(NbvCandidates & nbv_candidates)
     double phi_min = 0.0, phi_max = 2 * M_PI;
     double theta_min = 0.0, theta_max = 3*M_PI/4;
 
+
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis_r(r_min, r_max);
@@ -208,13 +179,19 @@ void ExplorationPlannerACE::generateCandidates(NbvCandidates & nbv_candidates)
 
 
     int i = 0;
-    int max_attempts = 100;
-    int N = 3;
-    while(nbv_candidates_.size() < N ){//|| !(i < max_attempts)){ //Try at least 100 times.
+    int max_attempts = 500;
+    int N = 10;
+    while(nbv_candidates_.size() < N && (i < max_attempts)){ 
+        ++i;
         
         std::cout << " Attempt number: " << i << std::endl;
         std::cout << " Candidates size: " << nbv_candidates_.size() << std::endl;
         Nbv nbv;
+
+        if (i > 1000) {  // Arbitrary large number
+            std::cerr << "Error: Exceeded debug attempt threshold. Exiting loop." << std::endl;
+            break;
+        }
 
         double r = dis_r(gen);
         double phi = dis_phi(gen);
@@ -226,64 +203,51 @@ void ExplorationPlannerACE::generateCandidates(NbvCandidates & nbv_candidates)
         octomap::OcTreeNode* node = octo_map_->search(x, y, z); 
 
         if (!node || octo_map_->isNodeOccupied(node)) {
-            std::cout << "Node occupied, skipping" << std::endl;
-            ++i;
             continue;
         }
 
-        // // Position at sampled position
         nbv.pose = Eigen::Isometry3d::Identity();
         nbv.pose.translate(Eigen::Vector3d(x, y, z)); 
+
+        if (clusters_.empty()) {
+            std::cerr << "No clusters available for candidate generation." << std::endl;
+            break;
+        }
        
         for(Cluster & cluster : clusters_){
-            if(nbv_candidates_.size() >= N){
-                std::cout << "Candidate size is large enough. " << std::endl;
+            if(nbv_candidates.size() >= N){
                 continue;
             }
             ++i;
-            // Calculate the direction vector towards the target
+          
             Eigen::Vector3d position(x, y, z);
-            Eigen::Vector3d target_pos(cluster.center.x(), cluster.center.y(), cluster.center.z());
+            Eigen::Vector3d target_pos(cluster.target.x(), cluster.target.y(), cluster.target.z());
 
-            // 1. Calculate the x-axis direction pointing toward the target
             Eigen::Vector3d direction_to_target = (target_pos - position).normalized();
             Eigen::Vector3d x_axis = direction_to_target;
 
-            // 2. Define the global up vector as the approximate z-axis
+            // Define the global up vector as the approximate z-axis
             Eigen::Vector3d global_up(0, 0, 1);
-
-            // 3. Compute the z-axis by projecting global up onto the plane orthogonal to x_axis
             Eigen::Vector3d z_axis = (global_up - global_up.dot(x_axis) * x_axis).normalized();
-
-            // 4. Compute the y-axis as the cross product of z_axis and x_axis
             Eigen::Vector3d y_axis = z_axis.cross(x_axis);
-
-            // 5. Construct the rotation matrix from x, y, and z axes
             Eigen::Matrix3d rotation_matrix;
-            rotation_matrix.col(0) = x_axis;  // x-axis points to the target
-            rotation_matrix.col(1) = y_axis;  // y-axis is perpendicular to both x and z
-            rotation_matrix.col(2) = z_axis;  // z-axis points approximately upward
-
-            // 6. Apply the rotation matrix to the pose
+            rotation_matrix.col(0) = x_axis;  
+            rotation_matrix.col(1) = y_axis;  
+            rotation_matrix.col(2) = z_axis;  
             nbv.pose.linear() = rotation_matrix;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
             auto result = plan(nbv.pose);
             if (result) {
-                Plan valid_plan = *result;  
-                nbv.plan = valid_plan;
-                nbv.pose = getFinalPoseFromPlan(valid_plan);
                 RayView ray_view = calculateRayView(nbv.pose, octo_map_);
                 double gain = ray_view.num_unknowns;
-                if(gain != 0){
-                    
-                    nbv.gain = gain;
-                    nbv.cost = compute_traj_lenght(valid_plan);
-                    nbv_candidates_.push_back(nbv);
-                    nbv_candidates.push_back(nbv);
-
-                }
+                Plan valid_plan = *result;  
+                nbv.plan = valid_plan;
+                nbv.gain = gain;
+                nbv.cost = compute_traj_lenght(valid_plan);
+                nbv_candidates_.push_back(nbv);
+                nbv_candidates.push_back(nbv);
 
             }
             
@@ -296,43 +260,3 @@ void ExplorationPlannerACE::generateCandidates(NbvCandidates & nbv_candidates)
 
 }
 
-
-
-
-NbvCandidates ExplorationPlannerACE::findParetoFrontiers(const NbvCandidates & nbv_candidates){
-
-    // First sort by cost
-    NbvCandidates sorted_candidates = nbv_candidates;
-
-    std::sort(sorted_candidates.begin(), sorted_candidates.end(),
-              [](const Nbv& a, const Nbv& b) {
-                  return a.cost < b.cost;
-              });
-
-    std::cout << "Sorted candidates after cost: " << std::endl;
-    for(Nbv nbv: sorted_candidates){
-        std::cout << "Gain: "<< nbv.gain << std::endl;
-        std::cout  << "Cost: "<< nbv.cost << std::endl;
-    }
-   
-    // Then check gein
-    NbvCandidates paretoFrontiers; 
-    double maxGain = -1.0; // Initialize maxGain as a very low value
-    for (const auto& candidate : sorted_candidates) {
-        if (candidate.gain > maxGain) {
-            paretoFrontiers.push_back(candidate); // Keep this candidate
-            maxGain = candidate.gain;  // Update maxGain
-        }
-    }
-
-    std::cout << "Pareto frontiers: " << std::endl;
-    for(Nbv nbv: paretoFrontiers){
-        std::cout << "Gain: "<< nbv.gain << std::endl;
-        std::cout  << "Cost: "<< nbv.cost << std::endl;
-    }
-    
-
-    return paretoFrontiers;
-
-
-}

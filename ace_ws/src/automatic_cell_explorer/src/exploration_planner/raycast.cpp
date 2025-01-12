@@ -59,6 +59,9 @@ RayView calculateRayView(
 }
 
 RayInfo castRay(std::shared_ptr<octomap::OcTree> & octo_map, const Eigen::Vector3d & sensor_origin, const Eigen::Vector3d & ray_direction_world){
+    /*
+      Code is based on octomaps castRay function: https://octomap.github.io/octomap/doc/classoctomap_1_1OccupancyOcTreeBase.html#a6371096f480cf835765286bfffd58708
+    */
 
     WorkspaceBounds bounds = WORK_SPACE;
     OrigoOffset origo = ORIGO;
@@ -176,7 +179,7 @@ RayInfo castRay(std::shared_ptr<octomap::OcTree> & octo_map, const Eigen::Vector
       if (currentNode){
         if (octo_map->isNodeOccupied(currentNode)) {
             ray_end = Eigen::Vector3d(end.x(), end.y(), end.z());
-            return RayInfo({sensor_origin, ray_end, NodeState::Free});
+            return RayInfo({sensor_origin, ray_end, NodeState::Occupied});
           //done = true;
           //break;
         }

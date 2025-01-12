@@ -20,13 +20,13 @@ StateMachineNode::StateMachineNode(MoveGrpPtr mvt_interface, planning_scene_moni
     plm_interface_(plm_interface),
     rviz_tool_(rviz_tool),
     current_state_(State::Initialise), 
-    current_type_(PlannerType::Global),
+    current_type_(PlannerType::Local),
     finished_(false),
     octomap_(std::make_shared<octomap::OcTree>(RES_LARGE)),
     exploration_planner_(createPlanner(current_type_, mvt_interface_, octomap_)),
     current_req_(ExecuteReq()),
     iteration_(-1),
-    logger_("runs/parameter_test/random/memory/has/3.csv"),
+    logger_("runs/test.csv"),
     nbv_candidates_()
 {
     camera_trigger_ = 
@@ -77,8 +77,11 @@ void StateMachineNode::handle_calculate_nbv(){
     std::cout << "--State Calculate Nbv--" << std::endl;
 
     bool visualize = false;
+    bool has_nbv_memory = true;
+    bool visualize_clusters = false;
+
+
     updatePlanner(current_type_);
-    //plm_interface_->updateSceneWithCurrentState();
 
     auto start_time = std::chrono::high_resolution_clock::now();
     exploration_planner_->updateOctomap(octomap_);
@@ -87,35 +90,28 @@ void StateMachineNode::handle_calculate_nbv(){
     Nbv nbv;
 
     //Logic for keeping nbv candidates in memory
-    bool has_nbv_memory = true;
     if(has_nbv_memory && current_type_== PlannerType::Global){
         
         exploration_planner_->calculateNbvCandidates(nbv_candidates_);
-
         nbv_candidates_visualize = nbv_candidates_;
-
         nbv = exploration_planner_->selectNbv(nbv_candidates_); 
-
-
 
     }
     else{
 
         exploration_planner_->calculateNbvCandidates();
-
         nbv_candidates_visualize = exploration_planner_->getNbvCandidates();
-
         nbv = exploration_planner_->selectNbv();
-        // auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
-        // std::vector<Cluster> clusters = exploration_planner_->getClusters(); 
-        // visualizeClusters(clusters, cluster_pub);
+
+        if (visualize_clusters){
+            auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
+            std::vector<Cluster> clusters = exploration_planner_->getClusters(); 
+            visualizeClusters(clusters, cluster_pub);
+
+        }
+
 
     }
-
-    // auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
-    // std::vector<Cluster> clusters = computeClusters(octomap_); 
-    
-    // visualizeClusters(clusters, cluster_pub);
 
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -127,9 +123,6 @@ void StateMachineNode::handle_calculate_nbv(){
     log_.nbv_calculation_t = duration.count();
     log_.planner = static_cast<int>(current_type_);
 
-    
-
-    
     // Visualizations
     if(visualize){
         auto nbv_ray_dots_pub = node_->create_publisher<MarkerArray>("nbv_ray_dots", 10);
@@ -149,28 +142,26 @@ void StateMachineNode::handle_calculate_nbv(){
 
     //rviz_tool_->prompt("Press next");
 
-
-
-
-    // Maybe check progress if raycast is wrong. (looking agains ceiling)
     if(nbv==Nbv() || nbv.gain == 0){
         std::cout << "Had no gain or was invalid. Trying again " << std::endl;
         if(current_type_ == PlannerType::Local){
             std::cout << "--Switching to Global Planner-- " << std::endl;
             current_type_ = PlannerType::Global;
         }   
+
         /// LOG:
         log_.progress = prev_progress_;
         log_.gain = 0;     
         log_.traj_lenght = 0;   
         logIteration();
+
         handle_calculate_nbv();
         return;
     }
-    // else if(current_type_ == PlannerType::Global){
-    //     std::cout << "--Switching back to Local planner --- " << std::endl;
-    //     current_type_ = PlannerType::Local;
-    // }
+    else if(current_type_ == PlannerType::Global){
+        std::cout << "--Switching back to Local planner --- " << std::endl;
+        current_type_ = PlannerType::Local;
+    }
 
     log_.traj_lenght = nbv.cost;
 
@@ -208,7 +199,6 @@ void StateMachineNode::handle_move_robot(){
     } 
     else 
     {
-        /// TODO: Some timing issue here, robot seems to move sucessfully, and stil enters this loop somtimes. 
         RCLCPP_ERROR(this->get_logger(), "Service call failed: No response from the service. Will just move on to campture for now");
         //log_.move_t = -1.0;
         //current_state_ = State::Calculate_NBV;
@@ -275,15 +265,7 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
                 auto frontiers_pub = this->create_publisher<octomap_msgs::msg::Octomap>("frontiers", 10);
                 auto map_pub = this->create_publisher<octomap_msgs::msg::Octomap>("map", 10);
                 auto c_center_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("centers",10);
-                //auto cluster_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("clusters", 10);
                 auto targets_pub = node_->create_publisher<MarkerArray>("targets", 10);
-
-                // only for visualizations. 
-                //std::vector<Cluster> clusters = computeClusters(octomap_); //could use getClusters, but only for Gloabal planner
-                //visualizeClusters(clusters, cluster_pub);
-
-    
-
 
                 octomap_msgs::msg::Octomap unknown_msg;
                 unknown_msg.header.frame_id = "world";  
@@ -311,9 +293,6 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
 
             }
 
-          
-           
-
             // LOG
             double unknown_voxel_count = calculateOccupiedVolume(unknown_tree);
             double gain = unknown_voxel_count - prev_progress_;
@@ -324,7 +303,6 @@ void StateMachineNode::update_planning_scene(const octomap_msgs::msg::Octomap::S
             std::cout << "Current Unknown Voxel Count: " << unknown_voxel_count << std::endl;
             std::cout << "Calculated Gain: " << gain << std::endl;
 
-            // Keep until utility measue is reliable
             // If no actual progress is made, we should witch to global planner. 
             if(current_type_ == PlannerType::Local){
                 double progress_tresh = 0.01;

@@ -5,6 +5,9 @@
 
 
 class RandomExplorationPlanner: public ExplorationPlanner
+/*
+  Default Global planner used for ablation studies.
+*/
 {
 public:
   RandomExplorationPlanner(MoveGrpPtr mvt_interface, std::shared_ptr<octomap::OcTree> octo_map)
@@ -17,6 +20,8 @@ public:
 private:
   void evaluateNbvCandidates();
   void generateCandidates();
+  void generateCandidatesJointSpace();
+  void generateCandidatesTarget();
   
   
 };

@@ -34,9 +34,6 @@ int main(int argc, char **argv)
     moveit_node->set_parameters(parameters);
 
 
-
-
-
     MoveGrpPtr mvt_interface = getMoveGroupInterface(moveit_node);
     planning_scene_monitor::PlanningSceneMonitorPtr plm_interface = getPlanningSceeneMonitiorPtr(pc_node);
     RvizToolPtr rviz_tool = getRvizToolPtr(rviz_node, plm_interface);
