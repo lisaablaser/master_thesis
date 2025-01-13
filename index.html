@@ -11,8 +11,7 @@
             padding: 0;
         }
         header {
-            background-color: #9DC6D6;
-            color: white;
+            color: black;
             padding: 15px 20px;
             text-align: center;
         }
@@ -21,7 +20,7 @@
             text-align: center;
         }
         video {
-            max-width: 100%;
+            max-width: 80%;
             height: auto;
             margin-top: 20px;
         }
@@ -33,13 +32,11 @@
     </header>
     <div class="content">
         <p>This video showcases the performance of the Autonomous Cell Exploration Planner (ACEP) in a simulated robotic scenario. Using a 3D sensor mounted on a robotic manipulator, the ACEP framework autonomously explores and maps unknown environments.</p>
-
+        
         <p>On the left, the video shows RVIz, where gray voxels represent unexplored regions, and green voxels indicate the areas that have been successfully mapped. On the right, you can see the corresponding view in Gazebo, illustrating the robot’s movements and interactions within the scene.</p>
 
-
         <p>For further details about the ACEP framework and its implementation, visit the <a href="https://github.com/lisaablaser/master_thesis/tree/main/ace_ws" target="_blank">GitHub repository</a>.</p>
-
-        <video controls>
+         <video controls>
             <source src="ACEP_video.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
